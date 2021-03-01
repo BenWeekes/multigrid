@@ -1,0 +1,70 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+  <meta charset="utf 8">
+  <title>Agora Mega Grid</title>
+  <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
+  <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
+  <style>
+
+  ibody { min-height: 100%; }
+
+  ihtml { height: 100%; }
+
+  .ng-scope {
+   	padding: 12px;
+  }
+ 
+  .agora_video_player {
+  	    /*border-radius: 15%;*/
+  }
+
+  .agora_select {
+	width: 180px;
+  }
+
+  .remote_video {
+ 	background-color:#222;
+  	margin: 2px;
+  	padding: 2px;
+	width: 120px;
+	height: 90px;
+  	display: inline-block;
+  }
+
+  .agora_stats {
+	font-family: Arial, Helvetica, sans-serif; 
+	width: 160px;
+	padding: 4px;
+	margin: 2px;
+ 	background-color:orange;
+	color:black;
+  	display: inline-block;
+  }
+  .main {
+  	background:#222;
+  }
+  #toolbar {
+	  white-space: nowrap;
+  }
+  </style>
+</head>  
+
+<body class="main">
+  <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
+    <select class="agora_select" ng-model="cameraSelect" 
+            ng-options="x.name for x in cameraNames track by x.value" 
+            ng-change="changeSelectedCamera()">
+      <option value="" disabled select>Select a Camera</option>
+    </select>
+
+    <select class="agora_select" class="agora-select" ng-model="microphoneSelect" 
+            ng-options="x.name for x in microphoneNames track by x.value" 
+            ng-change="changeSelectedMicrophone()">
+      <option value="" disabled select>Select a Microphone</option>
+    </select>
+    <div id="renderFrameRate" class="agora_stats"> </div>
+  </div>
+
+
+  <script src="./app.js?s=iiuuuu"></script>
