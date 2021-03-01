@@ -142,13 +142,16 @@ class AgoraMultiChanelApp {
       this.addSubscription(client,this.userMap[uid],this.VIDEO);
     }
 
-    this.videoSubscriptions = {};
-    this.audioSubscriptions = {};
-    this.videoPublishers = {};
-    this.audioPublishers = {};
-// video pubs which are not subs
+
+    var uid=this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
+    if (uid) {
+      var client=this.audioPublishers[uid];
+      this.addSubscription(client,this.userMap[uid],this.AUDIO);
+    }
 
 
+
+    // video pubs which are not subs
     //if (this.numVideoTiles < this.maxVideoTiles && !document.getElementById(user.uid.toString())) {
 
     // Ensure the video subs match the audio subs 
@@ -158,10 +161,8 @@ class AgoraMultiChanelApp {
    // this.numVideoTiles < this.maxVideoTiles && 
   }
 
-  // client._channelName
-  // currentClient._users[0].uid
-  addSubscription(client, user, mediaType) {
 
+  addSubscription(client, user, mediaType) {
     if (mediaType === this.VIDEO) {
       if (!document.getElementById(user.uid.toString())) {
         this.numVideoTiles++;
@@ -185,7 +186,7 @@ class AgoraMultiChanelApp {
       if (document.getElementById(user.uid.toString())) {
         console.log(" ### SUBSCRIBING IN CHANNEL " + client._channelName + ", TO USER " + user.uid.toString() + ", TO " + mediaType);
         client.subscribe(user, mediaType);
-        this.videoSubscriptions[user] = client;
+        this.videoSubscriptions[user.uid.toString()] = client;
         console.log(" ### SUBSCRIBED IN CHANNEL " + client._channelName + ", TO USER " + user.uid.toString() + ", TO " + mediaType);
         // playerDomDiv.id 
         user.videoTrack.play(user.uid.toString());
@@ -198,7 +199,7 @@ class AgoraMultiChanelApp {
     }
     else if (mediaType === this.AUDIO) {
       client.subscribe(user, mediaType);
-      this.audioSubscriptions[user] = client;
+      this.audioSubscriptions[user.uid.toString()] = client;
       //this.channels[currentIndex].audioSubscriptions[user.uid.toString()] = user;
       user.audioTrack.play();
     }
