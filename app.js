@@ -109,6 +109,9 @@ class AgoraMultiChanelApp {
     // what is render 
     var renderFrameRate = this.getAverageRenderFrameRate();
     console.log("renderFrameRate " + renderFrameRate);
+      this.increaseSubs();
+      this.updateUILayout();
+	  /*
     if (renderFrameRate < 10) {
       this.reduceSubs();
       this.updateUILayout();
@@ -118,6 +121,7 @@ class AgoraMultiChanelApp {
       this.increaseSubs();
       this.updateUILayout();
     }
+    */
   }
 
   getPubWhereNoSub(pubs,subs) {
@@ -142,10 +146,6 @@ class AgoraMultiChanelApp {
       this.addSubscription(client,this.userMap[uid],this.VIDEO);
     }
 
-    this.videoSubscriptions = {};
-    this.audioSubscriptions = {};
-    this.videoPublishers = {};
-    this.audioPublishers = {};
 // video pubs which are not subs
 
 
@@ -160,7 +160,7 @@ class AgoraMultiChanelApp {
 
   // client._channelName
   // currentClient._users[0].uid
-  addSubscription(client, user, mediaType) {
+  async addSubscription(client, user, mediaType) {
 
     if (mediaType === this.VIDEO) {
       if (!document.getElementById(user.uid.toString())) {
@@ -184,7 +184,7 @@ class AgoraMultiChanelApp {
       }
       if (document.getElementById(user.uid.toString())) {
         console.log(" ### SUBSCRIBING IN CHANNEL " + client._channelName + ", TO USER " + user.uid.toString() + ", TO " + mediaType);
-        client.subscribe(user, mediaType);
+        await client.subscribe(user, mediaType);
         this.videoSubscriptions[user] = client;
         console.log(" ### SUBSCRIBED IN CHANNEL " + client._channelName + ", TO USER " + user.uid.toString() + ", TO " + mediaType);
         // playerDomDiv.id 
@@ -197,7 +197,7 @@ class AgoraMultiChanelApp {
 
     }
     else if (mediaType === this.AUDIO) {
-      client.subscribe(user, mediaType);
+      await client.subscribe(user, mediaType);
       this.audioSubscriptions[user] = client;
       //this.channels[currentIndex].audioSubscriptions[user.uid.toString()] = user;
       user.audioTrack.play();
@@ -301,7 +301,7 @@ class AgoraMultiChanelApp {
     var renderFrameRateCount = 0;
     for (var i = 0; i < this.numClients; i++) {
       var client = this.clients[i];
-      if (!this.channels[i]) {
+      if (!client._users.length) {
         continue;
       }
       var rvs = client.getRemoteVideoStats();
