@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf 8">
   <title>Agora Mega Grid</title>
   <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
   <script src="./sdk/AgoraRTM.js"></script>
-
   <style>
     ibody {
       min-height: 100%;
@@ -29,26 +27,16 @@
       width: 150px;
     }
 
-    .mic_talking{
-	     background-color: lime-green;
+    .mic_talking {
+      background-color: lime-green;
     }
+
     .local_video {
-    background-color: #004;
-    margin: 0px;
-    width: 40px;
-    height: 30px;
-    display: inline-block;
-	    /*
-	    background-color: #004;
-    margin: 0px;
-    padding: 2px;
-    width: 40px;
-    height: 30px;
-    display: inline-block;
-    margin: -10px;
-    margin-left: 0px;
-    margin-right: -6px;
-	    */
+      background-color: #004;
+      margin: 0px;
+      width: 40px;
+      height: 30px;
+      display: inline-block;
     }
 
     .remote_video {
@@ -61,13 +49,14 @@
     }
 
     .remote_video_active {
-	border-style: solid;
-    	padding: 0px;
-	border-color: #FD5F00;
+      border-style: solid;
+      padding: 0px;
+      border-color: #FD5F00;
     }
 
     .agora_stats {
-      width: 140px !important;;
+      width: 140px !important;
+      ;
     }
 
     .media_controls {
@@ -117,15 +106,14 @@
       <option value="" disabled select>Select a Microphone</option>
     </select>
 
-      <div  onclick="toggleCam()" id="local-player" class="local_video"></div>
+    <div onclick="toggleCam()" id="local-player" class="local_video"></div>
     <div class="media_controls">
       <!--div onclick="toggleCam()" id="cam_mute" class="media_buttons">Camera</div-->
       <div onclick="toggleMic()" id="mic_mute" class="media_buttons">Mic</div>
-      
-    <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
+
+      <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
 
     </div>
   </div>
-
-
+</body>
   <script src="./app.js?s=rrrr"></script>

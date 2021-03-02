@@ -40,36 +40,27 @@ class AgoraMultiChanelApp {
     this.localVideoTrack = null;
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
+
+    // RTM
     this.rtmClient;
     this.rtmUid;
     this.rtmChannelName;
     this.rtmChannel;
 
+    // VAD
+    this.MaxAudioSamples = 400;
+    this.MaxBackgroundNoiseLevel = 30;
+    this.SilenceOffeset = 10;
+    this.audioSamplesArr = [];
+    this.audioSamplesArrSorted = [];
+    this.exceedCount = 0;
+    this.exceedCountThreshold = 4;
+
     this.createClients();
     this.joinChannels();
   }
 
-  initRTM() {
 
-    this.rtmClient = AgoraRTM.createInstance(this.appId);
-    this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
-      console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
-    });
-
-    this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
-      this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
-      this.rtmChannel.join().then(() => {
-        this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => { 
-		this.handleRTM(senderId,test);
-        });
-      }).catch(error => {
-        console.log('AgoraRTM client join failure', error);
-      });
-    }).catch(error => {
-      console.log('AgoraRTM client login failure', error);
-    });
-
-  }
 
   /*
           this.rtmChannel.sendMessage({ text: 'test channel message' }).then(() => {
@@ -139,14 +130,12 @@ class AgoraMultiChanelApp {
           delete this.audioPublishers[user.uid.toString()];
           delete this.audioSubscriptions[user.uid.toString()];
         });
-
     }
     this.numClients = i;
   }
 
   handleSubscriptions() {
     var renderFrameRate = this.getAverageRenderFrameRate();
-
     if (renderFrameRate > this.MinFPSToIncreaseSubs) {
       this.NumRenderExceed++;
     }
@@ -163,12 +152,31 @@ class AgoraMultiChanelApp {
       this.reduceSubs();
       this.updateUILayout();
     }
-
-    this.showMicInput();
+    this.voiceActivityDetection();
   }
 
-  handleRTM(senderId,text) {
-	  console.log(" "+text+" "+senderId);
+  initRTM() {
+    this.rtmClient = AgoraRTM.createInstance(this.appId);
+    this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
+      console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
+    });
+
+    this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
+      this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
+      this.rtmChannel.join().then(() => {
+        this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => {
+          this.handleRTM(senderId, test);
+        });
+      }).catch(error => {
+        console.log('AgoraRTM client join failure', error);
+      });
+    }).catch(error => {
+      console.log('AgoraRTM client login failure', error);
+    });
+  }
+
+  handleRTM(senderId, text) {
+    console.log(" " + text + " " + senderId);
   }
 
   getInputLevel(track) {
@@ -186,15 +194,36 @@ class AgoraMultiChanelApp {
     return average;
   }
 
-  showMicInput() {
+  voiceActivityDetection() {
     if (this.localAudioTrack) {
-      var audioLevel = Math.floor(this.getInputLevel(this.localAudioTrack));
-      if (audioLevel > 0) {
-        document.getElementById("mic_mute").classList.add("mic_talking");
-      } else {
-        document.getElementById("mic_mute").classList.remove("mic_talking");
-      }
+      return;
     }
+    var audioLevel = this.getInputLevel(this.localAudioTrack); //Math.floor(this.getInputLevel(this.localAudioTrack));
+    if (audioLevel <= this.MaxBackgroundNoiseLevel) {
+      if (this.audioSamplesArr.length >= this.MaxAudioSamples) {
+        var removed = this.audioSamplesArr.shift();
+        var removedIndex = this.audioSamplesArrSorted.indexOf(removed);
+        if (removedIndex > -1) {
+          this.audioSamplesArrSorted.splice(removedIndex, 1);
+        }
+      }
+      this.audioSamplesArr.push(audioLevel);
+      this.audioSamplesArrSorted.push(audioLevel);
+      this.audioSamplesArrSorted.sort((a, b) => a - b);
+    }
+    var background = Math.floor(3 * this.audioSamplesArrSorted[Math.floor(this.audioSamplesArrSorted.length / 2)] / 2);
+    if (audioLevel > this.background + this.SilenceOffeset) {
+      exceedCount++;
+    } else {
+      exceedCount = 0;
+    }
+
+    if (exceedCount > exceedCountThreshold) {
+      console.log("VOICE DETECTED");
+    } else {
+      $('#vad').html("");
+    }
+
   }
 
   dictionaryLength(dict) {
@@ -226,7 +255,6 @@ class AgoraMultiChanelApp {
     // Do we have audio pubs for unfilled audio subs?
     // Do we have video pubs for unfilled video subs?
     //dictionaryLength(this.videoSubscriptions);
-
     if (this.dictionaryLength(this.videoSubscriptions) < this.maxVideoTiles) {
       var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
       if (uid) {
@@ -234,16 +262,13 @@ class AgoraMultiChanelApp {
         this.addSubscription(client, this.userMap[uid], this.VIDEO);
       }
     }
-
     if (this.dictionaryLength(this.audioSubscriptions) < this.maxAudioSubscriptions) {
       var uid = this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
       if (uid) {
         var client = this.audioPublishers[uid];
         this.addSubscription(client, this.userMap[uid], this.AUDIO);
       }
-
     }
-
   }
 
   async addSubscription(client, user, mediaType) {
@@ -279,7 +304,6 @@ class AgoraMultiChanelApp {
         // 1 is for low quality
         client.setRemoteVideoStreamType(user.uid, 1);
       }
-
     }
     else if (mediaType === this.AUDIO) {
       await client.subscribe(user, mediaType);
@@ -304,7 +328,6 @@ class AgoraMultiChanelApp {
   }
 
   async removeSubscription(client, user, mediaType) {
-
     if (mediaType === this.VIDEO) {
       await client.unsubscribe(user, mediaType);
       delete this.videoSubscriptions[user.uid.toString()];
@@ -313,9 +336,7 @@ class AgoraMultiChanelApp {
       await client.unsubscribe(user, mediaType);
       delete this.audioSubscriptions[user.uid.toString()];
     }
-
   }
-
 
   // Publishing Local Streams
   async joinChannels() {
@@ -369,9 +390,7 @@ class AgoraMultiChanelApp {
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
     document.getElementById("cam_mute").classList.add("media_buttons_enabled");
-
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
-
   }
 
   //
@@ -514,9 +533,6 @@ function toggleCam() {
   }
 }
 
-
-
-
 function toggleMic() {
   if (!agoraApp.localAudioTrack) {
     alert("Please select a mic from the list");
@@ -531,7 +547,6 @@ function toggleMic() {
     agoraApp.localAudioTrack.setEnabled(true);
     document.getElementById("mic_mute").classList.add("media_buttons_enabled");
   }
-
 }
 
 
@@ -623,4 +638,4 @@ window.addEventListener('resize', resizeGrid);
 
 setInterval(() => {
   agoraApp.handleSubscriptions();
-}, 200);
+}, 100);
