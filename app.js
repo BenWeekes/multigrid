@@ -57,15 +57,10 @@ class AgoraMultiChanelApp {
     });
 
     this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
-      console.log('AgoraRTM client login success');
-
       this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
-
       this.rtmChannel.join().then(() => {
-        console.log('AgoraRTM client join success');
-        this.rtmChannel.sendMessage.on('ChannelMessage', ({ text }, senderId) => { // text: text of the received channel message; senderId: user ID of the sender.
-          /* Your code for handling events, such as receiving a channel message. */
-          console.log("RTM Msg " + text + " " + senderId);
+        this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => { 
+		this.handleRTM(senderId,test);
         });
       }).catch(error => {
         console.log('AgoraRTM client join failure', error);
@@ -170,6 +165,10 @@ class AgoraMultiChanelApp {
     }
 
     this.showMicInput();
+  }
+
+  handleRTM(senderId,text) {
+	  console.log(" "+text+" "+senderId);
   }
 
   getInputLevel(track) {
