@@ -20,11 +20,11 @@
   }
 
   .agora_select {
-	width: 180px;
+	width: 150px;
   }
 
   .remote_video {
- 	background-color:#222;
+ 	background-color:#000;
   	margin: 2px;
   	padding: 2px;
 	width: 120px;
@@ -34,12 +34,36 @@
 
   .agora_stats {
 	font-family: Arial, Helvetica, sans-serif; 
+	width: 120px;
+	padding: 4px;
+	margin: 2px;
+ 	background-color:grey;
+	color:black;
+  	display: inline-block;
+  }
+  .media_controls {
+	font-family: Arial, Helvetica, sans-serif; 
 	width: 160px;
 	padding: 4px;
 	margin: 2px;
- 	background-color:orange;
 	color:black;
   	display: inline-block;
+  }
+
+  .media_buttons {
+	width: 60px;
+	padding: 2px;
+	margin: 2px;
+ 	background-color:grey;
+	color:black;
+  	display: inline-block;
+	text-align: center;
+	cursor: pointer;
+	vertical-align: middle;
+  }
+
+  .media_buttons_enabled {
+ 	background-color:red;
   }
   .main {
   	background:#222;
@@ -63,8 +87,14 @@
             ng-change="changeSelectedMicrophone()">
       <option value="" disabled select>Select a Microphone</option>
     </select>
+
+       <div class="media_controls">
+		<div onclick="toggleCam()" id="cam_mute" class="media_buttons" >Camera</div>
+                <div onclick="toggleMic()" id="mic_mute" class="media_buttons" >Mic</div>
+
+      </div>
     <div id="renderFrameRate" class="agora_stats"> </div>
   </div>
 
 
-  <script src="./app.js?s=iiiuuuu"></script>
+  <script src="./app.js?s=jikkgggg"></script>
