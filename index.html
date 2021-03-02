@@ -1,98 +1,104 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
   <meta charset="utf 8">
   <title>Agora Mega Grid</title>
   <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
   <style>
+    ibody {
+      min-height: 100%;
+    }
 
-  ibody { min-height: 100%; }
+    ihtml {
+      height: 100%;
+    }
 
-  ihtml { height: 100%; }
+    .ng-scope {
+      padding: 12px;
+    }
 
-  .ng-scope {
-   	padding: 12px;
-  }
- 
-  .agora_video_player {
-  	    /*border-radius: 15%;*/
-  }
+    .agora_video_player {
+      /*border-radius: 15%;*/
+    }
 
-  .agora_select {
-	width: 150px;
-  }
+    .agora_select {
+      width: 150px;
+    }
 
-  .remote_video {
- 	background-color:#000;
-  	margin: 2px;
-  	padding: 2px;
-	width: 120px;
-	height: 90px;
-  	display: inline-block;
-  }
+    .remote_video {
+      background-color: #000;
+      margin: 2px;
+      padding: 2px;
+      width: 120px;
+      height: 90px;
+      display: inline-block;
+    }
 
-  .agora_stats {
-	font-family: Arial, Helvetica, sans-serif; 
-	width: 120px;
-	padding: 4px;
-	margin: 2px;
- 	background-color:grey;
-	color:black;
-  	display: inline-block;
-  }
-  .media_controls {
-	font-family: Arial, Helvetica, sans-serif; 
-	width: 160px;
-	padding: 4px;
-	margin: 2px;
-	color:black;
-  	display: inline-block;
-  }
+    .agora_stats {
+      font-family: Arial, Helvetica, sans-serif;
+      width: 120px;
+      padding: 4px;
+      margin: 2px;
+      background-color: grey;
+      color: black;
+      display: inline-block;
+    }
 
-  .media_buttons {
-	width: 60px;
-	padding: 2px;
-	margin: 2px;
- 	background-color:grey;
-	color:black;
-  	display: inline-block;
-	text-align: center;
-	cursor: pointer;
-	vertical-align: middle;
-  }
+    .media_controls {
+      font-family: Arial, Helvetica, sans-serif;
+      width: 160px;
+      padding: 4px;
+      margin: 2px;
+      color: black;
+      display: inline-block;
+    }
 
-  .media_buttons_enabled {
- 	background-color:red;
-  }
-  .main {
-  	background:#222;
-  }
-  #toolbar {
-	  white-space: nowrap;
-  }
+    .media_buttons {
+      width: 60px;
+      padding: 2px;
+      margin: 2px;
+      background-color: grey;
+      color: black;
+      display: inline-block;
+      text-align: center;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+
+    .media_buttons_enabled {
+      background-color: red;
+    }
+
+    .main {
+      background: #222;
+    }
+
+    #toolbar {
+      white-space: nowrap;
+    }
   </style>
-</head>  
+</head>
 
 <body class="main">
   <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
-    <select class="agora_select" ng-model="cameraSelect" 
-            ng-options="x.name for x in cameraNames track by x.value" 
-            ng-change="changeSelectedCamera()">
+    <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
+      ng-change="changeSelectedCamera()">
       <option value="" disabled select>Select a Camera</option>
     </select>
 
-    <select class="agora_select" class="agora-select" ng-model="microphoneSelect" 
-            ng-options="x.name for x in microphoneNames track by x.value" 
-            ng-change="changeSelectedMicrophone()">
+    <select class="agora_select" class="agora-select" ng-model="microphoneSelect"
+      ng-options="x.name for x in microphoneNames track by x.value" ng-change="changeSelectedMicrophone()">
       <option value="" disabled select>Select a Microphone</option>
     </select>
 
-       <div class="media_controls">
-		<div onclick="toggleCam()" id="cam_mute" class="media_buttons" >Camera</div>
-                <div onclick="toggleMic()" id="mic_mute" class="media_buttons" >Mic</div>
+    <div class="media_controls">
+      <div onclick="toggleCam()" id="cam_mute" class="media_buttons">Camera</div>
+      <div onclick="toggleMic()" id="mic_mute" class="media_buttons">Mic</div>
+      <!--div  id="mic_mute" class="media_buttons">Mic</div-->
 
-      </div>
+    </div>
     <div id="renderFrameRate" class="agora_stats"> </div>
   </div>
 
