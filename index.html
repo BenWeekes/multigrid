@@ -6,6 +6,8 @@
   <title>Agora Mega Grid</title>
   <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
+  <script src="./sdk/AgoraRTM.js"></script>
+
   <style>
     ibody {
       min-height: 100%;
@@ -27,6 +29,28 @@
       width: 150px;
     }
 
+    .mic_talking{
+	     background-color: lime-green;
+    }
+    .local_video {
+    background-color: #004;
+    margin: 0px;
+    width: 40px;
+    height: 30px;
+    display: inline-block;
+	    /*
+	    background-color: #004;
+    margin: 0px;
+    padding: 2px;
+    width: 40px;
+    height: 30px;
+    display: inline-block;
+    margin: -10px;
+    margin-left: 0px;
+    margin-right: -6px;
+	    */
+    }
+
     .remote_video {
       background-color: #000;
       margin: 2px;
@@ -37,13 +61,7 @@
     }
 
     .agora_stats {
-      font-family: Arial, Helvetica, sans-serif;
-      width: 120px;
-      padding: 4px;
-      margin: 2px;
-      background-color: grey;
-      color: black;
-      display: inline-block;
+      width: 140px !important;;
     }
 
     .media_controls {
@@ -93,15 +111,15 @@
       <option value="" disabled select>Select a Microphone</option>
     </select>
 
+      <div  onclick="toggleCam()" id="local-player" class="local_video"></div>
     <div class="media_controls">
-      <div onclick="toggleCam()" id="cam_mute" class="media_buttons">Camera</div>
+      <!--div onclick="toggleCam()" id="cam_mute" class="media_buttons">Camera</div-->
       <div onclick="toggleMic()" id="mic_mute" class="media_buttons">Mic</div>
-      <div id="local-player" class="player"></div>
       
+    <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
 
     </div>
-    <div id="renderFrameRate" class="agora_stats"> </div>
   </div>
 
 
-  <script src="./app.js?s=jikkgggg"></script>
+  <script src="./app.js?s=rrrr"></script>

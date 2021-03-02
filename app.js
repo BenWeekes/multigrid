@@ -14,7 +14,7 @@ class AgoraMultiChanelApp {
     // 1 Client corresponds to 1 channel so 4 clients
     this.maxClients = 4;
     this.maxUsersPerChannel = 16;
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || 64;
+    this.maxVideoTiles = getParameterByName("maxVideoTiles") || 16;
     this.numVideoTiles = 0;
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
     this.videoSubscriptions = {};
@@ -25,7 +25,7 @@ class AgoraMultiChanelApp {
     this.VIDEO = "video";
     this.AUDIO = "audio";
     this.MinFPSToIncreaseSubs = 23;
-    this.MaxFPSToDecreaseSubs = 20;
+    this.MaxFPSToDecreaseSubs = 10;
     this.NumRenderExceed = 0;
 
     // We'll keep track of one client object per Agora channel to join.
@@ -40,9 +40,46 @@ class AgoraMultiChanelApp {
     this.localVideoTrack = null;
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
+    this.rtmClient;
+    this.rtmUid;
+    this.rtmChannelName;
+    this.rtmChannel;
 
     this.createClients();
     this.joinChannels();
+  }
+
+  initRTM() {
+
+	  this.rtmClient = AgoraRTM.createInstance(this.appId);
+	  this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
+  		console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
+	  });
+
+	  this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
+  		console.log('AgoraRTM client login success');
+
+	  this.rtmChannel =  this.rtmClient.createChannel(this.rtmChannelName);
+	   this.rtmChannel.join().then(() => {
+  		console.log('AgoraRTM client join success');
+
+	  this.rtmChannel.sendMessage.on('ChannelMessage', ({ text }, senderId) => { // text: text of the received channel message; senderId: user ID of the sender.
+/* Your code for handling events, such as receiving a channel message. */
+		 console.log("GOT ONE "+text+" "+senderId );
+});
+	  this.rtmChannel.sendMessage({ text: 'test channel message' }).then(() => {
+  		console.log('AgoraRTM client send success');
+		}).catch(error => {
+  		console.log('AgoraRTM client send failure');
+		});
+
+		}).catch(error => {
+  		console.log('AgoraRTM client join failure', error);
+		});
+		}).catch(error => {
+  		console.log('AgoraRTM client login failure', error);
+	  });
+
   }
 
   createClients() {
@@ -123,7 +160,7 @@ class AgoraMultiChanelApp {
       this.NumRenderExceed = 0;
       this.increaseSubs();
       this.updateUILayout();
-    } else if (this.NumRenderExceed <= -3) {
+    } else if (this.NumRenderExceed <= -5) {
       this.NumRenderExceed = 0;
       this.reduceSubs();
       this.updateUILayout();
@@ -150,8 +187,12 @@ class AgoraMultiChanelApp {
   showMicInput() {
     if (this.localAudioTrack) {
       var audioLevel = Math.floor(this.getInputLevel(this.localAudioTrack));
-      document.getElementById("remic_mutenderFrameRate").innerHTML = "Mic " + audioLevel;
-    }
+      if (audioLevel > 0) {
+        document.getElementById("mic_mute").classList.add("mic_talking");
+      } else {
+    	document.getElementById("mic_mute").classList.remove("mic_talking");
+      }
+   }
   }
 
   dictionaryLength(dict) {
@@ -178,34 +219,29 @@ class AgoraMultiChanelApp {
     return subkeys[subkeys.length - 1];
   }
 
-
   increaseSubs() {
     // Add 1 audio and 1 video sub if available
     // Do we have audio pubs for unfilled audio subs?
     // Do we have video pubs for unfilled video subs?
     //dictionaryLength(this.videoSubscriptions);
 
-    var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
-    if (uid) {
-      var client = this.videoPublishers[uid];
-      this.addSubscription(client, this.userMap[uid], this.VIDEO);
+    if (this.dictionaryLength(this.videoSubscriptions)<this.maxVideoTiles ) {
+	    var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
+	    if (uid) {
+	      var client = this.videoPublishers[uid];
+	      this.addSubscription(client, this.userMap[uid], this.VIDEO);
+	    }
     }
 
+    if (this.dictionaryLength(this.audioSubscriptions)<this.maxAudioSubscriptions ) {
+    	var uid = this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
+	    if (uid) {
+	      var client = this.audioPublishers[uid];
+	      this.addSubscription(client, this.userMap[uid], this.AUDIO);
+	    }
 
-    uid = this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
-    if (uid) {
-      var client = this.audioPublishers[uid];
-      this.addSubscription(client, this.userMap[uid], this.AUDIO);
     }
 
-    // video pubs which are not subs
-    //if (this.numVideoTiles < this.maxVideoTiles && !document.getElementById(user.uid.toString())) {
-
-    // Ensure the video subs match the audio subs 
-
-    // this.maxVideoTiles = getParameterByName("maxVideoTiles") || 4;
-    // this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
-    // this.numVideoTiles < this.maxVideoTiles && 
   }
 
   async addSubscription(client, user, mediaType) {
@@ -295,6 +331,13 @@ class AgoraMultiChanelApp {
       // We'll use this to track channel state.
       // this.channels[i] = { name: tempChannelName, users: [], videoSubscriptions: [], audioSubscriptions: [] };
     }
+
+    // we will use the last channel name and UID to join RTM for send/receive VAD messages
+
+    this.rtmChannelName=tempChannelName;
+    this.rtmUid=tempUid.toString();
+    this.initRTM();
+
     this.numChannels = i;
   }
 
@@ -320,7 +363,7 @@ class AgoraMultiChanelApp {
       console.log(err);
     })
 
-    this.clients[publishToIndex].setLowStreamParameter({ birate: 200, framerate: 30, height: 180, width: 320 });
+    this.clients[publishToIndex].setLowStreamParameter({ bitrate: 200, framerate: 30, height: 180, width: 320 });
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
     document.getElementById("cam_mute").classList.add("media_buttons_enabled");
@@ -387,6 +430,11 @@ class AgoraMultiChanelApp {
         for (var k = 0; k < rvskeys.length; k++) {
           if (rvs[rvskeys[k]]["renderFrameRate"]) {
             var rfr = rvs[rvskeys[k]]["renderFrameRate"];
+            var dfr = rvs[rvskeys[k]]["decodeFrameRate"];
+	
+		 if (rfr!=dfr)
+		  	console.error(" render "+rfr+"/"+dfr);
+
             renderFrameRateSum = renderFrameRateSum + rfr;
             if (rfr < renderFrameRateMin) {
               renderFrameRateMin = rfr;
@@ -394,8 +442,11 @@ class AgoraMultiChanelApp {
             renderFrameRateCount++;
           } else {
             var kko = rvs[rvskeys[k]];
-            console.log("NANNY " + rvskeys[k] + " ");
+            //console.log("NANNY " + rvskeys[k] + " ");
           }
+
+	//console.warn("Logging stats for "+ rvskeys[k]);
+	//console.warn(rvs[rvskeys[k]]);	
         }
       }
     }
