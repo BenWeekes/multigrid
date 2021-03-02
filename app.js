@@ -51,36 +51,39 @@ class AgoraMultiChanelApp {
 
   initRTM() {
 
-	  this.rtmClient = AgoraRTM.createInstance(this.appId);
-	  this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
-  		console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
-	  });
+    this.rtmClient = AgoraRTM.createInstance(this.appId);
+    this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
+      console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
+    });
 
-	  this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
-  		console.log('AgoraRTM client login success');
+    this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
+      console.log('AgoraRTM client login success');
 
-	  this.rtmChannel =  this.rtmClient.createChannel(this.rtmChannelName);
-	   this.rtmChannel.join().then(() => {
-  		console.log('AgoraRTM client join success');
+      this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
 
-	  this.rtmChannel.sendMessage.on('ChannelMessage', ({ text }, senderId) => { // text: text of the received channel message; senderId: user ID of the sender.
-/* Your code for handling events, such as receiving a channel message. */
-		 console.log("GOT ONE "+text+" "+senderId );
-});
-	  this.rtmChannel.sendMessage({ text: 'test channel message' }).then(() => {
-  		console.log('AgoraRTM client send success');
-		}).catch(error => {
-  		console.log('AgoraRTM client send failure');
-		});
-
-		}).catch(error => {
-  		console.log('AgoraRTM client join failure', error);
-		});
-		}).catch(error => {
-  		console.log('AgoraRTM client login failure', error);
-	  });
+      this.rtmChannel.join().then(() => {
+        console.log('AgoraRTM client join success');
+        this.rtmChannel.sendMessage.on('ChannelMessage', ({ text }, senderId) => { // text: text of the received channel message; senderId: user ID of the sender.
+          /* Your code for handling events, such as receiving a channel message. */
+          console.log("RTM Msg " + text + " " + senderId);
+        });
+      }).catch(error => {
+        console.log('AgoraRTM client join failure', error);
+      });
+    }).catch(error => {
+      console.log('AgoraRTM client login failure', error);
+    });
 
   }
+
+  /*
+          this.rtmChannel.sendMessage({ text: 'test channel message' }).then(() => {
+          console.log('AgoraRTM client send success');
+        }).catch(error => {
+          console.log('AgoraRTM client send failure');
+        });
+  */
+
 
   createClients() {
     let i = 0;
@@ -190,9 +193,9 @@ class AgoraMultiChanelApp {
       if (audioLevel > 0) {
         document.getElementById("mic_mute").classList.add("mic_talking");
       } else {
-    	document.getElementById("mic_mute").classList.remove("mic_talking");
+        document.getElementById("mic_mute").classList.remove("mic_talking");
       }
-   }
+    }
   }
 
   dictionaryLength(dict) {
@@ -225,20 +228,20 @@ class AgoraMultiChanelApp {
     // Do we have video pubs for unfilled video subs?
     //dictionaryLength(this.videoSubscriptions);
 
-    if (this.dictionaryLength(this.videoSubscriptions)<this.maxVideoTiles ) {
-	    var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
-	    if (uid) {
-	      var client = this.videoPublishers[uid];
-	      this.addSubscription(client, this.userMap[uid], this.VIDEO);
-	    }
+    if (this.dictionaryLength(this.videoSubscriptions) < this.maxVideoTiles) {
+      var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
+      if (uid) {
+        var client = this.videoPublishers[uid];
+        this.addSubscription(client, this.userMap[uid], this.VIDEO);
+      }
     }
 
-    if (this.dictionaryLength(this.audioSubscriptions)<this.maxAudioSubscriptions ) {
-    	var uid = this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
-	    if (uid) {
-	      var client = this.audioPublishers[uid];
-	      this.addSubscription(client, this.userMap[uid], this.AUDIO);
-	    }
+    if (this.dictionaryLength(this.audioSubscriptions) < this.maxAudioSubscriptions) {
+      var uid = this.getPubWhereNoSub(this.audioPublishers, this.audioSubscriptions);
+      if (uid) {
+        var client = this.audioPublishers[uid];
+        this.addSubscription(client, this.userMap[uid], this.AUDIO);
+      }
 
     }
 
@@ -334,8 +337,8 @@ class AgoraMultiChanelApp {
 
     // we will use the last channel name and UID to join RTM for send/receive VAD messages
 
-    this.rtmChannelName=tempChannelName;
-    this.rtmUid=tempUid.toString();
+    this.rtmChannelName = tempChannelName;
+    this.rtmUid = tempUid.toString();
     this.initRTM();
 
     this.numChannels = i;
@@ -367,7 +370,7 @@ class AgoraMultiChanelApp {
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
     document.getElementById("cam_mute").classList.add("media_buttons_enabled");
-    
+
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
 
   }
@@ -431,9 +434,9 @@ class AgoraMultiChanelApp {
           if (rvs[rvskeys[k]]["renderFrameRate"]) {
             var rfr = rvs[rvskeys[k]]["renderFrameRate"];
             var dfr = rvs[rvskeys[k]]["decodeFrameRate"];
-	
-		 if (rfr!=dfr)
-		  	console.error(" render "+rfr+"/"+dfr);
+
+            if (rfr != dfr)
+              console.error(" render " + rfr + "/" + dfr);
 
             renderFrameRateSum = renderFrameRateSum + rfr;
             if (rfr < renderFrameRateMin) {
@@ -445,8 +448,8 @@ class AgoraMultiChanelApp {
             //console.log("NANNY " + rvskeys[k] + " ");
           }
 
-	//console.warn("Logging stats for "+ rvskeys[k]);
-	//console.warn(rvs[rvskeys[k]]);	
+          //console.warn("Logging stats for "+ rvskeys[k]);
+          //console.warn(rvs[rvskeys[k]]);	
         }
       }
     }
@@ -465,7 +468,7 @@ class AgoraMultiChanelApp {
     //console.log(" updateUILayout ");
     var body = document.body, html = document.documentElement;
     var height = window.innerHeight;
-    var width = window.innerWidth; 
+    var width = window.innerWidth;
 
     var cells = document.getElementsByClassName('remote_video');
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
