@@ -18,11 +18,13 @@ class AgoraMultiChanelApp {
     // Page Parameters
     this.appId = getParameterByName("appid") || "20b7c51ff4c644ab80cf5a4e646b0537";
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || 16;
+    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 6 : 64);
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
 
     this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 0;
     this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
+    this.allowedVideoSubs=this.minVideoAllowedSubs;
+    this.allowedAudioSubs=this.minAudioAllowedSubs;
 
     this.token = null;
     // Each agora client connects to one Agora channel
@@ -59,6 +61,7 @@ class AgoraMultiChanelApp {
     this.localVideoTrack = null;
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
+
 
     // RTM
     this.rtmClient;
@@ -102,13 +105,15 @@ class AgoraMultiChanelApp {
 
       this.clients[i].on("user-published", async (user, mediaType) => {
         var uid_string = user.uid.toString();
+	console.error(" adding user "+uid_string);
         this.userMap[uid_string] = user;
 
         if (mediaType === this.VIDEO) {
           this.videoPublishers[uid_string] = currentClient;
+          delete this.videoSubscriptions[uid_string];
   
           // check not already in the priority array
-          this.removeUidFromArray(videoPublishersByPriority, uid_string);
+          this.removeUidFromArray(this.videoPublishersByPriority, uid_string);
           // new publishers go on the end of the list in terms of page priority 
           // audio priority will influence video priority but remote users may not be publishing any audio
   
@@ -121,8 +126,9 @@ class AgoraMultiChanelApp {
         }
         else if (mediaType === this.AUDIO) {
           this.audioPublishers[uid_string] = currentClient;
-          // check not already in the priority array
-          this.removeUidFromArray(audioPublishersByPriority, uid_string);
+          delete this.audioSubscriptions[uid_string];
+          // check not  already in the priority array
+          this.removeUidFromArray(this.audioPublishersByPriority, uid_string);
           // default order will be chronological but this will be rearranged using the VAD
           this.audioPublishersByPriority.push(uid_string);
         }
@@ -132,15 +138,49 @@ class AgoraMultiChanelApp {
 
       // unpublished is called when users mute. Best not to remove them from UI completely
       this.clients[i].on("user-unpublished", async (user, mediaType) => {
+        var uid_string = user.uid.toString();
+	console.warn("user-unpublished "+uid_string);
+        if (mediaType === this.VIDEO) {
+          delete this.videoPublishers[uid_string];
+          delete this.videoSubscriptions[uid_string];
+          this.removeUidFromArray(this.videoPublishersByPriority, uid_string);
+        }
+        else if (mediaType === this.AUDIO) {
+          delete this.audioPublishers[uid_string];
+          delete this.audioSubscriptions[uid_string];
+          this.removeUidFromArray(this.audioPublishersByPriority, uid_string);
+        }
+      });
+
+      // unpublished is called when users mute. Best not to remove them from UI completely
+      this.clients[i].on("stream-published", async (user, mediaType) => {
+ 	 var uid_string = user.uid.toString();
+	 console.error("stream-published "+uid_string);
         if (mediaType === this.VIDEO) {
           delete this.videoPublishers[user.uid.toString()];
           delete this.videoSubscriptions[user.uid.toString()];
-          this.removeUidFromArray(videoPublishersByPriority, user.uid.toString());
+          this.removeUidFromArray(this.videoPublishersByPriority, user.uid.toString());
         }
         else if (mediaType === this.AUDIO) {
           delete this.audioPublishers[user.uid.toString()];
           delete this.audioSubscriptions[user.uid.toString()];
-          this.removeUidFromArray(audioPublishersByPriority, user.uid.toString());
+          this.removeUidFromArray(this.audioPublishersByPriority, user.uid.toString());
+        }
+      });
+
+      // unpublished is called when users mute. Best not to remove them from UI completely
+      this.clients[i].on("stream-updated", async (user, mediaType) => {
+ 	 var uid_string = user.uid.toString();
+	 console.error("stream-updated "+uid_string);
+        if (mediaType === this.VIDEO) {
+          delete this.videoPublishers[user.uid.toString()];
+          delete this.videoSubscriptions[user.uid.toString()];
+          this.removeUidFromArray(this.videoPublishersByPriority, user.uid.toString());
+        }
+        else if (mediaType === this.AUDIO) {
+          delete this.audioPublishers[user.uid.toString()];
+          delete this.audioSubscriptions[user.uid.toString()];
+          this.removeUidFromArray(this.audioPublishersByPriority, user.uid.toString());
         }
       });
 
@@ -150,8 +190,8 @@ class AgoraMultiChanelApp {
           delete this.videoSubscriptions[user.uid.toString()];
           delete this.audioPublishers[user.uid.toString()];
           delete this.audioSubscriptions[user.uid.toString()];
-          this.removeUidFromArray(audioPublishersByPriority, user.uid.toString());
-          this.removeUidFromArray(videoPublishersByPriority, user.uid.toString());
+          this.removeUidFromArray(this.audioPublishersByPriority, user.uid.toString());
+          this.removeUidFromArray(this.videoPublishersByPriority, user.uid.toString());
         });
     }
     this.numClients = i;
@@ -159,23 +199,23 @@ class AgoraMultiChanelApp {
 
   monitorStatistics() {
     // check real time call stats and increase, hold or decrease the number of audio/video subscriptions
+
     var renderFrameRate = this.getAverageRenderFrameRate();
-    if (renderFrameRate > this.MinFPSToIncreaseSubs) {
+    if ( renderFrameRate > this.MinFPSToIncreaseSubs) {
       this.NumRenderExceed++;
     }
-    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate < this.MaxFPSToDecreaseSubs) {
+    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate>=0 && renderFrameRate < this.MaxFPSToDecreaseSubs) {
       this.NumRenderExceed--;
     }
 
-    if (this.NumRenderExceed >= 3) {
+    if (this.NumRenderExceed >= 3 || this.dictionaryLength(this.videoSubscriptions) == 0 ) {
       this.NumRenderExceed = 0;
       if (this.allowedVideoSubs < this.maxVideoTiles) {
-        this.allowedVideoSubs++;
+	this.allowedVideoSubs=this.dictionaryLength(this.videoSubscriptions)+1;
       }
-      if (this.allowedAudioSubs < this.maxAudioSubscriptions) {
-        this.allowedAudioSubs++;
+      if (this.allowedAudioSubs < this.maxAudioSubscriptions && (this.dictionaryLength(this.audioSubscriptions)+1)>this.allowedAudioSubs) {
+        this.allowedAudioSubs=this.dictionaryLength(this.audioSubscriptions)+1;
       }
-
     } else if (this.NumRenderExceed <= -5) {
       this.NumRenderExceed = 0;
       if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
@@ -185,22 +225,14 @@ class AgoraMultiChanelApp {
         this.allowedAudioSubs--;
       }
     }
+
+    //console.log("renderFrameRate "+renderFrameRate+" this.allowedAudioSubs "+this.allowedAudioSubs+" this.allowedVideoSubs "+this.allowedVideoSubs);
     this.voiceActivityDetection();
     this.manageGrid();
   }
 
   dictionaryLength(dict) {
     return Object.keys(dict).length
-  }
-
-  getAnySub(subs) {
-    var subkeys = Object.keys(subs);
-    return subkeys[0];
-  }
-
-  getLastSub(subs) {
-    var subkeys = Object.keys(subs);
-    return subkeys[subkeys.length - 1];
   }
 
   manageGrid() {
@@ -222,23 +254,23 @@ class AgoraMultiChanelApp {
 
     // video slots
     var expectedVideoSlots = {};
-    for (v = 0; v < numVideoSlots; v++) {
+    for (var v = 0; v < numVideoSlots; v++) {
       // any slots not present add
-      addVideoSlotIfNotExisting(this.videoPublishersByPriority[v]);
+      this.addVideoSlotIfNotExisting(this.videoPublishersByPriority[v]);
       // remove any slots present which should not be  
       expectedVideoSlots[this.videoPublishersByPriority[v]] = this.videoPublishersByPriority[v];
     }
-    removeSlotsIfNotInMap(expectedVideoSlots);
+    this.removeSlotsIfNotInMap(expectedVideoSlots);
 
     // video subs
     var expectedVideoSubs = {};
-    for (v = 0; v < numVideoSubs; v++) {
+    for (var v = 0; v < numVideoSubs; v++) {
       // any slots not present add
-      addVideoSubIfNotExisting(this.videoPublishersByPriority[v]);
+      this.addVideoSubIfNotExisting(this.videoPublishersByPriority[v]);
       // remove any slots present which should not be  
       expectedVideoSubs[this.videoPublishersByPriority[v]] = this.videoPublishersByPriority[v];
     }
-    removeVideoSubsIfNotInMap(expectedVideoSubs);
+    this.removeVideoSubsIfNotInMap(expectedVideoSubs);
 
     // ** Audio ** 
     // numSlots is the smaller of maxAudioSubscriptions (6) and audioPublishersByPriority
@@ -250,54 +282,62 @@ class AgoraMultiChanelApp {
     // audio slots 
     // audio subs
     var expectedAudioSubs = {};
-    for (v = 0; v < numAudioSubs; v++) {
+    for (var v = 0; v < numAudioSubs; v++) {
       // any slots not present add
-      addAudioSubIfNotExisting(this.audioPublishersByPriority[v]);
+      this.addAudioSubIfNotExisting(this.audioPublishersByPriority[v]);
       // remove any slots present which should not be  
       expectedAudioSubs[this.audioPublishersByPriority[v]] = this.audioPublishersByPriority[v];
     }
-    removeAudioSubsIfNotInMap(expectedAudioSubs);
+    //this.removeAudioSubsIfNotInMap(expectedAudioSubs);
     this.updateUILayout();
   }
 
   removeAudioSubsIfNotInMap(expected) {
-    Object.keys(this.audioSubscriptions).forEach(function (key) {
+	var that=this;
+    Object.keys(this.audioSubscriptions).forEach(async function (key) {
       if (!expected[key]) {
-        var user = this.userMap[key];
-        var client = this.audioPublishers[key];
-        await client.unsubscribe(user, this.AUDIO);
-        delete this.audioSubscriptions[key];
+        var user = that.userMap[key];
+        var client = that.audioPublishers[key];
+        await client.unsubscribe(user, that.AUDIO);
+        delete that.audioSubscriptions[key];
+	console.warn(" UNsubscribed to Audio "+uid_string);
       }
     });
   }
 
-  addAudioSubIfNotExisting(uid_string) {
+ async addAudioSubIfNotExisting(uid_string) {
     if (this.audioSubscriptions[uid_string]) {
+	 //   console.warn(" already subscribed to Audio "+uid_string);
       return;
     }
     var user = this.userMap[uid_string];
     var client = this.audioPublishers[uid_string];
     await client.subscribe(user, this.AUDIO);
+	    console.warn(" subscribed to Audio "+uid_string);
     this.audioSubscriptions[uid_string] = client;
     user.audioTrack.play();
   }
 
-  removeVideoSubsIfNotInMap(expected) {
-    Object.keys(this.videoSubscriptions).forEach(function (key) {
+  async removeVideoSubsIfNotInMap(expected) {
+	var that=this;
+    Object.keys(this.videoSubscriptions).forEach(async function (key) {
       if (!expected[key]) {
-        var user = this.userMap[key];
-        var client = this.videoPublishers[key];
-        await client.unsubscribe(user, this.VIDEO);
-        delete this.videoSubscriptions[key];
+        var user = that.userMap[key];
+        var client = that.videoPublishers[key];
+        await client.unsubscribe(user, that.VIDEO);
+        delete that.videoSubscriptions[key];
       }
     });
   }
 
-  addVideoSubIfNotExisting(uid_string) {
+ async addVideoSubIfNotExisting(uid_string) {
     if (this.videoSubscriptions[uid_string]) {
       return;
     }
     var user = this.userMap[uid_string];
+     if (!user) {
+	     console.error("No USER "+uid_string);
+     }
     var client = this.videoPublishers[uid_string];
     this.videoSubscriptions[uid_string] = client;
     await client.subscribe(user, this.VIDEO);
@@ -311,8 +351,10 @@ class AgoraMultiChanelApp {
 
   removeSlotsIfNotInMap(expected) {
     var els = document.getElementsByClassName("remote_video");
+    var that=this;
     Array.prototype.forEach.call(els, function (el) {
       if (!expected[el.id]) {
+	that.numVideoTiles--;
         el.remove();
       }
     });
@@ -324,18 +366,20 @@ class AgoraMultiChanelApp {
       playerDomDiv.id = uid_string;
       playerDomDiv.className = "remote_video";
       // click to expand and subscribe to high quality
+      var that=this;
       playerDomDiv.onclick = function () {
         if (!document.fullscreenElement) {
           document.getElementById(uid_string).requestFullscreen();
-          client.setRemoteVideoStreamType(this.userMap[uid_string].uid, 0);
+          client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 0);
         } else {
           if (document.exitFullscreen) {
             document.exitFullscreen();
-            client.setRemoteVideoStreamType(this.userMap[uid_string].uid, 1);
+            client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 1);
           }
         }
       };
       document.body.append(playerDomDiv);
+      this.numVideoTiles++;
     }
   }
 
@@ -349,7 +393,7 @@ class AgoraMultiChanelApp {
   }
 
   promoteUidToFrontOfArrayIfPresent(array_, uid) {
-    if (removeUidFromArray(array_, uid)) {
+    if (this.removeUidFromArray(array_, uid)) {
       array_.unshift(uid);
     }
   }
@@ -378,7 +422,7 @@ class AgoraMultiChanelApp {
     if (text.startsWith(this.VAD)) {
       var vadUid = text.split(":")[1];
       console.log("VAD" + senderId + " vadUid= " + vadUid);
-      if (this.vadUid) {
+      if (this.vadUid && document.getElementById(this.vadUid)) {
         document.getElementById(this.vadUid).classList.remove("remote_video_active");
       }
 
@@ -442,7 +486,7 @@ class AgoraMultiChanelApp {
       if ((Date.now() - this.vadSend) > this.vadSendWait) {
         this.vadSend = Date.now();
         this.rtmChannel.sendMessage({ text: 'VAD:' + this.myUid[this.myPublishClient] }).then(() => {
-          if (this.vadUid) {
+          if (this.vadUid && document.getElementById(this.vadUid)) {
             document.getElementById(this.vadUid).classList.remove("remote_video_active");
           }
           console.log('AgoraRTM VAD send success VAD:' + this.myUid[this.myPublishClient]);
@@ -506,7 +550,7 @@ class AgoraMultiChanelApp {
     this.clients[publishToIndex].setLowStreamParameter({ bitrate: 200, framerate: 30, height: 180, width: 320 });
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
-    //document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
   }
 
@@ -561,7 +605,8 @@ class AgoraMultiChanelApp {
   getAverageRenderFrameRate() {
     var renderFrameRateSum = 0;
     var renderFrameRateAvg = 0;
-    var renderFrameRateMin = 100;
+    var renderFrameRateMinStart = 10000;
+    var renderFrameRateMin = renderFrameRateMinStart;
     var renderFrameRateCount = 0;
     for (var i = 0; i < this.numClients; i++) {
       var client = this.clients[i];
@@ -597,7 +642,10 @@ class AgoraMultiChanelApp {
     document.getElementById("renderFrameRate").innerHTML = "Avg " + renderFrameRateAvg + " Min " + renderFrameRateMin;
     //console.log("avg renderFrameRate " + renderFrameRate);
     if (!renderFrameRateAvg) {
-      console.log("NAN renderFrameRateAvg " + renderFrameRateAvg);
+      //console.log("NAN renderFrameRateAvg " + renderFrameRateAvg);
+    }
+    if (renderFrameRateMin==renderFrameRateMinStart) {
+	    return -1;
     }
     return renderFrameRateMin;
   }
@@ -649,11 +697,11 @@ function toggleCam() {
   }
   if (agoraApp.localVideoTrack._enabled) {
     agoraApp.localVideoTrack.setEnabled(false);
-    //document.getElementById("cam_mute").classList.remove("media_buttons_enabled");
+    document.getElementById("cam_mute").classList.remove("media_buttons_enabled");
   }
   else {
     agoraApp.localVideoTrack.setEnabled(true);
-    //document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
   }
 }
 
@@ -753,6 +801,10 @@ function getParameterByName(name, url = window.location.href) {
 
 function resizeGrid() {
   agoraApp.updateUILayout();
+}
+
+function isMobile() {
+	return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 }
 
 window.addEventListener('resize', resizeGrid);
