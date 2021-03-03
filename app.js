@@ -378,7 +378,7 @@ class AgoraMultiChanelApp {
           }
         }
       };
-      document.body.append(playerDomDiv);
+      document.getElementById("grid").append(playerDomDiv);
       this.numVideoTiles++;
     }
   }
@@ -687,12 +687,14 @@ class AgoraMultiChanelApp {
       document.getElementById(this.vadUid).classList.add("remote_video_active");
     }
   }
-
 }
 
 function toggleCam() {
   if (!agoraApp.localVideoTrack) {
-    alert("Please select a camera from the list");
+
+    let targetClientIndex = agoraApp.getFirstOpenChannel();
+    agoraApp.publishVideoToChannel(null, targetClientIndex);
+    //alert("Please select a camera from the list");
     return;
   }
   if (agoraApp.localVideoTrack._enabled) {
@@ -707,7 +709,8 @@ function toggleCam() {
 
 function toggleMic() {
   if (!agoraApp.localAudioTrack) {
-    alert("Please select a mic from the list");
+    let targetClientIndex = agoraApp.getFirstOpenChannel();
+    agoraApp.publishAudioToChannel(null, targetClientIndex);
     return;
   }
 

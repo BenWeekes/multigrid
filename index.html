@@ -35,7 +35,7 @@
       background-color: lime-green;
     }
 
-    .local_video {
+    .local_videoOld {
       idisplay:none;
       display: inline-block;
       background-color: #004;
@@ -43,6 +43,21 @@
       width: 160px;
       height: 90px;
     }
+
+
+    .local_video {
+      background-color: #000;
+      margin: 2px;
+      padding: 2px;
+      width: 120px;
+      height: 90px;
+      display: inline-block;
+    }
+
+    .hidden {
+      display: hidden !important;
+    }
+    
 
     .remote_video {
       background-color: #000;
@@ -143,7 +158,7 @@
        <img src='img/_video-512.png' onclick="toggleCam()" id="cam_mute" class="mic_icon"/>
      </div>
 
-    <div id="control_container">
+    <div id="control_container hidden">
      <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
        ng-change="changeSelectedCamera()">
        <option value="" disabled select>Select a Camera</option>
@@ -154,10 +169,19 @@
      </select>
     </div>
 
-    <div id="control_container2">
+    <div id="control_container2 hidden">
      <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
     </div>
 
   </div>
+
+  <div id="grid">
+    <div onclick="toggleCam()" id="local-player" class="local_video hidden"></div>
+
+
+
+  </div>
+
+
 </body>
   <script src="./app.js?s=ihandoiiiiissiiiiiiiiswiddddjj"></script>
