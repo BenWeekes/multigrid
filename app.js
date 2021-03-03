@@ -22,6 +22,7 @@ class AgoraMultiChanelApp {
     this.videoPublishers = {};
     this.audioPublishers = {};
     this.userMap = {};
+    this.VAD = "VAD";
     this.VIDEO = "video";
     this.AUDIO = "audio";
     this.MinFPSToIncreaseSubs = 23;
@@ -30,6 +31,8 @@ class AgoraMultiChanelApp {
 
     // We'll keep track of one client object per Agora channel to join.
     this.clients = [];
+    this.myUid = [];
+    this.myPublishClient;
     this.numClients = 0;
     // We'll track channel state (i.e. remote users).
     //this.channels = [];
@@ -54,7 +57,10 @@ class AgoraMultiChanelApp {
     this.audioSamplesArr = [];
     this.audioSamplesArrSorted = [];
     this.exceedCount = 0;
-    this.exceedCountThreshold = 4;
+    this.exceedCountThreshold = 2;
+    this.vadUid;
+    this.vadSend=0;
+    this.vadSendWait=2*1000;
 
     this.createClients();
     this.joinChannels();
@@ -165,7 +171,7 @@ class AgoraMultiChanelApp {
       this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
       this.rtmChannel.join().then(() => {
         this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => {
-          this.handleRTM(senderId, test);
+          this.handleRTM(senderId, text);
         });
       }).catch(error => {
         console.log('AgoraRTM client join failure', error);
@@ -176,7 +182,17 @@ class AgoraMultiChanelApp {
   }
 
   handleRTM(senderId, text) {
-    console.log(" " + text + " " + senderId);
+    if (text.startsWith(this.VAD)) {
+	  var vadUid=text.split(":")[1];
+    	  console.log("VAD" + senderId+" vadUid= " +vadUid);
+	  if (this.vadUid) {
+	    document.getElementById(this.vadUid).classList.remove("remote_video_active");
+	  }
+	  if (document.getElementById(vadUid)) {
+	  	document.getElementById(vadUid).classList.add("remote_video_active");
+	  }
+	  this.vadUid=vadUid;
+    }
   }
 
   getInputLevel(track) {
@@ -195,7 +211,7 @@ class AgoraMultiChanelApp {
   }
 
   voiceActivityDetection() {
-    if (this.localAudioTrack) {
+    if (!this.localAudioTrack) {
       return;
     }
     var audioLevel = this.getInputLevel(this.localAudioTrack); //Math.floor(this.getInputLevel(this.localAudioTrack));
@@ -212,16 +228,29 @@ class AgoraMultiChanelApp {
       this.audioSamplesArrSorted.sort((a, b) => a - b);
     }
     var background = Math.floor(3 * this.audioSamplesArrSorted[Math.floor(this.audioSamplesArrSorted.length / 2)] / 2);
-    if (audioLevel > this.background + this.SilenceOffeset) {
-      exceedCount++;
+    if (audioLevel > background + this.SilenceOffeset) {
+      this.exceedCount++;
     } else {
-      exceedCount = 0;
+      this.exceedCount = 0;
     }
 
-    if (exceedCount > exceedCountThreshold) {
-      console.log("VOICE DETECTED");
+	//console.log("audioLevel "+audioLevel+" background  "+background+" this.SilenceOffeset "+this.SilenceOffeset);
+    if (this.exceedCount > this.exceedCountThreshold) {
+        this.exceedCount = 0;
+	    
+	if ((Date.now() - this.vadSend)>this.vadSendWait) {
+	  this.vadSend=Date.now();
+          this.rtmChannel.sendMessage({ text: 'VAD:'+this.myUid[this.myPublishClient]}).then(() => {
+	  if (this.vadUid) {
+	    document.getElementById(this.vadUid).classList.remove("remote_video_active");
+	  }
+          console.log('AgoraRTM VAD send success VAD:'+this.myUid[this.myPublishClient]);
+        }).catch(error => {
+          console.log('AgoraRTM VAD send failure');
+        });
+	}
     } else {
-      $('#vad').html("");
+	//console.log("this.exceedCount "+this.exceedCount+" this.exceedCountThreshold "+this.exceedCountThreshold);
     }
 
   }
@@ -340,14 +369,13 @@ class AgoraMultiChanelApp {
 
   // Publishing Local Streams
   async joinChannels() {
-    let tempUid = 0;
     let tempChannelName = "";
     let i = 0;
     // Join one channel for each client object.
     for (i; i < this.numClients; i++) {
       tempChannelName = this.baseChannelName + i.toString();
       console.log("### TRYING TO JOIN: " + tempChannelName + " ###");
-      tempUid = await this.clients[i].join(this.appId,
+      this.myUid[i] = await this.clients[i].join(this.appId,
         tempChannelName,
         this.token, null);
       console.log("### JOINED: " + tempChannelName + " ###");
@@ -358,9 +386,8 @@ class AgoraMultiChanelApp {
     // we will use the last channel name and UID to join RTM for send/receive VAD messages
 
     this.rtmChannelName = tempChannelName;
-    this.rtmUid = tempUid.toString();
+    this.rtmUid = this.myUid[i-1].toString();
     this.initRTM();
-
     this.numChannels = i;
   }
 
@@ -369,7 +396,6 @@ class AgoraMultiChanelApp {
     // If we're currently capturing, unpublish and stop the track.
     if (this.localVideoTrack != null) {
       console.log("### UNPUBLISHED VIDEO! ###");
-
       await this.clients[publishToIndex].unpublish(this.localVideoTrack);
       this.localVideoTrack.stop();
     }
@@ -389,7 +415,7 @@ class AgoraMultiChanelApp {
     this.clients[publishToIndex].setLowStreamParameter({ bitrate: 200, framerate: 30, height: 180, width: 320 });
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    //document.getElementById("cam_mute").classList.add("media_buttons_enabled");
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
   }
 
@@ -415,14 +441,20 @@ class AgoraMultiChanelApp {
   // Returns the index of the first client object with an open channel.
   getFirstOpenChannel() {
     let tempCount = 0;
-    //    for (let i = 0; i < this.channels.length; i++) {
+
+    if (this.myPublishClient) {
+	  return myPublishClient;
+    }
+	 
     for (var i = 0; i < this.numClients; i++) {
       tempCount = this.clients[i]._users.length;
       console.log("### CHECKING CHANNEL " + this.clients[i]._channelName +
         ", WHICH HAS " + tempCount +
         " USERS IN IT.");
-      if (tempCount < this.maxUsersPerChannel)
-        return (i);
+      if (tempCount < this.maxUsersPerChannel) {
+	      this.myPublishClient=i;
+              return this.myPublishClient;
+      }
     }
   }
 
@@ -525,11 +557,11 @@ function toggleCam() {
   }
   if (agoraApp.localVideoTrack._enabled) {
     agoraApp.localVideoTrack.setEnabled(false);
-    document.getElementById("cam_mute").classList.remove("media_buttons_enabled");
+    //document.getElementById("cam_mute").classList.remove("media_buttons_enabled");
   }
   else {
     agoraApp.localVideoTrack.setEnabled(true);
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    //document.getElementById("cam_mute").classList.add("media_buttons_enabled");
   }
 }
 
@@ -629,7 +661,7 @@ function getParameterByName(name, url = window.location.href) {
 }
 
 function resizeGrid() {
-  console.log("resize " + agoraApp.numClients);
+  //console.log("resize " + agoraApp.numClients);
   agoraApp.updateUILayout();
 }
 
