@@ -9,22 +9,41 @@
 class AgoraMultiChanelApp {
   //C'tor: initialize Agora and Angular.
   constructor() {
+
+    // String Constants
+    this.VAD = "VAD";
+    this.VIDEO = "video";
+    this.AUDIO = "audio";
+
+    // Page Parameters
     this.appId = getParameterByName("appid") || "20b7c51ff4c644ab80cf5a4e646b0537";
+    this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
+    this.maxVideoTiles = getParameterByName("maxVideoTiles") || 16;
+    this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
+
+    this.minVideoAllowedSubs= getParameterByName("minVideoAllowedSubs") || 0;
+    this.minAudioAllowedSubs= getParameterByName("minAudioAllowedSubs") || 3;
+  
     this.token = null;
-    // 1 Client corresponds to 1 channel so 4 clients
+    // Each agora client connects to one Agora channel
     this.maxClients = 4;
     this.maxUsersPerChannel = 16;
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || 16;
     this.numVideoTiles = 0;
-    this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
+
     this.videoSubscriptions = {};
     this.audioSubscriptions = {};
     this.videoPublishers = {};
     this.audioPublishers = {};
     this.userMap = {};
-    this.VAD = "VAD";
-    this.VIDEO = "video";
-    this.AUDIO = "audio";
+
+    // first in list is more imporant person 
+    this.videoPublishersByPriority = [];
+    this.audioPublishersByPriority = [];
+
+    // first in list corresponds to grid cell 0
+    this.videoSubscribersBySlot = []; // on screen
+    this.audioSubscribersBySlot = [];
+
     this.MinFPSToIncreaseSubs = 23;
     this.MaxFPSToDecreaseSubs = 10;
     this.NumRenderExceed = 0;
@@ -37,7 +56,6 @@ class AgoraMultiChanelApp {
     // We'll track channel state (i.e. remote users).
     //this.channels = [];
     this.numChannels = 0;
-    this.baseChannelName = "SA-MULTITEST";
     // Seperate video and audio tracks we can manage seperately.
     this.localAudioTrack = null;
     this.localVideoTrack = null;
@@ -59,8 +77,8 @@ class AgoraMultiChanelApp {
     this.exceedCount = 0;
     this.exceedCountThreshold = 2;
     this.vadUid;
-    this.vadSend=0;
-    this.vadSendWait=2*1000;
+    this.vadSend = 0;
+    this.vadSendWait = 2 * 1000;
 
     this.createClients();
     this.joinChannels();
@@ -97,27 +115,41 @@ class AgoraMultiChanelApp {
 
 
       this.clients[i].on("user-published", async (user, mediaType) => {
-        //this.channels[currentIndex].users[user.uid.toString()] = user;
-        this.userMap[user.uid.toString()] = user;
+        var uid_string = user.uid.toString();
+        this.userMap[uid_string] = user;
+
         if (mediaType === this.VIDEO) {
-          this.videoPublishers[user.uid.toString()] = currentClient;
+          this.videoPublishers[uid_string] = currentClient;
+          // new publishers go on the end in terms of priority 
+          // audio priority will influence video but remote users may not be publishing any audio
+          // TODO users may already be publishing audio and talking - hence need to g
+          var index = this.audioPublishersByPriority.indexOf(uid_string);
+          if (index > -1) {
+            this.videoPublishersByPriority.splice(index, 0, uid_string);
+          } else {
+            this.videoPublishersByPriority.push(uid_string);
+          }
         }
         else if (mediaType === this.AUDIO) {
-          this.audioPublishers[user.uid.toString()] = currentClient;
+          this.audioPublishers[uid_string] = currentClient;
+          // default order will be chronological but this will be rearranged using the VAD
+          this.audioPublishersByPriority.push(uid_string);
         }
 
       });
 
-      // and remote unpublish event.
-      // unpublished is called when users mute. Best not to remove them and instead 
+
+      // unpublished is called when users mute. Best not to remove them from UI completely
       this.clients[i].on("user-unpublished", async (user, mediaType) => {
         if (mediaType === this.VIDEO) {
           delete this.videoPublishers[user.uid.toString()];
           delete this.videoSubscriptions[user.uid.toString()];
+          this.removeUidFromArray(videoPublishersByPriority, user.uid.toString());
         }
         else if (mediaType === this.AUDIO) {
           delete this.audioPublishers[user.uid.toString()];
           delete this.audioSubscriptions[user.uid.toString()];
+          this.removeUidFromArray(audioPublishersByPriority, user.uid.toString());
         }
       });
 
@@ -135,12 +167,17 @@ class AgoraMultiChanelApp {
           delete this.videoSubscriptions[user.uid.toString()];
           delete this.audioPublishers[user.uid.toString()];
           delete this.audioSubscriptions[user.uid.toString()];
+
+          this.removeUidFromArray(audioPublishersByPriority, user.uid.toString());
+          this.removeUidFromArray(videoPublishersByPriority, user.uid.toString());
+
         });
     }
     this.numClients = i;
   }
 
-  handleSubscriptions() {
+  monitorStatistics() {
+    // check real time stats and increase, hold or decrease the number of audio/video subscriptions
     var renderFrameRate = this.getAverageRenderFrameRate();
     if (renderFrameRate > this.MinFPSToIncreaseSubs) {
       this.NumRenderExceed++;
@@ -149,111 +186,31 @@ class AgoraMultiChanelApp {
       this.NumRenderExceed--;
     }
 
-    if (this.NumRenderExceed >= 3 || this.dictionaryLength(this.videoSubscriptions) == 0) {
+    if (this.NumRenderExceed >= 3) {
+
       this.NumRenderExceed = 0;
-      this.increaseSubs();
-      this.updateUILayout();
+      if (this.allowedVideoSubs < this.maxVideoTiles) {
+        this.allowedVideoSubs++;
+      }
+      if (this.allowedAudioSubs < this.maxAudioSubscriptions) {
+        this.allowedAudioSubs++;
+      }
+
     } else if (this.NumRenderExceed <= -5) {
       this.NumRenderExceed = 0;
-      this.reduceSubs();
-      this.updateUILayout();
-    }
-    this.voiceActivityDetection();
-  }
-
-  initRTM() {
-    this.rtmClient = AgoraRTM.createInstance(this.appId);
-    this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
-      console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
-    });
-
-    this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
-      this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
-      this.rtmChannel.join().then(() => {
-        this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => {
-          this.handleRTM(senderId, text);
-        });
-      }).catch(error => {
-        console.log('AgoraRTM client join failure', error);
-      });
-    }).catch(error => {
-      console.log('AgoraRTM client login failure', error);
-    });
-  }
-
-  handleRTM(senderId, text) {
-    if (text.startsWith(this.VAD)) {
-	  var vadUid=text.split(":")[1];
-    	  console.log("VAD" + senderId+" vadUid= " +vadUid);
-	  if (this.vadUid) {
-	    document.getElementById(this.vadUid).classList.remove("remote_video_active");
-	  }
-	  if (document.getElementById(vadUid)) {
-	  	document.getElementById(vadUid).classList.add("remote_video_active");
-	  }
-	  this.vadUid=vadUid;
-    }
-  }
-
-  getInputLevel(track) {
-    var analyser = track._source.analyserNode;
-    const bufferLength = analyser.frequencyBinCount;
-    var data = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(data);
-    var values = 0;
-    var average;
-    var length = data.length;
-    for (var i = 0; i < length; i++) {
-      values += data[i];
-    }
-    average = Math.floor(values / length);
-    return average;
-  }
-
-  voiceActivityDetection() {
-    if (!this.localAudioTrack) {
-      return;
-    }
-    var audioLevel = this.getInputLevel(this.localAudioTrack); //Math.floor(this.getInputLevel(this.localAudioTrack));
-    if (audioLevel <= this.MaxBackgroundNoiseLevel) {
-      if (this.audioSamplesArr.length >= this.MaxAudioSamples) {
-        var removed = this.audioSamplesArr.shift();
-        var removedIndex = this.audioSamplesArrSorted.indexOf(removed);
-        if (removedIndex > -1) {
-          this.audioSamplesArrSorted.splice(removedIndex, 1);
-        }
+      if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
+        this.allowedVideoSubs--;
       }
-      this.audioSamplesArr.push(audioLevel);
-      this.audioSamplesArrSorted.push(audioLevel);
-      this.audioSamplesArrSorted.sort((a, b) => a - b);
-    }
-    var background = Math.floor(3 * this.audioSamplesArrSorted[Math.floor(this.audioSamplesArrSorted.length / 2)] / 2);
-    if (audioLevel > background + this.SilenceOffeset) {
-      this.exceedCount++;
-    } else {
-      this.exceedCount = 0;
+      if (this.allowedAudioSubs > this.minAudioAllowedSubs) {
+        this.allowedAudioSubs--;
+      }
     }
 
-	//console.log("audioLevel "+audioLevel+" background  "+background+" this.SilenceOffeset "+this.SilenceOffeset);
-    if (this.exceedCount > this.exceedCountThreshold) {
-        this.exceedCount = 0;
-	    
-	if ((Date.now() - this.vadSend)>this.vadSendWait) {
-	  this.vadSend=Date.now();
-          this.rtmChannel.sendMessage({ text: 'VAD:'+this.myUid[this.myPublishClient]}).then(() => {
-	  if (this.vadUid) {
-	    document.getElementById(this.vadUid).classList.remove("remote_video_active");
-	  }
-          console.log('AgoraRTM VAD send success VAD:'+this.myUid[this.myPublishClient]);
-        }).catch(error => {
-          console.log('AgoraRTM VAD send failure');
-        });
-	}
-    } else {
-	//console.log("this.exceedCount "+this.exceedCount+" this.exceedCountThreshold "+this.exceedCountThreshold);
-    }
-
+    this.voiceActivityDetection();
+    this.manageGrid();
   }
+
+
 
   dictionaryLength(dict) {
     return Object.keys(dict).length
@@ -279,12 +236,128 @@ class AgoraMultiChanelApp {
     return subkeys[subkeys.length - 1];
   }
 
+  manageGrid() {
+
+    // max slots by page
+    // max slots by CPU/Network
+    // audio should be priority
+
+
+    // ** Video **
+    // numSlots, numSubs, numPubs
+    // numSlots (the number of slots on screen) is the smaller of this.maxVideoTiles or videoPublishersByPriority (numPubs)
+    // allowedSubs is the number of subs allowed by the network / CPU (minVideoAllowedSubs=0)
+    // numSubs is the smaller of allowedSubs and numSlots        
+    var numVideoSlots = Math.min(this.maxVideoTiles, this.videoPublishersByPriority.length);
+    var numVideoSubs = Math.min(this.allowedVideoSubs, numVideoSlots);
+    // both of these will be 0 to self from the videoPublishersByPriority
+    // page and SDK can be checked and fixed
+
+    // ** Audio ** 
+    // numSlots is the smaller of maxAudioSubscriptions (6) and audioPublishersByPriority
+    // allowedSubs is the number of subs allowed by the network / CPU (minAudioAllowedSubs=3)
+    // numSubs is the smaller of allowedSubs and 
+    var numAudioSlots = Math.min(this.maxAudioSubscriptions, this.audioPublishersByPriority.length);
+    var numAudioSubs = Math.min(this.allowedAudioSubs, numAudioSlots);
+
+
+    // video slots
+    var expectedVideoSlots = {};
+    for (v = 0; v < numVideoSlots; v++) {
+      // any slots not present add
+      addVideoSlotIfNotExisting(this.videoPublishersByPriority[v]);
+      // remove any slots present which should not be  
+      expectedVideoSlots[this.videoPublishersByPriority[v]]=this.videoPublishersByPriority[v];
+    }
+    removeSlotsIfNotInMap(expectedVideoSlots);
+
+    // video subs
+    var expectedVideoSubs = {};
+    for (v = 0; v < numVideoSubs; v++) {
+      // any slots not present add
+      addVideoSubIfNotExisting(this.videoPublishersByPriority[v]);
+      // remove any slots present which should not be  
+      expectedVideoSubs[this.videoPublishersByPriority[v]]=this.videoPublishersByPriority[v];
+    }
+    removeVideoSubsIfNotInMap(expectedVideoSubs);
+
+
+
+    // audio slots
+
+    // audio subs
+
+    this.updateUILayout();
+
+  }
+
+  removeVideoSubsIfNotInMap(expected) {
+
+    Object.keys(this.videoSubscriptions).forEach(function(key) {
+      if (!expected[key]) {
+        var user=this.userMap[key];
+        var client=this.videoPublishers[key];
+        await client.unsubscribe(user, this.VIDEO);
+        delete this.videoSubscriptions[key];
+      }
+  });
+
+  }
+
+  addVideoSubIfNotExisting(uid_string) {
+    if (this.videoSubscriptions[uid_string]) {
+      return;
+    }
+    var user=this.userMap[uid_string];
+    var client=this.videoPublishers[uid_string];
+    this.videoSubscriptions[uid_string] = client;
+    await client.subscribe(user, this.VIDEO);
+    // playerDomDiv.id 
+    user.videoTrack.play(uid_string);
+    // allow stream to fallback to audio only when congested
+    client.setStreamFallbackOption(user.uid, 2);
+    // 1 is for low quality
+    client.setRemoteVideoStreamType(user.uid, 1);
+  }
+
+  removeSlotsIfNotInMap(expected) {
+    var els = document.getElementsByClassName("remote_video");
+    Array.prototype.forEach.call(els, function (el) {
+         if (!expected[el.id]) {
+           el.remove();
+         }
+    });
+  }
+
+  addVideoSlotIfNotExisting(uid_string) {
+    if (!document.getElementById(uid_string)) {
+      const playerDomDiv = document.createElement("div");
+      playerDomDiv.id = uid_string;
+      playerDomDiv.className = "remote_video";
+      // click to expand and subscribe to high quality
+      playerDomDiv.onclick = function () {
+        if (!document.fullscreenElement) {
+          document.getElementById(uid_string).requestFullscreen();
+          client.setRemoteVideoStreamType(this.userMap[uid_string].uid, 0);
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+            client.setRemoteVideoStreamType(this.userMap[uid_string].uid, 1);
+          }
+        }
+      };
+      document.body.append(playerDomDiv);
+    }
+  }
+
+
   increaseSubs() {
     // Add 1 audio and 1 video sub if available
     // Do we have audio pubs for unfilled audio subs?
     // Do we have video pubs for unfilled video subs?
     //dictionaryLength(this.videoSubscriptions);
     if (this.dictionaryLength(this.videoSubscriptions) < this.maxVideoTiles) {
+      // TODO assuming we have the top priority in the slots add next priority 
       var uid = this.getPubWhereNoSub(this.videoPublishers, this.videoSubscriptions);
       if (uid) {
         var client = this.videoPublishers[uid];
@@ -367,6 +440,126 @@ class AgoraMultiChanelApp {
     }
   }
 
+
+  removeUidFromArray(array_, uid) {
+    var index = array_.indexOf(uid);
+    if (index > -1) {
+      array_.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  promoteUidToFrontOfArrayIfPresent(array_, uid) {
+    if (removeUidFromArray(array_, uid)) {
+      array_.unshift(uid);
+    }
+  }
+
+
+  initRTM() {
+    this.rtmClient = AgoraRTM.createInstance(this.appId);
+    this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
+      console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
+    });
+
+    this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
+      this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
+      this.rtmChannel.join().then(() => {
+        this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => {
+          this.handleRTM(senderId, text);
+        });
+      }).catch(error => {
+        console.log('AgoraRTM client join failure', error);
+      });
+    }).catch(error => {
+      console.log('AgoraRTM client login failure', error);
+    });
+  }
+
+  handleRTM(senderId, text) {
+    if (text.startsWith(this.VAD)) {
+      var vadUid = text.split(":")[1];
+      console.log("VAD" + senderId + " vadUid= " + vadUid);
+      if (this.vadUid) {
+        document.getElementById(this.vadUid).classList.remove("remote_video_active");
+      }
+
+      if (document.getElementById(vadUid)) {
+        document.getElementById(vadUid).classList.add("remote_video_active");
+      }
+      this.vadUid = vadUid;
+      // this person is talking now
+      // they should be in the audio publishing list
+      this.promoteUidToFrontOfArrayIfPresent(this.audioPublishersByPriority, this.vadUid);
+      // they might be in the video publishing list 
+      this.promoteUidToFrontOfArrayIfPresent(this.videoPublishersByPriority, this.vadUid);
+      // they should become top priority in both
+    }
+  }
+
+  getInputLevel(track) {
+    var analyser = track._source.analyserNode;
+    const bufferLength = analyser.frequencyBinCount;
+    var data = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(data);
+    var values = 0;
+    var average;
+    var length = data.length;
+    for (var i = 0; i < length; i++) {
+      values += data[i];
+    }
+    average = Math.floor(values / length);
+    return average;
+  }
+
+  voiceActivityDetection() {
+    if (!this.localAudioTrack) {
+      return;
+    }
+    var audioLevel = this.getInputLevel(this.localAudioTrack); //Math.floor(this.getInputLevel(this.localAudioTrack));
+    if (audioLevel <= this.MaxBackgroundNoiseLevel) {
+      if (this.audioSamplesArr.length >= this.MaxAudioSamples) {
+        var removed = this.audioSamplesArr.shift();
+        var removedIndex = this.audioSamplesArrSorted.indexOf(removed);
+        if (removedIndex > -1) {
+          this.audioSamplesArrSorted.splice(removedIndex, 1);
+        }
+      }
+      this.audioSamplesArr.push(audioLevel);
+      this.audioSamplesArrSorted.push(audioLevel);
+      this.audioSamplesArrSorted.sort((a, b) => a - b);
+    }
+    var background = Math.floor(3 * this.audioSamplesArrSorted[Math.floor(this.audioSamplesArrSorted.length / 2)] / 2);
+    if (audioLevel > background + this.SilenceOffeset) {
+      this.exceedCount++;
+    } else {
+      this.exceedCount = 0;
+    }
+
+    //console.log("audioLevel "+audioLevel+" background  "+background+" this.SilenceOffeset "+this.SilenceOffeset);
+    if (this.exceedCount > this.exceedCountThreshold) {
+      this.exceedCount = 0;
+
+      if ((Date.now() - this.vadSend) > this.vadSendWait) {
+        this.vadSend = Date.now();
+        this.rtmChannel.sendMessage({ text: 'VAD:' + this.myUid[this.myPublishClient] }).then(() => {
+          if (this.vadUid) {
+            document.getElementById(this.vadUid).classList.remove("remote_video_active");
+          }
+          console.log('AgoraRTM VAD send success VAD:' + this.myUid[this.myPublishClient]);
+        }).catch(error => {
+          console.log('AgoraRTM VAD send failure');
+        });
+      }
+    } else {
+      //console.log("this.exceedCount "+this.exceedCount+" this.exceedCountThreshold "+this.exceedCountThreshold);
+    }
+
+  }
+
+
+
   // Publishing Local Streams
   async joinChannels() {
     let tempChannelName = "";
@@ -386,7 +579,7 @@ class AgoraMultiChanelApp {
     // we will use the last channel name and UID to join RTM for send/receive VAD messages
 
     this.rtmChannelName = tempChannelName;
-    this.rtmUid = this.myUid[i-1].toString();
+    this.rtmUid = this.myUid[i - 1].toString();
     this.initRTM();
     this.numChannels = i;
   }
@@ -443,17 +636,17 @@ class AgoraMultiChanelApp {
     let tempCount = 0;
 
     if (this.myPublishClient) {
-	  return myPublishClient;
+      return myPublishClient;
     }
-	 
+
     for (var i = 0; i < this.numClients; i++) {
       tempCount = this.clients[i]._users.length;
       console.log("### CHECKING CHANNEL " + this.clients[i]._channelName +
         ", WHICH HAS " + tempCount +
         " USERS IN IT.");
       if (tempCount < this.maxUsersPerChannel) {
-	      this.myPublishClient=i;
-              return this.myPublishClient;
+        this.myPublishClient = i;
+        return this.myPublishClient;
       }
     }
   }
@@ -669,5 +862,5 @@ window.addEventListener('resize', resizeGrid);
 
 
 setInterval(() => {
-  agoraApp.handleSubscriptions();
+  agoraApp.monitorStatistics();
 }, 100);
