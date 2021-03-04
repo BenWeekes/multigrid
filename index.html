@@ -46,16 +46,18 @@
 
 
     .local_video {
-      background-color: #000;
-      margin: 2px;
-      padding: 2px;
+    background-color: #000;
+    margin: 2px;
+    margin-left: 3px;
+    margin-right: 0px;
+    padding: 2px;
       width: 120px;
       height: 90px;
       display: inline-block;
     }
 
     .hidden {
-      display: hidden !important;
+      display: none !important;
     }
     
 
@@ -76,8 +78,10 @@
     }
 
     .agora_stats {
-      width: 140px !important;
-      
+      iwidth: 440px !important;
+      width: 100% !important;
+	height: 32px;
+	font-size: 24px;
     }
 
     .media_controls {
@@ -93,7 +97,7 @@
       width: 60px;
       padding: 2px;
       margin: 2px;
-      background-color: grey;
+      background-color: #eee;
       color: black;
       display: inline-block;
       text-align: center;
@@ -113,26 +117,32 @@
       white-space: nowrap;
     }
     #control_container{
-     display: inline-block;
-     idisplay: none;
+     idisplay: inline-block;
      top: -46px;
      position: relative;
      left: 6px;
 	     top: -9px;
     left: 0px;
     }
+
     #control_container2{
+	    width:100%;
+     float: left;
+     margin-right: 3px;
      display: inline-block;
-     top: -46px;
-     position: relative;
-     left: 6px;
-	     top: -9px;
-    left: 0px;
      }
 
     #mic_mute{
 	    background-image:url('img/microphone_1-512.webp');
     }
+
+    .mic_icon_mobile{
+    	width: 60px !important;
+    	height: 60px !important;
+    	margin-left: 20px !important;
+	
+    }
+
     .mic_icon{
      width: 30px;
     height: 30px;
@@ -146,19 +156,21 @@
     cursor: pointer;
     vertical-align: middle;
 	    }
+    #grid{
+	    margin-left:4px;
+    }
   </style>
 </head>
 
 <body class="main">
   <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
-    <div onclick="toggleCam()" id="local-player" class="local_video"></div>
 
      <div class="media_controls">
        <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_mute" class="mic_icon"/>
        <img src='img/_video-512.png' onclick="toggleCam()" id="cam_mute" class="mic_icon"/>
      </div>
 
-    <div id="control_container hidden">
+    <div id="control_container" class="hidden">
      <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
        ng-change="changeSelectedCamera()">
        <option value="" disabled select>Select a Camera</option>
@@ -169,7 +181,7 @@
      </select>
     </div>
 
-    <div id="control_container2 hidden">
+    <div id="control_container2" class="hidden">
      <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
     </div>
 
@@ -177,11 +189,9 @@
 
   <div id="grid">
     <div onclick="toggleCam()" id="local-player" class="local_video hidden"></div>
-
-
-
   </div>
 
 
 </body>
-  <script src="./app.js?s=ihandoiiiiissiiiiiiiiswiddddjj"></script>
+  <script src="./app.js?s=jjjsiiiiiss"></script>
+
