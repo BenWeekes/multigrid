@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf 8">
   <title>Agora Mega Grid</title>
@@ -24,11 +25,11 @@
     }
 
     .agora_select {
-	    margin: 10px;
-	display:block;
-	          width: 240px;
-    background-color: #111;
-    color: #ddd;
+      margin: 10px;
+      display: block;
+      width: 240px;
+      background-color: #111;
+      color: #ddd;
     }
 
     .mic_talking {
@@ -36,7 +37,7 @@
     }
 
     .local_videoOld {
-      idisplay:none;
+      idisplay: none;
       display: inline-block;
       background-color: #004;
       margin: 0px;
@@ -46,11 +47,11 @@
 
 
     .local_video {
-    background-color: #000;
-    margin: 2px;
-    margin-left: 3px;
-    margin-right: 0px;
-    padding: 2px;
+      background-color: #000;
+      margin: 2px;
+      margin-left: 3px;
+      margin-right: 0px;
+      padding: 2px;
       width: 120px;
       height: 90px;
       display: inline-block;
@@ -59,7 +60,7 @@
     .hidden {
       display: none !important;
     }
-    
+
 
     .remote_video {
       background-color: #000;
@@ -80,8 +81,8 @@
     .agora_stats {
       iwidth: 440px !important;
       width: 100% !important;
-	height: 32px;
-	font-size: 24px;
+      height: 32px;
+      font-size: 24px;
     }
 
     .media_controls {
@@ -116,48 +117,50 @@
     #toolbar {
       white-space: nowrap;
     }
-    #control_container{
-     idisplay: inline-block;
-     top: -46px;
-     position: relative;
-     left: 6px;
-	     top: -9px;
-    left: 0px;
+
+    #control_container {
+      idisplay: inline-block;
+      top: -46px;
+      position: relative;
+      left: 6px;
+      top: -9px;
+      left: 0px;
     }
 
-    #control_container2{
-	    width:100%;
-     float: left;
-     margin-right: 3px;
-     display: inline-block;
-     }
-
-    #mic_mute{
-	    background-image:url('img/microphone_1-512.webp');
+    #control_container2 {
+      width: 100%;
+      float: left;
+      margin-right: 3px;
+      display: inline-block;
     }
 
-    .mic_icon_mobile{
-    	width: 60px !important;
-    	height: 60px !important;
-    	margin-left: 20px !important;
-	
+    #mic_mute {
+      background-image: url('img/microphone_1-512.webp');
     }
 
-    .mic_icon{
-     width: 30px;
-    height: 30px;
-    border-radius: 16%;
-    padding: 2px;
-    margin: 6px;
-    background-color: #c44;
-    color: white;
-    display: inline-block;
-    text-align: center;
-    cursor: pointer;
-    vertical-align: middle;
-	    }
-    #grid{
-	    margin-left:4px;
+    .mic_icon_mobile {
+      width: 60px !important;
+      height: 60px !important;
+      margin-left: 20px !important;
+
+    }
+
+    .mic_icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 16%;
+      padding: 2px;
+      margin: 6px;
+      background-color: #c44;
+      color: white;
+      display: inline-block;
+      text-align: center;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+
+    #grid {
+      margin-left: 4px;
     }
   </style>
 </head>
@@ -165,24 +168,24 @@
 <body class="main">
   <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
 
-     <div class="media_controls">
-       <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_mute" class="mic_icon"/>
-       <img src='img/_video-512.png' onclick="toggleCam()" id="cam_mute" class="mic_icon"/>
-     </div>
+    <div class="media_controls">
+      <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_mute" class="mic_icon" />
+      <img src='img/_video-512.png' onclick="toggleCam()" id="cam_mute" class="mic_icon" />
+    </div>
 
     <div id="control_container" class="hidden">
-     <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
-       ng-change="changeSelectedCamera()">
-       <option value="" disabled select>Select a Camera</option>
-     </select>
-     <select class="agora_select" class="agora-select" ng-model="microphoneSelect"
-       ng-options="x.name for x in microphoneNames track by x.value" ng-change="changeSelectedMicrophone()">
-       <option value="" disabled select>Select a Microphone</option>
-     </select>
+      <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
+        ng-change="changeSelectedCamera()">
+        <option value="" disabled select>Select a Camera</option>
+      </select>
+      <select class="agora_select" class="agora-select" ng-model="microphoneSelect"
+        ng-options="x.name for x in microphoneNames track by x.value" ng-change="changeSelectedMicrophone()">
+        <option value="" disabled select>Select a Microphone</option>
+      </select>
     </div>
 
     <div id="control_container2" class="hidden">
-     <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
+      <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
     </div>
 
   </div>
@@ -193,5 +196,4 @@
 
 
 </body>
-  <script src="./app.js?s=jjjsiiiiiss"></script>
-
+<script src="./app.js?s=jjjsiiiiiss"></script>
