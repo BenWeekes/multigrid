@@ -56,7 +56,7 @@ class AgoraMultiChanelApp {
     // We'll keep track of one client object per Agora channel to join.
     this.clients = [];
     this.myUid = [];
-    this.myPublishClient=-1;
+    this.myPublishClient = -1;
     this.numClients = 0;
     this.numChannels = 0;
     // Seperate video and audio tracks we can manage seperately.
@@ -601,7 +601,7 @@ class AgoraMultiChanelApp {
   getFirstOpenChannel() {
     let tempCount = 0;
 
-    if (this.myPublishClient>-1) {
+    if (this.myPublishClient > -1) {
       return this.myPublishClient;
     }
 
@@ -625,47 +625,36 @@ class AgoraMultiChanelApp {
   }
   getOutboundStats() {
 
-    var lowStream;
-
-      if (this.myPublishClient>-1 && this.clients[this.myPublishClient]  && this.clients[this.myPublishClient]._lowStream) {
-	      lowStream=this.clients[this.myPublishClient]._lowStream;
+    if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
+      var lowStream = this.clients[this.myPublishClient]._lowStream;
+      if (lowStream.pc && lowStream.pc.pc) {
+        lowStream.pc.pc.getStats(null).then(stats => {
+          stats.forEach(report => {
+            if (report.type === "outbound-rtp" && report.kind === "video") {
+              Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+              if (report["framesPerSecond"])
+                console.log("LOW framesPerSecond " + report["framesPerSecond"]);
+            }
+          })
+        });
       }
-  if (!lowStream) {
-	  return;
-  }
-
-    if (lowStream.pc && lowStream.pc.pc) {
-      lowStream.pc.pc.getStats(null).then(stats => {
-        stats.forEach(report => {
-          if (report.type === "outbound-rtp" && report.kind === "video") {
-//            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
-            if (report["framesPerSecond"])
-              console.log("LOW framesPerSecond " + report["framesPerSecond"]);              
-          }
-        })
-      });
     }
 
-
-	      var highStream;
-
-      if (this.myPublishClient>-1 && this.clients[this.myPublishClient]  && this.clients[this.myPublishClient]._highStream) {
-              highStream=this.clients[this.myPublishClient]._highStream;
+    if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._highStream) {
+      var highStream = this.clients[this.myPublishClient]._highStream;
+      if (highStream.pc && highStream.pc.pc) {
+        highStream.pc.pc.getStats(null).then(stats => {
+          stats.forEach(report => {
+            if (report.type === "outbound-rtp" && report.kind === "video") {
+              Object.keys(report).forEach(statName => { console.log(`high OUTBOUND ${statName}: ${report[statName]}`); });
+              if (report["framesPerSecond"])
+                console.log("high framesPerSecond " + report["framesPerSecond"]);
+            }
+          })
+        });
       }
-  if (!highStream) {
-          return;
-  }
+    }
 
-    if (highStream.pc && highStream.pc.pc) {
-      highStream.pc.pc.getStats(null).then(stats => {
-        stats.forEach(report => {
-          if (report.type === "outbound-rtp" && report.kind === "video") {
-            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
-            if (report["framesPerSecond"])
-              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);
-          }
-        })
-      });
     }
 
   }
@@ -678,7 +667,7 @@ class AgoraMultiChanelApp {
     var renderFrameRateMin = StatMinStart;
     var renderFrameRateCount = 0;
 
-	  this.getOutboundStats();
+
     var packetLossAvg = 0;
     var packetLossMax = 0;
     var packetLossMin = StatMinStart;
@@ -689,6 +678,9 @@ class AgoraMultiChanelApp {
     var end2EndDelayAvg = 0;
     var end2EndDelayMax = 0;
     var end2EndDelayCount = 0;
+
+
+    this.getOutboundStats();
 
     for (var i = 0; i < this.numClients; i++) {
       var client = this.clients[i];
@@ -703,17 +695,14 @@ class AgoraMultiChanelApp {
           var rc = client._remoteStream.get(uid);
           if (rc) {
             if (rc.pc && rc.pc.pc) {
-              //console.log(`inbound-rtp video for ${uid}`);
               rc.pc.pc.getStats(null).then(stats => {
                 stats.forEach(report => {
                   if (report.type === "inbound-rtp" && report.kind === "video") {
-                    if (report["framesDropped"])
-                      console.log(" framesDropped " + report["framesDropped"]);
-                    //Object.keys(report).forEach(statName => { console.log(`${statName}: ${report[statName]}`); });
+                   // if (report["framesDropped"])
+                    //  console.log(" framesDropped " + report["framesDropped"]);
+                    Object.keys(report).forEach(statName => { console.log(`inbound-rtp video for ${uid}  ${statName}: ${report[statName]}`); });
                   }
                 })
-
-
               });
             }
           }
@@ -1010,4 +999,4 @@ window.addEventListener('resize', resizeGrid);
 
 setInterval(() => {
   agoraApp.monitorStatistics();
-}, 100);
+}, 150);
