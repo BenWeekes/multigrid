@@ -51,14 +51,12 @@ class AgoraMultiChanelApp {
     this.videoSubscribersBySlot = []; // on screen
     this.audioSubscribersBySlot = [];
 
-    this.MinFPSToIncreaseSubs = 12;
-    this.MaxFPSToDecreaseSubs = 8;
     this.NumRenderExceed = 0;
 
     // We'll keep track of one client object per Agora channel to join.
     this.clients = [];
     this.myUid = [];
-    this.myPublishClient;
+    this.myPublishClient=-1;
     this.numClients = 0;
     this.numChannels = 0;
     // Seperate video and audio tracks we can manage seperately.
@@ -69,8 +67,10 @@ class AgoraMultiChanelApp {
 
     this.lowVideoHeight = 180
     this.lowVideoWidth = 320;
-    this.lowVideoFPS = 15;
-    this.lowVideoBitrate = 200;
+    this.lowVideoFPS = 30;
+    this.lowVideoBitrate = 300;
+    this.MinFPSToIncreaseSubs = 12;
+    this.MaxFPSToDecreaseSubs = 8;
 
 
     // RTM
@@ -601,15 +601,13 @@ class AgoraMultiChanelApp {
   getFirstOpenChannel() {
     let tempCount = 0;
 
-    if (this.myPublishClient) {
-      return myPublishClient;
+    if (this.myPublishClient>-1) {
+      return this.myPublishClient;
     }
 
     for (var i = 0; i < this.numClients; i++) {
       tempCount = this.clients[i]._users.length;
-      console.log("### CHECKING CHANNEL " + this.clients[i]._channelName +
-        ", WHICH HAS " + tempCount +
-        " USERS IN IT.");
+      //console.log("### CHECKING CHANNEL " + this.clients[i]._channelName + ", WHICH HAS " + tempCount + " USERS IN IT.");
       if (tempCount < this.maxUsersPerChannel) {
         this.myPublishClient = i;
         return this.myPublishClient;
@@ -627,30 +625,51 @@ class AgoraMultiChanelApp {
   }
   getOutboundStats() {
 
-    if (this.clients[this.myUid]._lowStream && this.clients[this.myUid]._lowStream.pc && this.clients[this.myUid]._lowStream.pc.pc) {
-      this.clients[this.myUid]._lowStream.pc.pc.getStats(null).then(stats => {
+    var lowStream;
+
+      if (this.myPublishClient>-1 && this.clients[this.myPublishClient]  && this.clients[this.myPublishClient]._lowStream) {
+	      lowStream=this.clients[this.myPublishClient]._lowStream;
+      }
+  if (!lowStream) {
+	  return;
+  }
+
+    if (lowStream.pc && lowStream.pc.pc) {
+      lowStream.pc.pc.getStats(null).then(stats => {
         stats.forEach(report => {
           if (report.type === "outbound-rtp" && report.kind === "video") {
-            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+//            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
             if (report["framesPerSecond"])
-              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);              
+              console.log("LOW framesPerSecond " + report["framesPerSecond"]);              
           }
         })
       });
     }
 
-    if (this.clients[this.myUid]._lowStream && this.clients[this.myUid]._highStream.pc && this.clients[this.myUid]._highStream.pc.pc) {
-      this.clients[this.myUid]._highStream.pc.pc.getStats(null).then(stats => {
+
+	      var highStream;
+
+      if (this.myPublishClient>-1 && this.clients[this.myPublishClient]  && this.clients[this.myPublishClient]._highStream) {
+              highStream=this.clients[this.myPublishClient]._highStream;
+      }
+  if (!highStream) {
+          return;
+  }
+
+    if (highStream.pc && highStream.pc.pc) {
+      highStream.pc.pc.getStats(null).then(stats => {
         stats.forEach(report => {
           if (report.type === "outbound-rtp" && report.kind === "video") {
-            Object.keys(report).forEach(statName => { console.log(`HIGH OUTBOUND ${statName}: ${report[statName]}`); });
+            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
             if (report["framesPerSecond"])
-              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);              
+              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);
           }
         })
       });
     }
+
   }
+
 
   getCallStats() {
     var renderFrameRateSum = 0;
@@ -659,6 +678,7 @@ class AgoraMultiChanelApp {
     var renderFrameRateMin = StatMinStart;
     var renderFrameRateCount = 0;
 
+	  this.getOutboundStats();
     var packetLossAvg = 0;
     var packetLossMax = 0;
     var packetLossMin = StatMinStart;
