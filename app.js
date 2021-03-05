@@ -623,8 +623,8 @@ class AgoraMultiChanelApp {
         ua.forEach(element => element.audioTrack ? element.audioTrack.setVolume(vol) : 0);
     }
   }
-  getOutboundStats() {
 
+  getOutboundStats() {
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
       var lowStream = this.clients[this.myPublishClient]._lowStream;
       if (lowStream.pc && lowStream.pc.pc) {
@@ -654,9 +654,6 @@ class AgoraMultiChanelApp {
         });
       }
     }
-
-    }
-
   }
 
 
