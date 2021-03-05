@@ -625,9 +625,31 @@ class AgoraMultiChanelApp {
         ua.forEach(element => element.audioTrack ? element.audioTrack.setVolume(vol) : 0);
     }
   }
-  getLocalStats() {
+  getOutboundStats() {
 
-	  this.clients[this.myUi]._lowStream.pc.pc;
+    if (this.clients[this.myUid]._lowStream && this.clients[this.myUid]._lowStream.pc && this.clients[this.myUid]._lowStream.pc.pc) {
+      this.clients[this.myUid]._lowStream.pc.pc.getStats(null).then(stats => {
+        stats.forEach(report => {
+          if (report.type === "outbound-rtp" && report.kind === "video") {
+            Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+            if (report["framesPerSecond"])
+              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);              
+          }
+        })
+      });
+    }
+
+    if (this.clients[this.myUid]._lowStream && this.clients[this.myUid]._highStream.pc && this.clients[this.myUid]._highStream.pc.pc) {
+      this.clients[this.myUid]._highStream.pc.pc.getStats(null).then(stats => {
+        stats.forEach(report => {
+          if (report.type === "outbound-rtp" && report.kind === "video") {
+            Object.keys(report).forEach(statName => { console.log(`HIGH OUTBOUND ${statName}: ${report[statName]}`); });
+            if (report["framesPerSecond"])
+              console.log("HIGH framesPerSecond " + report["framesPerSecond"]);              
+          }
+        })
+      });
+    }
   }
 
   getCallStats() {
@@ -654,28 +676,28 @@ class AgoraMultiChanelApp {
         continue;
       }
 
-	// WebRTC Stats
+      // WebRTC Stats
       if (client._remoteStream) {
-	      for (var u=0; u<client._users.length; u++) {
-		var uid=client._users[u].uid;
-		var rc=client._remoteStream.get(uid);
-		if (rc) {
-			if (rc.pc && rc.pc.pc) {
-			     //console.log(`inbound-rtp video for ${uid}`);
- 			     rc.pc.pc.getStats(null).then(stats => {
-    				stats.forEach(report => {
-    	  				if (report.type === "inbound-rtp" && report.kind === "video") {
-						if (report["framesDropped"])
-		      					console.log(" framesDropped "+report["framesDropped"]);
-       		 				//Object.keys(report).forEach(statName => { console.log(`${statName}: ${report[statName]}`); });
-      						}
-				})
+        for (var u = 0; u < client._users.length; u++) {
+          var uid = client._users[u].uid;
+          var rc = client._remoteStream.get(uid);
+          if (rc) {
+            if (rc.pc && rc.pc.pc) {
+              //console.log(`inbound-rtp video for ${uid}`);
+              rc.pc.pc.getStats(null).then(stats => {
+                stats.forEach(report => {
+                  if (report.type === "inbound-rtp" && report.kind === "video") {
+                    if (report["framesDropped"])
+                      console.log(" framesDropped " + report["framesDropped"]);
+                    //Object.keys(report).forEach(statName => { console.log(`${statName}: ${report[statName]}`); });
+                  }
+                })
 
 
-  				});
-			}
-	      }
-	  }
+              });
+            }
+          }
+        }
       }
 
       var rvs = client.getRemoteVideoStats();
