@@ -625,6 +625,10 @@ class AgoraMultiChanelApp {
         ua.forEach(element => element.audioTrack ? element.audioTrack.setVolume(vol) : 0);
     }
   }
+  getLocalStats() {
+
+	  this.clients[this.myUi]._lowStream.pc.pc;
+  }
 
   getCallStats() {
     var renderFrameRateSum = 0;
@@ -649,11 +653,37 @@ class AgoraMultiChanelApp {
       if (!client._users.length) {
         continue;
       }
+
+	// WebRTC Stats
+      if (client._remoteStream) {
+	      for (var u=0; u<client._users.length; u++) {
+		var uid=client._users[u].uid;
+		var rc=client._remoteStream.get(uid);
+		if (rc) {
+			if (rc.pc && rc.pc.pc) {
+			     //console.log(`inbound-rtp video for ${uid}`);
+ 			     rc.pc.pc.getStats(null).then(stats => {
+    				stats.forEach(report => {
+    	  				if (report.type === "inbound-rtp" && report.kind === "video") {
+						if (report["framesDropped"])
+		      					console.log(" framesDropped "+report["framesDropped"]);
+       		 				//Object.keys(report).forEach(statName => { console.log(`${statName}: ${report[statName]}`); });
+      						}
+				})
+
+
+  				});
+			}
+	      }
+	  }
+      }
+
       var rvs = client.getRemoteVideoStats();
       if (rvs) {
         var rvskeys = Object.keys(rvs);
         for (var k = 0; k < rvskeys.length; k++) {
           if (rvs[rvskeys[k]]["renderFrameRate"]) {
+
 
             var rfr = rvs[rvskeys[k]]["renderFrameRate"];
             renderFrameRateSum = renderFrameRateSum + rfr;
