@@ -1,14 +1,14 @@
 /******************************************************************************
  * Application: Grid View Demo
- * Author: Shankara Dash Shivagana & Ben Weekes
+ * Author:  Ben Weekes
  * Company: Agora.io
- * Date: Feb 23rd
+ * Date: Mar 1st
  * Description: 
  *
  *****************************************************************************/
 class AgoraMultiChanelApp {
   //C'tor: initialize Agora and Angular.
-  constructor() {
+   constructor() {
 
     // String Constants
     this.VAD = "VAD";
@@ -91,12 +91,20 @@ class AgoraMultiChanelApp {
     this.vadSend = 0;
     this.vadSendWait = 2 * 1000;
 
-    this.createClients();
-    this.joinChannels();
+
+    this.outboundFPSLow=0;
+    this.outboundFPSHigh=0;
+    this.OutboundStatsMonitorInterval=15;
+    this.debugInboundStats=this.OutboundStatsMonitorInterval;
+    this.debugOutboundStats=this.OutboundStatsMonitorInterval;
   }
 
+  async init() {
+    await this.createClients();
+    await this.joinChannels();
+  }
 
-  createClients() {
+  async createClients() {
     let i = 0;
     // Create the max number of client objects.
     for (i; i < this.maxClients; i++) {
@@ -144,7 +152,6 @@ class AgoraMultiChanelApp {
         }
 
       });
-
 
       // unpublished is called when users mute. Best not to remove them from UI completely
       this.clients[i].on("user-unpublished", async (user, mediaType) => {
@@ -368,7 +375,7 @@ class AgoraMultiChanelApp {
     // allow stream to fallback to audio only when congested
     client.setStreamFallbackOption(user.uid, 1);
     // 1 is for low quality
-    client.setRemoteVideoStreamType(user.uid, 1);
+    //client.setRemoteVideoStreamType(user.uid, 1);
   }
 
   removeSlotsIfNotInMap(expected) {
@@ -523,8 +530,6 @@ class AgoraMultiChanelApp {
 
   }
 
-
-
   // Publishing Local Streams
   async joinChannels() {
     let tempChannelName = "";
@@ -532,16 +537,12 @@ class AgoraMultiChanelApp {
     // Join one channel for each client object.
     for (i; i < this.numClients; i++) {
       tempChannelName = this.baseChannelName + i.toString();
-      console.log("### TRYING TO JOIN: " + tempChannelName + " ###");
-      this.myUid[i] = await this.clients[i].join(this.appId,
-        tempChannelName,
+      this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
         this.token, null);
-      console.log("### JOINED: " + tempChannelName + " ###");
-      // We'll use this to track channel state.
-      // this.channels[i] = { name: tempChannelName, users: [], videoSubscriptions: [], audioSubscriptions: [] };
     }
 
     // we will use the last channel name and UID to join RTM for send/receive VAD messages
+    this.startCamMic();
 
     this.rtmChannelName = tempChannelName;
     this.rtmUid = this.myUid[i - 1].toString();
@@ -549,7 +550,42 @@ class AgoraMultiChanelApp {
     this.numChannels = i;
   }
 
+  startCamMic() {
+    let targetClientIndex=this.getFirstOpenChannel();
+    this.publishAudioVideoToChannel(null,null, targetClientIndex);
+  }
+
   //
+  async publishAudioVideoToChannel(cameraId, micId, publishToIndex) {
+
+    //[this.localAudioTrack, this.localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks({
+//	    audioConfig: {microphoneId: micId}, videoConfig: { cameraId: cameraId, encoderConfig: {frameRate: 30 }}
+ //   });
+
+    [this.localAudioTrack, this.localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+	     {microphoneId: micId},  { cameraId: cameraId, encoderConfig: {width: 640, height: { ideal: 480, min: 400, max: 500 }, frameRate: 20, bitrateMin: 600, bitrateMax: 1000}} );
+
+	 
+//this.localVideoTrack=await AgoraRTC.createCameraVideoTrack({ encoderConfig: { width: 640, height: { ideal: 480, min: 400, max: 500 }, frameRate: 20, bitrateMin: 600, bitrateMax: 1000, }, })
+     this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+      microphoneId: micId,
+    });
+	  
+
+    this.clients[publishToIndex].enableDualStream().then(() => {
+      console.log("Enable Dual stream success!");
+    }).catch(err => {
+      console.log(err);
+    })
+
+    this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
+    this.localVideoTrack.play("local-player");
+    document.getElementById("local-player").classList.remove("hidden");
+    await this.clients[publishToIndex].publish([this.localAudioTrack,this.localVideoTrack]);
+    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
+  }
+
   async publishVideoToChannel(cameraId, publishToIndex) {
     // If we're currently capturing, unpublish and stop the track.
     if (this.localVideoTrack != null) {
@@ -625,6 +661,12 @@ class AgoraMultiChanelApp {
   }
 
   getOutboundStats() {
+
+    if (this.debugOutboundStats++ < this.OutboundStatsMonitorInterval)  {
+      return;
+    }
+    this.debugOutboundStats=0;
+
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
       var lowStream = this.clients[this.myPublishClient]._lowStream;
       if (lowStream.pc && lowStream.pc.pc) {
@@ -632,8 +674,9 @@ class AgoraMultiChanelApp {
           stats.forEach(report => {
             if (report.type === "outbound-rtp" && report.kind === "video") {
               Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
-              if (report["framesPerSecond"])
-                console.log("LOW framesPerSecond " + report["framesPerSecond"]);
+              if (report["framesPerSecond"]) {
+		      this.outboundFPSLow=report["framesPerSecond"];
+	      }
             }
           })
         });
@@ -646,16 +689,16 @@ class AgoraMultiChanelApp {
         highStream.pc.pc.getStats(null).then(stats => {
           stats.forEach(report => {
             if (report.type === "outbound-rtp" && report.kind === "video") {
-              Object.keys(report).forEach(statName => { console.log(`high OUTBOUND ${statName}: ${report[statName]}`); });
-              if (report["framesPerSecond"])
-                console.log("high framesPerSecond " + report["framesPerSecond"]);
+              Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+              if (report["framesPerSecond"]) {
+		      this.outboundFPSHigh=report["framesPerSecond"];
+	      }
             }
           })
         });
       }
     }
   }
-
 
   getCallStats() {
     var renderFrameRateSum = 0;
@@ -676,7 +719,6 @@ class AgoraMultiChanelApp {
     var end2EndDelayMax = 0;
     var end2EndDelayCount = 0;
 
-
     this.getOutboundStats();
 
     for (var i = 0; i < this.numClients; i++) {
@@ -686,7 +728,9 @@ class AgoraMultiChanelApp {
       }
 
       // WebRTC Stats
-      if (client._remoteStream) {
+      if (client._remoteStream && this.debugInboundStats++ > 25) {
+	    this.debugInboundStats=0;
+
         for (var u = 0; u < client._users.length; u++) {
           var uid = client._users[u].uid;
           var rc = client._remoteStream.get(uid);
@@ -788,7 +832,8 @@ class AgoraMultiChanelApp {
       packetLossMin = -1;
     }
 
-    document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
+    document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FPSLow:" + this.outboundFPSLow + " FPSHigh:" + this.outboundFPSHigh + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
+    //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
     return renderFrameRateMin;
   }
@@ -861,14 +906,14 @@ class AgoraMultiChanelApp {
   }
 }
 
+
 function toggleCam() {
   if (!agoraApp.localVideoTrack) {
-
     AgoraRTC.getCameras();
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishVideoToChannel(null, targetClientIndex);
     document.getElementById("local-player").classList.remove("hidden");
-    //alert("Please select a camera from the list");
+    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
     return;
   }
   if (agoraApp.localVideoTrack._enabled) {
@@ -883,11 +928,13 @@ function toggleCam() {
   }
 }
 
+
 function toggleMic() {
   if (!agoraApp.localAudioTrack) {
     AgoraRTC.getMicrophones();
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishAudioToChannel(null, targetClientIndex);
+    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
     return;
   }
 
@@ -972,8 +1019,10 @@ function initializeAngularController() {
 }
 
 let agoraApp = new AgoraMultiChanelApp();
+agoraApp.init();
 let angularApp = angular.module('multiChannelApp', []);
 initializeAngularController();
+
 
 function getParameterByName(name, url = window.location.href) {
   name = name.replace(/[\[\]]/g, '\\$&');
