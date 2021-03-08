@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf 8">
   <title>Agora Mega Grid</title>
+  <!--meta http-equiv="refresh" content="3"-->
   <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
   <script src="./sdk/AgoraRTM.js"></script>
@@ -106,10 +107,7 @@
       vertical-align: middle;
     }
 
-    .media_buttons_enabled {
-      background-color: grey !important;
-    }
-
+  
     .main {
       background: #222;
     }
@@ -142,8 +140,25 @@
       width: 60px !important;
       height: 60px !important;
       margin-left: 20px !important;
-
     }
+
+    .button_horizontally_flip {
+      transform: scaleX(-1);
+    }
+
+    .fullscreen{
+      width:1280px !important;
+      height:720px !important;
+    }
+
+    .cam_off_reduced {
+      width: 26px !important;
+    height: 22px !important;
+    padding: 6px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+}
+    
 
     .mic_icon {
       width: 30px;
@@ -159,6 +174,11 @@
       vertical-align: middle;
     }
 
+    .media_buttons_enabled {
+      background-color: rgb(91, 184, 137) !important;
+    }
+
+
     #grid {
       margin-left: 4px;
     }
@@ -169,8 +189,12 @@
   <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
 
     <div class="media_controls">
-      <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_mute" class="mic_icon" />
-      <img src='img/_video-512.png' onclick="toggleCam()" id="cam_mute" class="mic_icon" />
+      <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_off" class="mic_icon media_buttons_enabled hidden" />
+      <img src='img/icon-40-512.webp' onclick="toggleMic()" id="mic_on" class="mic_icon button_horizontally_flip" />  
+      <img src='img/_video-512.png' onclick="toggleCam()" id="cam_off" class="mic_icon media_buttons_enabled hidden" />
+      <img src='img/73-512.webp' onclick="toggleCam()" id="cam_on" class="mic_icon cam_off_reduced" />
+      
+      
     </div>
 
     <div id="control_container" class="hidden">
@@ -196,4 +220,4 @@
 
 
 </body>
-<script src="./app.js?s=iiiiiiiiiiiiiiiiiiiu"></script>
+<script src="./app.js?s=iiiiiu"></script>

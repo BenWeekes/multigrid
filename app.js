@@ -26,12 +26,15 @@ class AgoraMultiChanelApp {
     this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 6 : 64);
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
 
-    this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 2;
+    this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 1;
     this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
+    // disable subscriptions for load testing clients 
+    this.performSubscriptions = getParameterByName("performSubscriptions") || true;
     this.allowedVideoSubs = this.minVideoAllowedSubs;
     this.allowedAudioSubs = this.minAudioAllowedSubs;
 
     this.token = null;
+    
     // Each agora client connects to one Agora channel
     this.maxClients = 4;
     this.maxUsersPerChannel = 16;
@@ -67,10 +70,17 @@ class AgoraMultiChanelApp {
 
     this.lowVideoHeight = 180
     this.lowVideoWidth = 320;
-    this.lowVideoFPS = 30;
-    this.lowVideoBitrate = 300;
-    this.MinFPSToIncreaseSubs = 12;
-    this.MaxFPSToDecreaseSubs = 8;
+    this.lowVideoFPS = 24;
+    this.lowVideoBitrate = 200;
+
+    this.highVideoHeight = 360
+    this.highVideoWidth = 640;
+    this.highVideoFPS = 24;
+    this.highVideoBitrateMin = 200;
+    this.highVideoBitrateMax = 800;
+
+    this.FPSThresholdToIncreaseSubs = 20;
+    this.FPSThresholdToReduceSubs = 14;
 
 
     // RTM
@@ -224,10 +234,10 @@ class AgoraMultiChanelApp {
     // check real time call stats and increase, hold or decrease the number of audio/video subscriptions
 
     var renderFrameRate = this.getCallStats();
-    if (renderFrameRate > this.MinFPSToIncreaseSubs) {
+    if (renderFrameRate > this.FPSThresholdToIncreaseSubs) {
       this.NumRenderExceed++;
     }
-    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate >= 0 && renderFrameRate < this.MaxFPSToDecreaseSubs) {
+    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate >= 0 && renderFrameRate < this.FPSThresholdToReduceSubs) {
       this.NumRenderExceed--;
     }
 
@@ -336,10 +346,13 @@ class AgoraMultiChanelApp {
     }
     var user = this.userMap[uid_string];
     var client = this.audioPublishers[uid_string];
-    await client.subscribe(user, this.AUDIO);
-    console.warn(" subscribed to Audio " + uid_string);
     this.audioSubscriptions[uid_string] = client;
-    user.audioTrack.play();
+    
+    if (this.performSubscriptions) {
+      await client.subscribe(user, this.AUDIO);
+      console.warn(" subscribed to Audio " + uid_string);
+      user.audioTrack.play();
+    }
   }
 
   async removeVideoSubsIfNotInMap(expected) {
@@ -369,11 +382,13 @@ class AgoraMultiChanelApp {
     }
     var client = this.videoPublishers[uid_string];
     this.videoSubscriptions[uid_string] = client;
-    await client.subscribe(user, this.VIDEO);
-    // playerDomDiv.id 
-    user.videoTrack.play(uid_string);
-    // allow stream to fallback to audio only when congested
-    client.setStreamFallbackOption(user.uid, 1);
+    if (this.performSubscriptions) {
+      await client.subscribe(user, this.VIDEO);
+      // playerDomDiv.id 
+      user.videoTrack.play(uid_string);
+      // allow stream to fallback to audio only when congested
+      client.setStreamFallbackOption(user.uid, 1);
+    }
     // 1 is for low quality
     //client.setRemoteVideoStreamType(user.uid, 1);
   }
@@ -399,13 +414,26 @@ class AgoraMultiChanelApp {
       var client = that.videoPublishers[uid_string];
       playerDomDiv.onclick = function () {
         if (!document.fullscreenElement) {
-          document.getElementById(uid_string).requestFullscreen();
+
+          //document.getElementById(uid_string).requestFullscreen();
+
+          var element =  document.getElementById(uid_string);
+          if (element.requestFullscreen) {
+              element.requestFullscreen();
+          } else if (element.mozRequestFullScreen) {
+              element.mozRequestFullScreen();
+          } else if (element.webkitRequestFullscreen) {
+              element.webkitRequestFullscreen();
+          } else if (element.msRequestFullscreen) {
+              element.msRequestFullscreen();
+          } 
+
           client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 0);
         } else {
           if (document.exitFullscreen) {
             document.exitFullscreen();
-            client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 1);
           }
+          client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 1);
         }
       };
       document.getElementById("grid").append(playerDomDiv);
@@ -558,20 +586,11 @@ class AgoraMultiChanelApp {
   //
   async publishAudioVideoToChannel(cameraId, micId, publishToIndex) {
 
-    //[this.localAudioTrack, this.localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks({
-//	    audioConfig: {microphoneId: micId}, videoConfig: { cameraId: cameraId, encoderConfig: {frameRate: 30 }}
- //   });
 
     [this.localAudioTrack, this.localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-	     {microphoneId: micId},  { cameraId: cameraId, encoderConfig: {width: 640, height: { ideal: 480, min: 400, max: 500 }, frameRate: 20, bitrateMin: 600, bitrateMax: 1000}} );
+	     {microphoneId: micId},  { cameraId: cameraId, encoderConfig: {width: this.highVideoWidth, height: this.highVideoHeight, frameRate:  this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax}} );
 
 	 
-//this.localVideoTrack=await AgoraRTC.createCameraVideoTrack({ encoderConfig: { width: 640, height: { ideal: 480, min: 400, max: 500 }, frameRate: 20, bitrateMin: 600, bitrateMax: 1000, }, })
-     this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-      microphoneId: micId,
-    });
-	  
-
     this.clients[publishToIndex].enableDualStream().then(() => {
       console.log("Enable Dual stream success!");
     }).catch(err => {
@@ -582,8 +601,11 @@ class AgoraMultiChanelApp {
     this.localVideoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
     await this.clients[publishToIndex].publish([this.localAudioTrack,this.localVideoTrack]);
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
-    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
+    document.getElementById("mic_on").classList.add("hidden");
+    document.getElementById("mic_off").classList.remove("hidden"); 
+    document.getElementById("cam_on").classList.add("hidden");
+    document.getElementById("cam_off").classList.remove("hidden"); 
+
   }
 
   async publishVideoToChannel(cameraId, publishToIndex) {
@@ -610,7 +632,6 @@ class AgoraMultiChanelApp {
     this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
     this.localVideoTrack.play("local-player");
     await this.clients[publishToIndex].publish(this.localVideoTrack);
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
   }
 
@@ -628,8 +649,6 @@ class AgoraMultiChanelApp {
       microphoneId: microphoneId,
     });
     await this.clients[publishToIndex].publish(this.localAudioTrack);
-    document.getElementById("mic_mute").disabled = false;
-    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
     console.log("### PUBLISHED AUDIO TO " + publishToIndex + "! ###");
   }
 
@@ -703,7 +722,7 @@ class AgoraMultiChanelApp {
   getCallStats() {
     var renderFrameRateSum = 0;
     var renderFrameRateAvg = 0;
-    var StatMinStart = 1000000;
+    var StatMinStart = 1000000; 
     var renderFrameRateMin = StatMinStart;
     var renderFrameRateCount = 0;
 
@@ -913,18 +932,21 @@ function toggleCam() {
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishVideoToChannel(null, targetClientIndex);
     document.getElementById("local-player").classList.remove("hidden");
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    document.getElementById("cam_on").classList.add("hidden");
+    document.getElementById("cam_off").classList.remove("hidden"); 
     return;
   }
   if (agoraApp.localVideoTrack._enabled) {
     agoraApp.localVideoTrack.setEnabled(false);
     document.getElementById("local-player").classList.add("hidden");
-    document.getElementById("cam_mute").classList.remove("media_buttons_enabled");
+    document.getElementById("cam_on").classList.remove("hidden");
+    document.getElementById("cam_off").classList.add("hidden"); 
   }
   else {
     agoraApp.localVideoTrack.setEnabled(true);
     document.getElementById("local-player").classList.remove("hidden");
-    document.getElementById("cam_mute").classList.add("media_buttons_enabled");
+    document.getElementById("cam_on").classList.add("hidden");
+    document.getElementById("cam_off").classList.remove("hidden"); 
   }
 }
 
@@ -934,17 +956,20 @@ function toggleMic() {
     AgoraRTC.getMicrophones();
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishAudioToChannel(null, targetClientIndex);
-    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
+    document.getElementById("mic_on").classList.add("hidden");
+    document.getElementById("mic_off").classList.remove("hidden"); 
     return;
   }
 
   if (agoraApp.localAudioTrack._enabled) {
     agoraApp.localAudioTrack.setEnabled(false);
-    document.getElementById("mic_mute").classList.remove("media_buttons_enabled");
+    document.getElementById("mic_on").classList.add("hidden");
+    document.getElementById("mic_off").classList.remove("hidden"); 
   }
   else {
     agoraApp.localAudioTrack.setEnabled(true);
-    document.getElementById("mic_mute").classList.add("media_buttons_enabled");
+    document.getElementById("mic_on").classList.remove("hidden");
+    document.getElementById("mic_off").classList.add("hidden"); 
   }
 }
 
