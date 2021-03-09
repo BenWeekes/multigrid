@@ -16,6 +16,7 @@ class AgoraMultiChanelApp {
 
     // String Constants
     this.VAD = "VAD";
+    this.FPS = "FPS";
     this.VIDEO = "video";
     this.AUDIO = "audio";
 
@@ -47,6 +48,7 @@ class AgoraMultiChanelApp {
     this.videoPublishers = {};
     this.audioPublishers = {};
     this.userMap = {};
+    this.fpsMap = {};
     this.allowedVideoSubs = this.minVideoAllowedSubs;
     this.allowedAudioSubs = this.minAudioAllowedSubs;
     this.NumRenderExceed = 0;
@@ -100,10 +102,13 @@ class AgoraMultiChanelApp {
 
     this.outboundFPSLow = 0;
     this.outboundFPSHigh = 0;
-    this.OutboundStatsWait=1000;
+    this.OutboundStatsWait=2000;
     this.outboundStatsLast=0;
     this.outboundFPSHigh2=0;
     this.outboundFPSLow2=0;
+    this.outboundFrameCountHigh=0;
+    this.outboundFrameCountLow=0;
+
     this.outboundFrameCount = 0;
     this.InboundStatsMonitorInterval = 15;
     this.debugInboundStats = this.InboundStatsMonitorInterval;
@@ -465,6 +470,10 @@ class AgoraMultiChanelApp {
       // they might be in the video publishing list 
       this.promoteUidToFrontOfArrayIfPresent(this.videoPublishersByPriority, this.vadUid);
       // they should become top priority in both
+    } else if (text.startsWith(this.FPS)) {
+      var fpsUid = text.split(":")[1];
+      var fps = text.split(":")[1];
+      this.fpsMap[fpsUid] = fps;
     }
   }
 
@@ -699,6 +708,7 @@ class AgoraMultiChanelApp {
       }
     }
 
+
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._highStream) {
       var highStream = this.clients[this.myPublishClient]._highStream;
       if (highStream.pc && highStream.pc.pc) {
@@ -721,6 +731,28 @@ class AgoraMultiChanelApp {
         });
       }
     }
+
+    // if the frames being encoded is less than expected 
+    // i.e. less than the top end
+    // then relay this to the group to avoid them limiting their remote video count
+
+    var localFPS=0;
+    if (this.outboundFPSHigh2 > 0) {
+      localFPS=this.outboundFPSHigh2;
+    }
+    if (this.outboundFPSLow2 > 0 && this.outboundFPSLow2 <localFPS) {
+      localFPS=this.outboundFPSLow2;
+    }
+
+    if (localFPS > 0 && localFPS<this.FPSThresholdToIncreaseSubs) {
+      var msg= this.FPS+':' + this.myUid[this.myPublishClient]+":"+localFPS;
+      this.rtmChannel.sendMessage({ text: msg}).then(() => {
+        console.log('AgoraRTM FPS send success :' + msg);
+      }).catch(error => {
+        console.log('AgoraRTM FPS send failure');
+      }); 
+    }
+
   }
 
   getCallStats() {
@@ -750,7 +782,7 @@ class AgoraMultiChanelApp {
         continue;
       }
 
-      // WebRTC Inbound Stats Per Client
+      // WebRTC Inbound Stats Per Client - Keep as useful to know how to get
       /*
       if (client._remoteStream && this.debugInboundStats++ > 25) {
         this.debugInboundStats = 0;
@@ -782,6 +814,7 @@ class AgoraMultiChanelApp {
 
 
             var rfr = rvs[rvskeys[k]]["renderFrameRate"];
+            console.log("remote FPS for "+rvskeys[k]+" "+this.fpsMap[rvskeys[k]]);
             renderFrameRateSum = renderFrameRateSum + rfr;
             if (rfr < renderFrameRateMin) {
               renderFrameRateMin = rfr;
