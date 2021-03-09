@@ -478,6 +478,7 @@ class AgoraMultiChanelApp {
     } else if (text.startsWith(this.FPS)) {
       var fpsUid = text.split(":")[1];
       var fps = text.split(":")[2];
+      console.log("adding FPS "+fps+" for "+fpsUid );
       this.fpsMap[fpsUid] = fps;
     }
   }
@@ -755,7 +756,7 @@ class AgoraMultiChanelApp {
       localFPS=this.outboundFPSLow2;
     }
 
-    if (localFPS > 0 && localFPS<this.FPSThresholdToIncreaseSubs) {
+    if (localFPS > 0 && localFPS<this.FPSThresholdToIncreaseSubs * this.maxFPS) {
       var msg= this.FPS+':' + this.myUid[this.myPublishClient]+":"+localFPS;
       this.rtmChannel.sendMessage({ text: msg}).then(() => {
         console.log('AgoraRTM FPS send success :' + msg);
