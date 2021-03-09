@@ -74,12 +74,12 @@ class AgoraMultiChanelApp {
 
     this.lowVideoHeight = 180
     this.lowVideoWidth = 320;
-    this.lowVideoFPS = 24;
+    this.lowVideoFPS = isMobile() ? 15 : 24;
     this.lowVideoBitrate = 200;
 
-    this.highVideoHeight = 360
-    this.highVideoWidth = 640;
-    this.highVideoFPS = 24;
+    this.highVideoHeight = isMobile() ? 180 : 360;
+    this.highVideoWidth = isMobile() ? 320 : 640;
+    this.highVideoFPS =  isMobile() ? 15 : 24;
     this.highVideoBitrateMin = 200;
     this.highVideoBitrateMax = 800;
 
@@ -107,6 +107,7 @@ class AgoraMultiChanelApp {
 
     this.outboundFPSLow=0;
     this.outboundFPSHigh=0;
+    this.outboundFrameCount=0;
     this.OutboundStatsMonitorInterval=15;
     this.debugInboundStats=this.OutboundStatsMonitorInterval;
     this.debugOutboundStats=this.OutboundStatsMonitorInterval;
@@ -330,7 +331,7 @@ class AgoraMultiChanelApp {
       // remove any slots present which should not be  
       expectedAudioSubs[this.audioPublishersByPriority[v]] = this.audioPublishersByPriority[v];
     }
-    //this.removeAudioSubsIfNotInMap(expectedAudioSubs);
+    this.removeAudioSubsIfNotInMap(expectedAudioSubs);
     this.updateUILayout();
   }
 
@@ -728,7 +729,7 @@ class AgoraMultiChanelApp {
         lowStream.pc.pc.getStats(null).then(stats => {
           stats.forEach(report => {
             if (report.type === "outbound-rtp" && report.kind === "video") {
-              Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+              //Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
               if (report["framesPerSecond"]) {
 		      this.outboundFPSLow=report["framesPerSecond"];
 	      }
@@ -744,10 +745,14 @@ class AgoraMultiChanelApp {
         highStream.pc.pc.getStats(null).then(stats => {
           stats.forEach(report => {
             if (report.type === "outbound-rtp" && report.kind === "video") {
-              Object.keys(report).forEach(statName => { console.log(`LOW OUTBOUND ${statName}: ${report[statName]}`); });
+              //Object.keys(report).forEach(statName => { console.log(`HIGH OUTBOUND ${statName}: ${report[statName]}`); });
               if (report["framesPerSecond"]) {
 		      this.outboundFPSHigh=report["framesPerSecond"];
 	      }
+              if (report["framesEncoded"]) {
+		      this.outboundFrameCount=report["framesEncoded"];
+	      }
+	
             }
           })
         });
@@ -796,7 +801,7 @@ class AgoraMultiChanelApp {
                   if (report.type === "inbound-rtp" && report.kind === "video") {
                    // if (report["framesDropped"])
                     //  console.log(" framesDropped " + report["framesDropped"]);
-                    Object.keys(report).forEach(statName => { console.log(`inbound-rtp video for ${uid}  ${statName}: ${report[statName]}`); });
+                    //Object.keys(report).forEach(statName => { console.log(`inbound-rtp video for ${uid}  ${statName}: ${report[statName]}`); });
                   }
                 })
               });
@@ -888,7 +893,7 @@ class AgoraMultiChanelApp {
     }
 
     var stats="Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
-    var stats2=" Outbound stream FPS Low:" + this.outboundFPSLow + " High:" + this.outboundFPSHigh + " | Audio Subs "+this.getMapSize(this.audioSubscriptions)+"/"+this.maxAudioSubscriptions+ "("+this.audioPublishersByPriority.length+")"  + " | Video Subs "+this.getMapSize(this.videoSubscriptions)+"/"+this.maxVideoTiles+ "("+this.videoPublishersByPriority.length+")"  ; ;
+    var stats2=" Outbound stream FPS Low:" + this.outboundFPSLow + " High:" + this.outboundFPSHigh + " " + this.outboundFrameCount +" | Audio Subs "+this.getMapSize(this.audioSubscriptions)+"/"+this.maxAudioSubscriptions+ "("+this.audioPublishersByPriority.length+")"  + " | Video Subs "+this.getMapSize(this.videoSubscriptions)+"/"+this.maxVideoTiles+ "("+this.videoPublishersByPriority.length+")"  ; ;
     document.getElementById("renderFrameRate").innerHTML = stats+"<br/>"+stats2;
     //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
@@ -962,10 +967,14 @@ class AgoraMultiChanelApp {
     document.getElementById("local-player").style.width = cell_width - 2 + 'px';
     document.getElementById("local-player").style.height = cell_height - 2 + 'px';
     if (isMobile()) {
-      document.getElementById("cam_on").classList.add("default_icon_mobile");
-      document.getElementById("mic_on").classList.add("default_icon_mobile");
       document.getElementById("cam_off").classList.add("default_icon_mobile");
+      document.getElementById("mic_on").classList.add("default_icon_mobile");
       document.getElementById("mic_off").classList.add("default_icon_mobile");
+      document.getElementById("stats_button").classList.add("default_icon_mobile");
+      document.getElementById("settings_button").classList.add("default_icon_mobile");
+
+      document.getElementById("cam_on").classList.remove("cam_off_reduced");
+      document.getElementById("cam_on").classList.add("cam_off_reduced_mobile");
 
     }
 
