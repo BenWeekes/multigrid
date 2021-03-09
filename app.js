@@ -472,7 +472,7 @@ class AgoraMultiChanelApp {
       // they should become top priority in both
     } else if (text.startsWith(this.FPS)) {
       var fpsUid = text.split(":")[1];
-      var fps = text.split(":")[1];
+      var fps = text.split(":")[2];
       this.fpsMap[fpsUid] = fps;
     }
   }
