@@ -834,7 +834,7 @@ class AgoraMultiChanelApp {
 
 
             var rfr = rvs[rvskeys[k]]["renderFrameRate"];
-            console.log("remote FPS for "+rvskeys[k]+" "+this.fpsMap[rvskeys[k]]+" render rate"+rfr);
+           // console.log("remote FPS for "+rvskeys[k]+" "+this.fpsMap[rvskeys[k]]+" render rate"+rfr);
             var expectedFPS=this.maxFPS;
             if (this.fpsMap[rvskeys[k]]) {
               expectedFPS=this.fpsMap[rvskeys[k]];
@@ -926,12 +926,12 @@ class AgoraMultiChanelApp {
     }
 
    // var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
-   var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | remotesIncrease:" + remotesIncrease + " remotesDecrease:" + remotesDecrease+" remotesHold:"+remotesHold;
+   var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease+" Hold:"+remotesHold;
     var stats2 = " Outbound stream FPS Low:" + this.outboundFPSLow + " " + this.outboundFPSLow2  + " High:" + this.outboundFPSHigh + " " + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.maxVideoTiles + "(" + this.videoPublishersByPriority.length + ")";;
     document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
-    console.log("remotesIncrease "+remotesIncrease+" remotesDecrease "+remotesDecrease+" remotesHold "+remotesHold);
+    //console.log("remotesIncrease "+remotesIncrease+" remotesDecrease "+remotesDecrease+" remotesHold "+remotesHold);
 /*
     if (renderFrameRate > this.FPSThresholdToIncreaseSubs) {
       this.NumRenderExceed++;
