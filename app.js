@@ -29,7 +29,7 @@ class AgoraMultiChanelApp {
     }
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
     
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 6 : 64);
+    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 16 : 64);
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
 
     this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 1;
