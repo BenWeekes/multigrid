@@ -36,6 +36,7 @@ class AgoraMultiChanelApp {
     this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
+    this.sendVAD = getParameterByName("sendVAD") || "true";
 
     // tokens not used in this sample
     this.token = null;
@@ -211,15 +212,17 @@ class AgoraMultiChanelApp {
   monitorStatistics() {
     // check real time call stats and increase, hold or decrease the number of audio/video subscriptions
 
+    /*
     var renderFrameRate = this.getCallStats();
     if (renderFrameRate > this.FPSThresholdToIncreaseSubs) {
       this.NumRenderExceed++;
     }
     else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate >= 0 && renderFrameRate < this.FPSThresholdToReduceSubs) {
       this.NumRenderExceed--;
-    }
+    } */
 
 
+    this.useCallStatsToAdjustNumberOfSubscriptions();
 
     if (this.NumRenderExceed >= 3 || this.dictionaryLength(this.videoSubscriptions) == 0) {
       this.NumRenderExceed = 0;
@@ -314,7 +317,7 @@ class AgoraMultiChanelApp {
         var client = that.audioPublishers[key];
         await client.unsubscribe(user, that.AUDIO);
         delete that.audioSubscriptions[key];
-        console.warn(" UNsubscribed to Audio " + uid_string);
+        console.warn(" removeAudioSubsIfNotInMap  " + key+ " allowedAudioSubs " + that.allowedAudioSubs);
       }
     });
   }
@@ -330,7 +333,7 @@ class AgoraMultiChanelApp {
 
     if (this.performSubscriptions==="true") {
       await client.subscribe(user, this.AUDIO);
-      console.warn(" subscribed to Audio " + uid_string);
+      //console.warn(" subscribed to Audio " + uid_string);
       user.audioTrack.play();
     }
   }
@@ -339,11 +342,11 @@ class AgoraMultiChanelApp {
     var that = this;
     Object.keys(this.videoSubscriptions).forEach(async function (key) {
       if (!expected[key]) {
-        console.log(" removing " + key + " this.allowedVideoSubs " + that.allowedVideoSubs);
-        console.log("expected");
-        console.log(expected);
-        console.log("videoPublishersByPriority");
-        console.log(that.videoPublishersByPriority);
+        console.log(" removeVideoSubsIfNotInMap " + key + " allowedVideoSubs " + that.allowedVideoSubs);
+       // console.log("expected");
+       // console.log(expected);
+       // console.log("videoPublishersByPriority");
+       // console.log(that.videoPublishersByPriority);
         var user = that.userMap[key];
         var client = that.videoPublishers[key];
         await client.unsubscribe(user, that.VIDEO);
@@ -460,6 +463,7 @@ class AgoraMultiChanelApp {
     if (text.startsWith(this.VAD)) {
       var vadUid = text.split(":")[1];
       console.log("VAD" + senderId + " vadUid= " + vadUid);
+
       if (this.vadUid && document.getElementById(this.vadUid)) {
         document.getElementById(this.vadUid).classList.remove("remote_video_active");
       }
@@ -499,7 +503,7 @@ class AgoraMultiChanelApp {
   }
 
   voiceActivityDetection() {
-    if (!this.localTracks.audioTrack || !this.rtmChannel) {
+    if (!this.localTracks.audioTrack || !this.rtmChannel || !(this.sendVAD==="true")) {
       return;
     }
     var audioLevel = this.getInputLevel(this.localTracks.audioTrack); //Math.floor(this.getInputLevel(this.localTracks.audioTrack));
@@ -683,8 +687,6 @@ class AgoraMultiChanelApp {
   }
 
   getOutboundStats() {
-
-
     var now=Date.now();
     if ((now - this.outboundStatsLast) < this.OutboundStatsWait) {
       return;
@@ -696,7 +698,6 @@ class AgoraMultiChanelApp {
     }
 
     this.outboundStatsLast=now;
-
 
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
       var lowStream = this.clients[this.myPublishClient]._lowStream;
@@ -767,7 +768,7 @@ class AgoraMultiChanelApp {
 
   }
 
-  getCallStats() {
+  useCallStatsToAdjustNumberOfSubscriptions() {
 
     // based on remote and local FPS for each client we can determine if the number of remote videos can be
     // increased, held or decreased.
@@ -830,6 +831,7 @@ class AgoraMultiChanelApp {
       if (rvs) {
         var rvskeys = Object.keys(rvs);
         for (var k = 0; k < rvskeys.length; k++) {
+         // console.log("stats for "+ rvskeys[k]+" rfr  "+rvs[rvskeys[k]]["renderFrameRate"]);
           if (rvs[rvskeys[k]]["renderFrameRate"]) {
 
 
@@ -926,22 +928,22 @@ class AgoraMultiChanelApp {
     }
 
    // var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
-   var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease+" Hold:"+remotesHold;
+   var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:"+renderFrameRateCount+" | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease+" Hold:"+remotesHold;
     var stats2 = " Outbound stream FPS Low:" + this.outboundFPSLow + " " + this.outboundFPSLow2  + " High:" + this.outboundFPSHigh + " " + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.maxVideoTiles + "(" + this.videoPublishersByPriority.length + ")";;
     document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
     //console.log("remotesIncrease "+remotesIncrease+" remotesDecrease "+remotesDecrease+" remotesHold "+remotesHold);
-/*
-    if (renderFrameRate > this.FPSThresholdToIncreaseSubs) {
+
+    if (remotesIncrease>0 && remotesDecrease==0 && remotesHold==0 ) {
       this.NumRenderExceed++;
     }
-    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && renderFrameRate >= 0 && renderFrameRate < this.FPSThresholdToReduceSubs) {
+    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && remotesDecrease > (remotesHold+remotesIncrease)) {
       this.NumRenderExceed--;
     }
-*/
 
-    return renderFrameRateMin;
+
+   // return renderFrameRateMin;
   }
 
   getMapSize(x) {
