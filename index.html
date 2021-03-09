@@ -5,7 +5,10 @@
   <meta charset="utf 8">
   <title>Agora Mega Grid</title>
   <!--meta http-equiv="refresh" content="3"-->
-  <script src="https://code.angularjs.org/1.6.9/angular.js"></script>
+  <link rel="stylesheet" href="./assets/bootstrap.min.css">
+  <!--link rel="stylesheet" href="./index.css"-->
+
+  <!--script src="https://code.angularjs.org/1.6.9/angular.js"></script-->
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
   <script src="./sdk/AgoraRTM.js"></script>
   <style>
@@ -37,14 +40,6 @@
       background-color: lime-green;
     }
 
-    .local_videoOld {
-      idisplay: none;
-      display: inline-block;
-      background-color: #004;
-      margin: 0px;
-      width: 160px;
-      height: 90px;
-    }
 
 
     .local_video {
@@ -82,13 +77,24 @@
     .agora_stats {
       iwidth: 440px !important;
       width: 100% !important;
-      height: 32px;
+      height: 90px;
       font-size: 24px;
     }
 
     .media_controls {
       font-family: Arial, Helvetica, sans-serif;
       width: 160px;
+      padding: 4px;
+      margin: 2px;
+      color: black;
+      display: inline-block;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .settings_controls {
+      font-family: Arial, Helvetica, sans-serif;
+      float: right;
       padding: 4px;
       margin: 2px;
       color: black;
@@ -107,7 +113,7 @@
       vertical-align: middle;
     }
 
-  
+
     .main {
       background: #222;
     }
@@ -125,7 +131,7 @@
       left: 0px;
     }
 
-    #control_container2 {
+    #stats_container {
       width: 100%;
       float: left;
       margin-right: 3px;
@@ -136,7 +142,7 @@
       background-image: url('img/microphone_1-512.webp');
     }
 
-    .mic_icon_mobile {
+    .default_icon_mobile {
       width: 60px !important;
       height: 60px !important;
       margin-left: 20px !important;
@@ -146,57 +152,194 @@
       transform: scaleX(-1);
     }
 
-    .fullscreen{
-      width:1280px !important;
-      height:720px !important;
+    .fullscreen {
+      width: 1280px !important;
+      height: 720px !important;
     }
 
     .cam_off_reduced {
       width: 26px !important;
-    height: 22px !important;
-    padding: 6px !important;
-    padding-left: 4px !important;
-    padding-right: 4px !important;
-}
-    
+      height: 22px !important;
+      padding: 6px !important;
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+    }
 
-    .mic_icon {
+
+    .default_icon {
       width: 30px;
       height: 30px;
       border-radius: 16%;
       padding: 2px;
       margin: 6px;
+      margin-left: 2px;
       background-color: #c44;
       color: white;
       display: inline-block;
       text-align: center;
       cursor: pointer;
       vertical-align: middle;
+      box-sizing: content-box;
     }
 
     .media_buttons_enabled {
       background-color: rgb(91, 184, 137) !important;
     }
 
+    .settings_icon {
+      background-color: rgb(144, 146, 145) !important;
+    }
+
+    #pre-local-player {
+      width: 240px;
+      height: 180px;
+    }
 
     #grid {
       margin-left: 4px;
+    }
+
+
+    .lds-ring {
+      top: 50%;
+      left: 50%;
+      margin-left: -80px;
+      margin-top: -80px;
+      display: block;
+      position: absolute;
+      width: 80px;
+      height: 80px;
+
+    }
+
+    .lds-ring div {
+      z-index: 100;
+      left: 50%;
+      top: 50%;
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      margin: 4px;
+      border: 4px solid rgb(91, 184, 137);
+      border-radius: 50%;
+      animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color:rgb(91, 184, 137) transparent transparent transparent;
+    }
+
+    .lds-ring div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+
+    .lds-ring div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+
+    .lds-ring div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+
+    @keyframes lds-ring {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    .modal-content{
+      background-color: #fafafa;
     }
   </style>
 </head>
 
 <body class="main">
+  <div id="spinner" class="lds-ring hidden">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
   <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
 
     <div class="media_controls">
-      <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_off" class="mic_icon media_buttons_enabled hidden" />
-      <img src='img/icon-40-512.webp' onclick="toggleMic()" id="mic_on" class="mic_icon button_horizontally_flip" />  
-      <img src='img/_video-512.png' onclick="toggleCam()" id="cam_off" class="mic_icon media_buttons_enabled hidden" />
-      <img src='img/73-512.webp' onclick="toggleCam()" id="cam_on" class="mic_icon cam_off_reduced" />
-      
-      
+      <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_off"
+        class="default_icon media_buttons_enabled hidden" />
+      <img src='img/icon-40-512.webp' onclick="toggleMic()" id="mic_on" class="default_icon button_horizontally_flip" />
+      <img src='img/_video-512.png' onclick="toggleCam()" id="cam_off"
+        class="default_icon media_buttons_enabled hidden" />
+      <img src='img/73-512.webp' onclick="toggleCam()" id="cam_on" class="default_icon cam_off_reduced" />
     </div>
 
+
+    <div class="settings_controls">
+
+
+      <img src='img/aami3-22-512.png' onclick="toggleStats()" id="stats_button" class="default_icon settings_icon" />
+      <img src='img/Settings_control_interface-512.webp' onclick="toggleSettings()" id="settings_button"
+        class="default_icon settings_icon" />
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="media-device-test" data-backdrop="static" tabindex="-1" role="dialog"
+      aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modal-label">Device Selection: </h5>
+          </div>
+          <div class="modal-body">
+            <div class="container">
+              <h5 class="device-name">Microphone</h5>
+              <p class="device-intro">Produce sounds to check if the mic works.</p>
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Mics</button>
+                  <div class="mic-list dropdown-menu"></div>
+                </div>
+                <input type="text" class="mic-input form-control" aria-label="Text input with dropdown button" readonly>
+              </div>
+              <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                  aria-valuemax="100"></div>
+              </div>
+              <h5 class="device-name">Camera</h5>
+              <p id="device-intro">Move in front of the camera to check if it works.</p>
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Cams</button>
+                  <div class="cam-list dropdown-menu"></div>
+                </div>
+                <input type="text" class="cam-input form-control" aria-label="Text input with dropdown button" readonly>
+              </div>
+              <!-- 
+          <h5 class="device-name">Speaker</h5>
+          <p class="device-intro">Play sound to test if the speaker works. (Switching speakers works only on Chrome).</p>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Speakers</button>
+              <div class="speaker-list dropdown-menu"></div>
+            </div>
+            <input type="text" class="speaker-input form-control" aria-label="Text input with dropdown button" readonly>
+            <button class="speaker-play btn btn-primary btn-sm">play</button>
+          </div>
+          <div class="button">
+          </div>     -->
+              <div id="pre-local-player" class="player"></div>
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Join Channel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--
     <div id="control_container" class="hidden">
       <select class="agora_select" ng-model="cameraSelect" ng-options="x.name for x in cameraNames track by x.value"
         ng-change="changeSelectedCamera()">
@@ -207,17 +350,22 @@
         <option value="" disabled select>Select a Microphone</option>
       </select>
     </div>
+  -->
 
-    <div id="control_container2" class="ihidden">
+    <div id="stats_container" class="hidden">
       <div id="renderFrameRate" class="media_buttons agora_stats"> </div>
     </div>
 
   </div>
 
+
   <div id="grid">
-    <div  id="local-player" class="local_video hidden"></div>
+    <div id="local-player" class="local_video hidden"></div>
   </div>
 
 
 </body>
-<script src="./app.js?s=iiiiiu"></script>
+
+<script src="./assets/jquery-3.4.1.min.js"></script>
+<script src="./assets/bootstrap.bundle.min.js"></script>
+<script src="./app.js?ff=ghfdddhhh"></script>

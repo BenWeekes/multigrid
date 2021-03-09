@@ -34,7 +34,7 @@ class AgoraMultiChanelApp {
     this.allowedAudioSubs = this.minAudioAllowedSubs;
 
     this.token = null;
-    
+
     // Each agora client connects to one Agora channel
     this.maxClients = 4;
     this.maxUsersPerChannel = 16;
@@ -63,8 +63,12 @@ class AgoraMultiChanelApp {
     this.numClients = 0;
     this.numChannels = 0;
     // Seperate video and audio tracks we can manage seperately.
-    this.localAudioTrack = null;
-    this.localVideoTrack = null;
+
+    this.localTracks = {
+      videoTrack: null,
+      audioTrack: null,
+      audioSourceTrack:null
+    };
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
 
@@ -81,7 +85,6 @@ class AgoraMultiChanelApp {
 
     this.FPSThresholdToIncreaseSubs = 20;
     this.FPSThresholdToReduceSubs = 14;
-
 
     // RTM
     this.rtmClient;
@@ -113,6 +116,7 @@ class AgoraMultiChanelApp {
     await this.createClients();
     await this.joinChannels();
   }
+
 
   async createClients() {
     let i = 0;
@@ -179,6 +183,8 @@ class AgoraMultiChanelApp {
         }
       });
 
+    
+/*
       // unpublished is called when users mute. Best not to remove them from UI completely
       this.clients[i].on("stream-published", async (user, mediaType) => {
         var uid_string = user.uid.toString();
@@ -211,6 +217,8 @@ class AgoraMultiChanelApp {
         }
       });
 
+      */
+
       this.clients[i].on("user-left",
         async (user) => {
           delete this.videoPublishers[user.uid.toString()];
@@ -225,7 +233,7 @@ class AgoraMultiChanelApp {
   }
 
   getMaxVideoTiles() {
-    if (this.localVideoTrack != null && agoraApp.localVideoTrack._enabled) {
+    if (this.localTracks.videoTrack != null && agoraApp.localTracks.videoTrack._enabled) {
       return this.maxVideoTiles - 1;
     }
     return this.maxVideoTiles;
@@ -514,10 +522,10 @@ class AgoraMultiChanelApp {
   }
 
   voiceActivityDetection() {
-    if (!this.localAudioTrack) {
+    if (!this.localTracks.audioTrack || !this.rtmChannel)  {
       return;
     }
-    var audioLevel = this.getInputLevel(this.localAudioTrack); //Math.floor(this.getInputLevel(this.localAudioTrack));
+    var audioLevel = this.getInputLevel(this.localTracks.audioTrack); //Math.floor(this.getInputLevel(this.localTracks.audioTrack));
     if (audioLevel <= this.MaxBackgroundNoiseLevel) {
       if (this.audioSamplesArr.length >= this.MaxAudioSamples) {
         var removed = this.audioSamplesArr.shift();
@@ -567,10 +575,11 @@ class AgoraMultiChanelApp {
       tempChannelName = this.baseChannelName + i.toString();
       this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
         this.token, null);
+//        alert( this.myUid[i] );
+        //alert("Channel Join Failed. Please check appid is correct.")
     }
 
     // we will use the last channel name and UID to join RTM for send/receive VAD messages
-    this.startCamMic();
 
     this.rtmChannelName = tempChannelName;
     this.rtmUid = this.myUid[i - 1].toString();
@@ -578,17 +587,44 @@ class AgoraMultiChanelApp {
     this.numChannels = i;
   }
 
-  startCamMic() {
+
+  
+
+
+  async loadDevices() {
+    // create local tracks
+
+
+    [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+      {},  { encoderConfig: {width: this.highVideoWidth, height: this.highVideoHeight, frameRate:  this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax}} );
+
+      /*
+
+    [ this.localTracks.audioTrack,this.localTracks.videoTrack,this.localTracks.audioSourceTrack ] = await Promise.all([
+      // create local tracks, using microphone and camera
+      AgoraRTC.createMicrophoneAudioTrack(),
+      AgoraRTC.createCameraVideoTrack(),
+      AgoraRTC.createBufferSourceAudioTrack({
+        source: "./music.mp3",
+      })
+      
+    ]);
+    */
+   
+  }
+
+  startCamMic(cameraId, micId) {
     let targetClientIndex=this.getFirstOpenChannel();
-    this.publishAudioVideoToChannel(null,null, targetClientIndex);
+    this.publishAudioVideoToChannel(cameraId, micId, targetClientIndex);
   }
 
   //
   async publishAudioVideoToChannel(cameraId, micId, publishToIndex) {
 
-
-    [this.localAudioTrack, this.localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+    if (!this.localTracks.audioTrack) {
+    [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
 	     {microphoneId: micId},  { cameraId: cameraId, encoderConfig: {width: this.highVideoWidth, height: this.highVideoHeight, frameRate:  this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax}} );
+    }
 
 	 
     this.clients[publishToIndex].enableDualStream().then(() => {
@@ -598,9 +634,9 @@ class AgoraMultiChanelApp {
     })
 
     this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
-    this.localVideoTrack.play("local-player");
+    this.localTracks.videoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
-    await this.clients[publishToIndex].publish([this.localAudioTrack,this.localVideoTrack]);
+    await this.clients[publishToIndex].publish([this.localTracks.audioTrack,this.localTracks.videoTrack]);
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden"); 
     document.getElementById("cam_on").classList.add("hidden");
@@ -610,14 +646,14 @@ class AgoraMultiChanelApp {
 
   async publishVideoToChannel(cameraId, publishToIndex) {
     // If we're currently capturing, unpublish and stop the track.
-    if (this.localVideoTrack != null) {
+    if (this.localTracks.videoTrack != null) {
       console.log("### UNPUBLISHED VIDEO! ###");
-      await this.clients[publishToIndex].unpublish(this.localVideoTrack);
-      this.localVideoTrack.stop();
+      await this.clients[publishToIndex].unpublish(this.localTracks.videoTrack);
+      this.localTracks.videoTrack.stop();
     }
 
     // Create a new track and publish.
-    this.localVideoTrack = await AgoraRTC.createCameraVideoTrack({
+    this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack({
       cameraId: cameraId,
       encoderConfig: "240p",
     });
@@ -630,25 +666,25 @@ class AgoraMultiChanelApp {
 
 
     this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
-    this.localVideoTrack.play("local-player");
-    await this.clients[publishToIndex].publish(this.localVideoTrack);
+    this.localTracks.videoTrack.play("local-player");
+    await this.clients[publishToIndex].publish(this.localTracks.videoTrack);
     console.log("### PUBLISHED VIDEO VIDEO TO " + publishToIndex + "! ###");
   }
 
   //
   async publishAudioToChannel(microphoneId, publishToIndex) {
     // If we're currently capturing, unpublish and stop the track.
-    if (this.localAudioTrack != null) {
+    if (this.localTracks.audioTrack != null) {
       console.log("### UNPUBLISHED AUDIO! ###");
-      await this.clients[publishToIndex].unpublish(this.localAudioTrack);
-      this.localAudioTrack.stop();
+      await this.clients[publishToIndex].unpublish(this.localTracks.audioTrack);
+      this.localTracks.audioTrack.stop();
     }
 
     // Create a new track and publish.
-    this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+    this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
       microphoneId: microphoneId,
     });
-    await this.clients[publishToIndex].publish(this.localAudioTrack);
+    await this.clients[publishToIndex].publish(this.localTracks.audioTrack);
     console.log("### PUBLISHED AUDIO TO " + publishToIndex + "! ###");
   }
 
@@ -851,10 +887,21 @@ class AgoraMultiChanelApp {
       packetLossMin = -1;
     }
 
-    document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FPSLow:" + this.outboundFPSLow + " FPSHigh:" + this.outboundFPSHigh + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
+    var stats="Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
+    var stats2=" Outbound stream FPS Low:" + this.outboundFPSLow + " High:" + this.outboundFPSHigh + " | Audio Subs "+this.getMapSize(this.audioSubscriptions)+"/"+this.maxAudioSubscriptions+ "("+this.audioPublishersByPriority.length+")"  + " | Video Subs "+this.getMapSize(this.videoSubscriptions)+"/"+this.maxVideoTiles+ "("+this.videoPublishersByPriority.length+")"  ; ;
+    document.getElementById("renderFrameRate").innerHTML = stats+"<br/>"+stats2;
     //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
     return renderFrameRateMin;
+  }
+
+   getMapSize(x) {
+    var len = 0;
+    for (var count in x) {
+            len++;
+    }
+
+    return len;
   }
 
   updateUILayout() {
@@ -864,7 +911,7 @@ class AgoraMultiChanelApp {
     var width = window.innerWidth;
 
     var extra = 0;
-    if (agoraApp.localVideoTrack && agoraApp.localVideoTrack._enabled) {
+    if (agoraApp.localTracks.videoTrack && agoraApp.localTracks.videoTrack._enabled) {
       extra++;
     }
     var cells = document.getElementsByClassName('remote_video');
@@ -915,8 +962,11 @@ class AgoraMultiChanelApp {
     document.getElementById("local-player").style.width = cell_width - 2 + 'px';
     document.getElementById("local-player").style.height = cell_height - 2 + 'px';
     if (isMobile()) {
-      document.getElementById("cam_mute").classList.add("mic_icon_mobile");
-      document.getElementById("mic_mute").classList.add("mic_icon_mobile");
+      document.getElementById("cam_on").classList.add("default_icon_mobile");
+      document.getElementById("mic_on").classList.add("default_icon_mobile");
+      document.getElementById("cam_off").classList.add("default_icon_mobile");
+      document.getElementById("mic_off").classList.add("default_icon_mobile");
+
     }
 
     if (document.getElementById(this.vadUid)) {
@@ -925,9 +975,18 @@ class AgoraMultiChanelApp {
   }
 }
 
+function toggleStats() {
+
+  if (document.getElementById("stats_container").classList.contains("hidden")) {
+    document.getElementById("stats_container").classList.remove("hidden");
+  } else {
+    document.getElementById("stats_container").classList.add("hidden")
+  }
+}
+
 
 function toggleCam() {
-  if (!agoraApp.localVideoTrack) {
+  if (!agoraApp.localTracks.videoTrack) {
     AgoraRTC.getCameras();
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishVideoToChannel(null, targetClientIndex);
@@ -936,14 +995,14 @@ function toggleCam() {
     document.getElementById("cam_off").classList.remove("hidden"); 
     return;
   }
-  if (agoraApp.localVideoTrack._enabled) {
-    agoraApp.localVideoTrack.setEnabled(false);
+  if (agoraApp.localTracks.videoTrack._enabled) {
+    agoraApp.localTracks.videoTrack.setEnabled(false);
     document.getElementById("local-player").classList.add("hidden");
     document.getElementById("cam_on").classList.remove("hidden");
     document.getElementById("cam_off").classList.add("hidden"); 
   }
   else {
-    agoraApp.localVideoTrack.setEnabled(true);
+    agoraApp.localTracks.videoTrack.setEnabled(true);
     document.getElementById("local-player").classList.remove("hidden");
     document.getElementById("cam_on").classList.add("hidden");
     document.getElementById("cam_off").classList.remove("hidden"); 
@@ -952,7 +1011,7 @@ function toggleCam() {
 
 
 function toggleMic() {
-  if (!agoraApp.localAudioTrack) {
+  if (!agoraApp.localTracks.audioTrack) {
     AgoraRTC.getMicrophones();
     let targetClientIndex = agoraApp.getFirstOpenChannel();
     agoraApp.publishAudioToChannel(null, targetClientIndex);
@@ -961,92 +1020,21 @@ function toggleMic() {
     return;
   }
 
-  if (agoraApp.localAudioTrack._enabled) {
-    agoraApp.localAudioTrack.setEnabled(false);
+  if (agoraApp.localTracks.audioTrack._enabled) {
+    agoraApp.localTracks.audioTrack.setEnabled(false);
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden"); 
   }
   else {
-    agoraApp.localAudioTrack.setEnabled(true);
+    agoraApp.localTracks.audioTrack.setEnabled(true);
     document.getElementById("mic_on").classList.remove("hidden");
     document.getElementById("mic_off").classList.add("hidden"); 
   }
 }
 
-function initializeAngularController() {
-  /* Initialize the AngularJS controller for the Camera select box. */
-  angularApp.controller('multiChannelCtrl', function ($scope) {
-
-    // Define the event handler for when the user selects a camera.
-    $scope.changeSelectedCamera = function () {
-      console.log("### SELECTED NEW CAMERA: " +
-        $scope.cameraSelect.name + " ###");
-      // Define the target client/channel we want to publish into.
-      let targetClientIndex = agoraApp.getFirstOpenChannel();
-      agoraApp.publishVideoToChannel($scope.cameraSelect.value,
-        targetClientIndex);
-    }
-
-    // Define the event handler for when the user selects a microphone.
-    $scope.changeSelectedMicrophone = function () {
-      console.log("### SELECTED NEW MICROPHONE: " +
-        $scope.microphoneSelect.name + " ###");
-      let targetClientIndex = agoraApp.getFirstOpenChannel();
-      agoraApp.publishAudioToChannel($scope.microphoneSelect.value,
-        targetClientIndex);
-    }
-
-    let tempNames = {};
-    tempNames.cameras = [];
-    tempNames.microphones = [];
-
-    //  AgoraRTC.getDevices();
-
-    /*
-    // Get the camera metadata. 
-    AgoraRTC.getCameras().then(devices => {
-      console.log("### GOT CAMERAS ###")
-      devices.forEach(function (item, index) {
-        console.log(devices[index].label + " device id: " +
-          devices[index].deviceId);
-        // Push the metadata into our array structured for Angular.
-        tempNames.cameras.push({
-          name: devices[index].label,
-          value: devices[index].deviceId
-        });
-      });
-
-      // Update Angular's model for the select and force a view update.
-      $scope.cameraNames = tempNames.cameras;
-      $scope.$apply();
-    });
-
-    // Get the microphone metadata.      
-    AgoraRTC.getMicrophones().then(devices => {
-      console.log("### GOT MICROPHONES ###")
-      devices.forEach(function (item, index) {
-        console.log(devices[index].label + " device id: " +
-          devices[index].deviceId);
-        // Push the metadata into our array structured for Angular.
-        tempNames.microphones.push({
-          name: devices[index].label,
-          value: devices[index].deviceId
-        });
-      });
-
-      // Update Angular's model for the select and force a view update.
-      $scope.microphoneNames = tempNames.microphones;
-      $scope.$apply();
-    });
-
-    */
-  });
-}
 
 let agoraApp = new AgoraMultiChanelApp();
-agoraApp.init();
-let angularApp = angular.module('multiChannelApp', []);
-initializeAngularController();
+//agoraApp.init();
 
 
 function getParameterByName(name, url = window.location.href) {
@@ -1066,7 +1054,87 @@ function isMobile() {
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 }
 
+async function switchCamera(label) {
+  currentCam = cams.find(cam => cam.label === label);
+  $(".cam-input").val(currentCam.label);
+  // switch device of local video track.
+  await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+}
+
+async function switchMicrophone(label) {
+  currentMic = mics.find(mic => mic.label === label);
+  $(".mic-input").val(currentMic.label);
+  // switch device of local audio track.
+  await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+}
+
+async function switchSpeaker(label, deviceId) {
+  $(".speaker-input").val(label);
+  // switch device of local audio track.
+  await agoraApp.localTracks.audioSourceTrack.setPlaybackDevice(deviceId);
+}
+
+function setVolumeWave() {
+  volumeAnimation = requestAnimationFrame(setVolumeWave);
+  $(".progress-bar").css("width", agoraApp.localTracks.audioTrack.getVolumeLevel() * 100 + "%")
+  $(".progress-bar").attr("aria-valuenow", agoraApp.localTracks.audioTrack.getVolumeLevel() * 100)
+}
+
+function showLoadingSpinner(){
+  document.getElementById("spinner").classList.remove("hidden"); 
+}
+
+function hideLoadingSpinner(){
+  document.getElementById("spinner").classList.add("hidden");
+}
+let volumeAnimation;
+async function showMediaDeviceTest() {
+
+  await agoraApp.loadDevices();
+
+  agoraApp.localTracks.videoTrack.play("pre-local-player");
+  $("#media-device-test").modal("show");
+  $(".cam-list").delegate("a", "click", function(e){
+    switchCamera(this.text);
+  });
+  $(".mic-list").delegate("a", "click", function(e){
+    switchMicrophone(this.text);
+  });
+
+   // get mics
+   mics =  await AgoraRTC.getMicrophones();
+   currentMic = mics[0];
+   $(".mic-input").val(currentMic.label);
+   mics.forEach(mic => {
+     $(".mic-list").append(`<a class="dropdown-item" href="#">${mic.label}</a>`);
+   });
+ 
+   // get cameras
+   cams =  await AgoraRTC.getCameras();
+   currentCam = cams[0];
+   $(".cam-input").val(currentCam.label);
+   cams.forEach(cam => {
+     $(".cam-list").append(`<a class="dropdown-item" href="#">${cam.label}</a>`);
+   });
+ 
+   
+  $("#media-device-test").on("hidden.bs.modal", async function (e) {
+    cancelAnimationFrame(volumeAnimation);
+    showLoadingSpinner();
+    await agoraApp.init();
+    await agoraApp.startCamMic( $(".cam-input").val(),$(".mic-input").val());
+    hideLoadingSpinner();
+  })
+
+  volumeAnimation = requestAnimationFrame(setVolumeWave);
+  await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+  await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+
+
+}
+
 window.addEventListener('resize', resizeGrid);
+showMediaDeviceTest();
 
 setInterval(() => {
   agoraApp.monitorStatistics();
