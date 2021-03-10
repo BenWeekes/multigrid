@@ -29,7 +29,7 @@ class AgoraMultiChanelApp {
     }
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
 
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 16 : 64);
+    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 9 : 49);
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
 
     this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 1;
@@ -71,9 +71,12 @@ class AgoraMultiChanelApp {
     };
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
-    this.lowVideoHeight = 180
-    this.lowVideoWidth = 320;
-    this.maxFPS = 24;
+    //this.lowVideoHeight = 180;  // 154
+    //this.lowVideoWidth = 320; // 274
+    this.lowVideoHeight = 154;  // 154
+    this.lowVideoWidth = 274; // 274
+
+    this.maxFPS = 20;
     this.lowVideoFPS = isMobile() ? 15 : this.maxFPS;
     this.lowVideoBitrate = 200;
     this.highVideoHeight = isMobile() ? 180 : 360;
@@ -938,8 +941,9 @@ class AgoraMultiChanelApp {
     }
 
     // var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
-    var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
-    var stats2 = " Outbound stream FPS Low:" + this.outboundFPSLow + " " + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh + " " + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.maxVideoTiles + "(" + this.videoPublishersByPriority.length + ")";;
+    var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
+    //var stats2 = " Outbound stream FPS Low:" + this.outboundFPSLow + " " + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh + " " + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.maxVideoTiles + "(" + this.videoPublishersByPriority.length + ")";;
+    var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;;
     document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     //document.getElementById("renderFrameRate").innerHTML = "RRAvg:" + renderFrameRateAvg + " RRMin:" + renderFrameRateMin + " PLMin:" + Math.round(packetLossMin * 100) / 100 + " PLMax:" + Math.round(packetLossMax * 100) / 100 + " FRAvg:" + Math.round(freezeRateAvg * 100) / 100 + " FRMax:" + Math.round(freezeRateMax * 100) / 100 + " EEAvg:" + Math.round(end2EndDelayAvg * 100) / 100 + " EEMax:" + Math.round(end2EndDelayMax * 100) / 100;
 
@@ -951,10 +955,11 @@ class AgoraMultiChanelApp {
     }
     //this.getMapSize(this.videoSubscriptions)
 
+   // increase the number of subscriptions while conditions remain perfect 
     if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold == 0) {
       this.NumRenderExceed++;
-    }
-    else if (this.dictionaryLength(this.videoSubscriptions) > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
+    } // reduce the number of subscriptions when the majority of streams are failing to keep up.
+    else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
       this.NumRenderExceed--;
     }
 
