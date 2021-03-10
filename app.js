@@ -1098,7 +1098,7 @@ function toggleMic() {
     agoraApp.localTracks.audioTrack.setEnabled(true);
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
-    
+
   }
 }
 
