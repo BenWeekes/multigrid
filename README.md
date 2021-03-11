@@ -21,3 +21,14 @@
  
  Depenending on your network, it can take a reasonabling long amount of time to ramp up to a high number of remote video streams. 
  Improvemets to the algo could be made to allow it to ramp up more quickly. 
+ 
+ 
+ Usage:
+ 
+ clone this repo into a folder being served by a webserver e.g. nginx
+ Access the demo using an Agora appid which doesn't have tokens enabled 
+ e.g.
+ https://sokool.io/multigrid/?appid=20FFFFFFFFFb7c0cf5aPPPPPPPP537
+ 
+ If you wanted to use tokens you would need to pass a token into the page for each of the channels the user is joining.
+ 
