@@ -31,6 +31,7 @@
  *
  *****************************************************************************/
 class AgoraMultiChanelApp {
+
   //C'tor: initialize Agora and Angular.
   constructor() {
 
@@ -85,16 +86,16 @@ class AgoraMultiChanelApp {
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
     this.lowVideoHeight = 180;
-    this.lowVideoWidth = 320; 
+    this.lowVideoWidth = 320;
     //this.lowVideoHeight = 154;  (1080p/7)
     //this.lowVideoWidth = 274;  (1080p/7)
 
-    this.LowVideoStreamType=1;
-    this.HighVideoStreamType=0;
-    this.defaultVideoStreamType=this.HighVideoStreamType; // high
+    this.LowVideoStreamType = 1;
+    this.HighVideoStreamType = 0;
+    this.defaultVideoStreamType = this.HighVideoStreamType; // high
     // number of subscriptions before moving to low stream
-    this.SwitchVideoStreamTypeAt=4;
-    
+    this.SwitchVideoStreamTypeAt = 4;
+
 
     this.maxFPS = 20;
     this.lowVideoFPS = isMobile() ? 15 : this.maxFPS;
@@ -406,7 +407,7 @@ class AgoraMultiChanelApp {
         // 1 is for low quality
         client.setStreamFallbackOption(user.uid, 1);
         client.setRemoteVideoStreamType(user.uid, this.defaultVideoStreamType);
-        
+
       }).catch(e => {
         delete that.videoSubscriptions[uid_string];
         console.error(e);
@@ -477,7 +478,7 @@ class AgoraMultiChanelApp {
   }
 
   initRTM() {
-    this.rtmClient = AgoraRTM.createInstance(this.appId);
+    this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter: AgoraRTM.LOG_FILTER_ERROR});
     this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
     });
@@ -568,7 +569,7 @@ class AgoraMultiChanelApp {
 
       if ((Date.now() - this.vadSend) > this.vadSendWait) {
         this.vadSend = Date.now();
-        this.rtmChannel.sendMessage({ text: this.VAD+':' + this.myUid[this.myPublishClient] }).then(() => {
+        this.rtmChannel.sendMessage({ text: this.VAD + ':' + this.myUid[this.myPublishClient] }).then(() => {
           if (this.vadUid && document.getElementById(this.vadUid)) {
             document.getElementById(this.vadUid).classList.remove("remote_video_active");
           }
@@ -577,7 +578,7 @@ class AgoraMultiChanelApp {
           console.log('AgoraRTM VAD send failure');
         });
       }
-    } 
+    }
 
   }
 
@@ -802,24 +803,24 @@ class AgoraMultiChanelApp {
   }
 
   doSwitchVideoStreamTypeAt() {
-    var subs=this.getMapSize(this.videoSubscriptions);
-    if (subs>this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType==this.HighVideoStreamType) {
-      this.defaultVideoStreamType=this.LowVideoStreamType;
+    var subs = this.getMapSize(this.videoSubscriptions);
+    if (subs > this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType == this.HighVideoStreamType) {
+      this.defaultVideoStreamType = this.LowVideoStreamType;
       this.changeVideoStreamType(this.defaultVideoStreamType);
-    } else if (subs<this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType!=this.HighVideoStreamType) {
-      this.defaultVideoStreamType=this.HighVideoStreamType;
+    } else if (subs < this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType != this.HighVideoStreamType) {
+      this.defaultVideoStreamType = this.HighVideoStreamType;
       this.changeVideoStreamType(this.defaultVideoStreamType);
     }
   }
 
   changeVideoStreamType(streamType) {
-    var that=this;
+    var that = this;
     Object.keys(this.videoSubscriptions).forEach(async function (key) {
-        var user = that.userMap[key];
-        var client = that.videoPublishers[key];
-        client.setRemoteVideoStreamType(user.uid, streamType);
+      var user = that.userMap[key];
+      var client = that.videoPublishers[key];
+      client.setRemoteVideoStreamType(user.uid, streamType);
     });
-    
+
   }
 
   useCallStatsToAdjustNumberOfSubscriptions() {
@@ -986,14 +987,14 @@ class AgoraMultiChanelApp {
     var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
     var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;;
     document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
-   
+
     var subs = this.getMapSize(this.videoSubscriptions);
     if (subs > 1 && renderFrameRateCount < (subs - 1)) { // account for missing render rates
       remotesDecrease = remotesDecrease + ((subs - 1) - renderFrameRateCount);
     }
-   
-   // increase the number of subscriptions while conditions remain perfect 
-    if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold < (remotesIncrease/10)) {
+
+    // increase the number of subscriptions while conditions remain perfect 
+    if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold < (remotesIncrease / 10)) {
       this.NumRenderExceed++;
     } // reduce the number of subscriptions when the majority of streams are failing to keep up.
     else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
