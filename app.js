@@ -3,11 +3,31 @@
  * Author:  Ben Weekes & Shankara Shivagana
  * Company: Agora.io
  * Date: Mar 1st
- * Description: The app will use multiple agora channels 
- * to increase the number of remote video streams displayed on screeen.
- * Rather than blindly subscribing to all users in all the channels it 
- * maintains a priority list and increases/decreases the number of subscriptions based on the incall statistics
  * 
+ * Description: This demo app will use multiple agora channels 
+ * to increase the number of remote video streams displayed on screeen beyond the limits of a single channel.
+ 
+ * This demo is configured to use 4 channels (maxClients=4) allowing for up to 16*4=64 remote videos.
+
+ * Rather than immediately subscribing to publishing users when a "user-published" event is received,
+ * the users are put into a list (videoPublishersByPriority / audioPublishersByPriority).
+ * 
+ * A function (monitorStatistics) runs every 150ms which monitors the renderingRate of each of the remote video streams.
+ * The renderingRate is an Agora statistic which is incredibly sensitive to fluctations in available network and processing power.
+ * Based on the renderingRate of each video stream the number of audio and video subscriptions is increased, held or decreased.
+ * 
+ * The maximum number of audio subscriptions is configured to 6 while the maximum number of video subscriptions (maxVideoTiles) 
+ * is set at 9 for mobile and 49 for desktop.
+ * 
+ * When somebody starts talking they broadcast a VAD message over RTM to let others in group know that they are talking. 
+ * This ensures that their audio is subscribed to if it is not currently (in the situation where more than 6 have their mic unmuted)
+ * and that their video is brought on screen if not already.
+ * 
+ * Monitoring remote render rates works very well unless the sender is not reaching the requested encoding FPS.
+ * To address this problem, encoding users share their outbound FPS via RTM when it is falling below 90% of the requested FPS.
+ * 
+ * Depenending on your network, it can take a reasonabling long amount of time to ramp up to a high number of remote video streams. 
+ * Improvemets to the algo could be made to allow it to ramp up more quickly. 
  *
  *****************************************************************************/
 class AgoraMultiChanelApp {
@@ -543,13 +563,12 @@ class AgoraMultiChanelApp {
       this.exceedCount = 0;
     }
 
-    //console.log("audioLevel "+audioLevel+" background  "+background+" this.SilenceOffeset "+this.SilenceOffeset);
     if (this.exceedCount > this.exceedCountThreshold) {
       this.exceedCount = 0;
 
       if ((Date.now() - this.vadSend) > this.vadSendWait) {
         this.vadSend = Date.now();
-        this.rtmChannel.sendMessage({ text: 'VAD:' + this.myUid[this.myPublishClient] }).then(() => {
+        this.rtmChannel.sendMessage({ text: this.VAD+':' + this.myUid[this.myPublishClient] }).then(() => {
           if (this.vadUid && document.getElementById(this.vadUid)) {
             document.getElementById(this.vadUid).classList.remove("remote_video_active");
           }
@@ -558,9 +577,7 @@ class AgoraMultiChanelApp {
           console.log('AgoraRTM VAD send failure');
         });
       }
-    } else {
-      //console.log("this.exceedCount "+this.exceedCount+" this.exceedCountThreshold "+this.exceedCountThreshold);
-    }
+    } 
 
   }
 
