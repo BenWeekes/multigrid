@@ -110,7 +110,6 @@ class AgoraMultiChanelApp {
     this.FPSThresholdToIncreaseSubs = 0.9;
     this.FPSThresholdToReduceSubs = 0.6;
 
-
     // RTM
     this.rtmClient;
     this.rtmUid;
