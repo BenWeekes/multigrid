@@ -44,11 +44,11 @@ class AgoraMultiChanelApp {
     // Page Parameters
     this.appId = getParameterByName("appid");
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
-    this.maxVideoTiles = getParameterByName("maxVideoTiles") || (isMobile() ? 9 : 49);
-    this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
-    this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 1;
-    this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
-    this.intervalMonitor = getParameterByName("intervalMonitor") || 150;
+    this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || (isMobile() ? 9 : 49);
+    this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
+    this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
+    this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
+    this.intervalMonitor = getParameterByNameAsInt("intervalMonitor") || 150;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -259,15 +259,16 @@ class AgoraMultiChanelApp {
 
     if (this.NumRenderExceed >= 3 || this.dictionaryLength(this.videoSubscriptions) == 0) {
       this.NumRenderExceed = 0;
-      if (this.allowedVideoSubs < this.getMaxVideoTiles()) {
+      if (this.allowedVideoSubs < this.getMaxVideoTiles() &&  this.allowedVideoSubs < (this.dictionaryLength(this.videoSubscriptions) + 1) ) {
         this.allowedVideoSubs = this.dictionaryLength(this.videoSubscriptions) + 1;
       }
-      if (this.allowedAudioSubs < this.maxAudioSubscriptions && (this.dictionaryLength(this.audioSubscriptions) + 1) > this.allowedAudioSubs) {
+      if (this.allowedAudioSubs < this.maxAudioSubscriptions && this.allowedAudioSubs < (this.dictionaryLength(this.audioSubscriptions) + 1) ) {
         this.allowedAudioSubs = this.dictionaryLength(this.audioSubscriptions) + 1;
       }
     } else if (this.NumRenderExceed <= -5) {
       this.NumRenderExceed = 0;
       if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
+        console.error(" reducing  this.allowedVideoSubs "+ this.allowedVideoSubs+" "+this.minVideoAllowedSubs);
         this.allowedVideoSubs--;
       }
       if (this.allowedAudioSubs > this.minAudioAllowedSubs) {
@@ -1172,6 +1173,13 @@ function getParameterByName(name, url = window.location.href) {
   if (!results) return null;
   if (!results[2]) return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+
+function getParameterByNameAsInt(name, url = window.location.href) {
+  var val=getParameterByName(name,url);
+ if (val) return parseInt(val, 10);
+ return val;
 }
 
 function resizeGrid() {
