@@ -50,7 +50,9 @@ class AgoraMultiChanelApp {
     this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
+    this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
     this.sendVAD = getParameterByName("sendVAD") || "true";
+    this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
 
     // tokens not used in this sample
     this.token = null;
@@ -126,6 +128,8 @@ class AgoraMultiChanelApp {
     this.vadUid;
     this.vadSend = 0;
     this.vadSendWait = 2 * 1000;
+    this.vadRecv = 0;
+    this.vadRecvWait = 1 * 1000;
 
 
     this.outboundFPSLow = 0;
@@ -478,7 +482,7 @@ class AgoraMultiChanelApp {
   }
 
   initRTM() {
-    this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter: AgoraRTM.LOG_FILTER_ERROR});
+    this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter:AgoraRTM.LOG_FILTER_ERROR});
     this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
     });
@@ -498,7 +502,9 @@ class AgoraMultiChanelApp {
   }
 
   handleRTM(senderId, text) {
-    if (text.startsWith(this.VAD)) {
+    if (text.startsWith(this.VAD) && (Date.now() - this.vadRecv) > this.vadRecvWait) {
+      this.vadRecv = Date.now();
+    
       var vadUid = text.split(":")[1];
       //console.log("VAD" + senderId + " vadUid= " + vadUid);
 
@@ -540,6 +546,7 @@ class AgoraMultiChanelApp {
     return average;
   }
 
+
   voiceActivityDetection() {
     if (!this.localTracks.audioTrack || !this.rtmChannel || !(this.sendVAD === "true")) {
       return;
@@ -566,6 +573,9 @@ class AgoraMultiChanelApp {
 
     if (this.exceedCount > this.exceedCountThreshold) {
       this.exceedCount = 0;
+
+      
+
 
       if ((Date.now() - this.vadSend) > this.vadSendWait) {
         this.vadSend = Date.now();
@@ -613,9 +623,12 @@ class AgoraMultiChanelApp {
       {}, { encoderConfig: { width: this.highVideoWidth, height: this.highVideoHeight, frameRate: this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax } });
   }
 
-  startCamMic(cameraId, micId) {
+  async startCamMic(cameraId, micId) {
     let targetClientIndex = this.getFirstOpenChannel();
-    this.publishAudioVideoToChannel(cameraId, micId, targetClientIndex);
+    await this.publishAudioVideoToChannel(cameraId, micId, targetClientIndex);
+    if (this.muteMicOnJoin === "true") {
+      toggleMic();
+    }
   }
 
   //
@@ -983,11 +996,7 @@ class AgoraMultiChanelApp {
       packetLossMin = -1;
     }
 
-    // display stats in UI
-    var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
-    var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;;
-    document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
-
+    
     var subs = this.getMapSize(this.videoSubscriptions);
     if (subs > 1 && renderFrameRateCount < (subs - 1)) { // account for missing render rates
       remotesDecrease = remotesDecrease + ((subs - 1) - renderFrameRateCount);
@@ -1001,6 +1010,14 @@ class AgoraMultiChanelApp {
       this.NumRenderExceed--;
     }
 
+    // display stats in UI
+    var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
+    var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;;
+    document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
+
+    if (this.enableFullLogging === "true"){
+      console.log((new Date()).toLocaleTimeString()+" "+stats+" "+stats+" "+stats2+" NumRenderExceed="+this.NumRenderExceed);
+    }
 
     // return renderFrameRateMin;
   }
