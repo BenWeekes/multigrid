@@ -48,6 +48,7 @@ class AgoraMultiChanelApp {
     this.maxAudioSubscriptions = getParameterByName("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByName("minVideoAllowedSubs") || 1;
     this.minAudioAllowedSubs = getParameterByName("minAudioAllowedSubs") || 3;
+    this.intervalMonitor = getParameterByName("intervalMonitor") || 150;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -204,7 +205,6 @@ class AgoraMultiChanelApp {
           // default order will be chronological but this will be rearranged using the VAD
           this.audioPublishersByPriority.push(uid_string);
         }
-
       });
 
       // unpublished is called when users mute. Best not to remove them from UI completely
@@ -222,7 +222,6 @@ class AgoraMultiChanelApp {
           this.removeUidFromArray(this.audioPublishersByPriority, uid_string);
         }
       });
-
 
       this.clients[i].on("user-left",
         async (user) => {
@@ -1278,4 +1277,4 @@ if (showDeviceSelection === "true") {
 
 setInterval(() => {
   agoraApp.monitorStatistics();
-}, 150);
+}, agoraApp.intervalMonitor );
