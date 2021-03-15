@@ -20,7 +20,7 @@
     }
 
     .local_video {
-      background-color: #000;
+      background-color: #222;
       margin: 2px;
       margin-left: 3px;
       margin-right: 0px;
@@ -36,7 +36,7 @@
 
 
     .remote_video {
-      background-color: #000;
+      background-color: #222;
       margin: 2px;
       padding: 2px;
       width: 120px;
