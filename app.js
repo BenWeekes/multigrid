@@ -12,7 +12,7 @@
  * Rather than immediately subscribing to publishing users when a "user-published" event is received,
  * the users are put into a list (videoPublishersByPriority / audioPublishersByPriority).
  * 
- * A function (monitorStatistics) runs every 150ms which monitors the renderingRate of each of the remote video streams.
+ * A function (manageSubscriptions) runs every 150ms which monitors the renderingRate of each of the remote video streams.
  * The renderingRate is an Agora statistic which is incredibly sensitive to fluctations in available network and processing power.
  * Based on the renderingRate of each video stream the number of audio and video subscriptions is increased, held or decreased.
  * 
@@ -48,7 +48,7 @@ class AgoraMultiChanelApp {
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
-    this.intervalMonitor = getParameterByNameAsInt("intervalMonitor") || 150;
+    this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -103,7 +103,6 @@ class AgoraMultiChanelApp {
     }
     // number of subscriptions before moving to low stream
     this.SwitchVideoStreamTypeAt = 4;
-
 
     this.maxFPS = 20;
     this.lowVideoFPS = isMobile() ? 15 : this.maxFPS;
@@ -165,6 +164,10 @@ class AgoraMultiChanelApp {
   async init() {
     await this.createClients();
     await this.joinChannels();
+    //
+    setInterval(() => {
+      this.manageSubscriptions();
+    }, this.intervalManageSubscriptions);
   }
 
   async createClients() {
@@ -250,7 +253,8 @@ class AgoraMultiChanelApp {
     }
     return this.maxVideoTiles;
   }
-  monitorStatistics() {
+
+  manageSubscriptions() {
     this.useCallStatsToAdjustNumberOfSubscriptions();
     this.voiceActivityDetection();
     if (this.superOptimise !== "true") {  
@@ -1256,6 +1260,4 @@ if (showDeviceSelection === "true") {
   connect();
 }
 
-setInterval(() => {
-  agoraApp.monitorStatistics();
-}, agoraApp.intervalMonitor);
+
