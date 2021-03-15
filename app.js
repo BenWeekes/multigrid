@@ -151,10 +151,10 @@ class AgoraMultiChanelApp {
     this.mobileUIUpdated=true;
     
     this.manageGridLast = 0;
-    this.ManageGridWait = 300;
-    if (this.superOptimise === "true") {  
-      this.ManageGridWait=2000;
-    }
+    this.ManageGridWait = getParameterByNameAsInt("ManageGridWait") || 300;
+    //if (this.superOptimise === "true") {  
+    //  this.ManageGridWait=2000;
+   // }
 
     // check an appid has been passed in
     if (!this.appId) {
@@ -1008,6 +1008,7 @@ class AgoraMultiChanelApp {
   }
 
 
+  // web is square
   getGridColCount(cells) {
     if (cells < 5) {
       return 2;
@@ -1036,10 +1037,22 @@ class AgoraMultiChanelApp {
       extra++;
     }
     var cells = document.getElementsByClassName('remote_video');
-    var cellCount = cells.length + extra;;
+    var cellCount = cells.length + extra;
     var cols = this.getGridColCount(cellCount);
     var rows =  Math.ceil(cellCount/cols);
     //var rows = cols;
+
+    // for mobile it will be 2xX
+    if (this.isMobile()) {
+        // landscape
+        if (width>height) {  // landscape
+          rows=2;
+          cols=Math.ceil(cellCount/rows);
+        } else { // portrait
+          cols=2;
+          rows=Math.ceil(cellCount/cols);
+        }
+    }
 
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
@@ -1060,8 +1073,7 @@ class AgoraMultiChanelApp {
       // width constrained
        cell_width =  grid_available_width/cols;
        cell_height = cell_width/ (this.AspectRatio);
-    }
-    
+    }  
 
     for (var i = 0; i < cells.length; i++) {
       cells[i].style.width = cell_width + 'px';
