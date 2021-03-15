@@ -36,6 +36,10 @@
     background-color: #222;
   }
 
+  .headerOpen {
+    height: 140px !important;
+  }
+
   .header2 {
     height: 350px;
     padding: 10px;

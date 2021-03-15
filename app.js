@@ -41,6 +41,8 @@ class AgoraMultiChanelApp {
     this.VIDEO = "video";
     this.AUDIO = "audio";
 
+    this.AspectRatio=16/9;
+
     // Page Parameters
     this.appId = getParameterByName("appid");
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
@@ -1035,19 +1037,31 @@ class AgoraMultiChanelApp {
     }
     var cells = document.getElementsByClassName('remote_video');
     var cellCount = cells.length + extra;;
-
     var cols = this.getGridColCount(cellCount);
-    var rows = cols;
+    var rows =  Math.ceil(cellCount/cols);
+    //var rows = cols;
+
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
-
     var grid_padding = 10;
-    var grid_height = height - toolbar_height - (grid_padding * rows);
+    var grid_available_height = height - toolbar_height - (grid_padding * rows);
+    var grid_available_width = width - (grid_padding * cols);
 
-    //    var cell_width =  grid_width/cols;
-    //    var cell_height = cell_width/ (16 / 9);
-    var cell_height = grid_height / rows;
-    var cell_width = cell_height * (16 / 9);
+    // are we limited by width of height 
+
+    var cell_width=160;
+    var cell_height=90;
+
+    if (rows*grid_available_width/this.AspectRatio> cols* grid_available_height) {
+      // height constrained
+       cell_height = grid_available_height/rows;
+       cell_width = cell_height * (this.AspectRatio);
+    } else {
+      // width constrained
+       cell_width =  grid_available_width/cols;
+       cell_height = cell_width/ (this.AspectRatio);
+    }
+    
 
     for (var i = 0; i < cells.length; i++) {
       cells[i].style.width = cell_width + 'px';
@@ -1069,7 +1083,6 @@ class AgoraMultiChanelApp {
       document.getElementById("mic_off").classList.add("default_icon_mobile");
       document.getElementById("stats_button").classList.add("default_icon_mobile");
       document.getElementById("settings_button").classList.add("default_icon_mobile");
-
       document.getElementById("cam_on").classList.remove("cam_off_reduced");
       document.getElementById("cam_on").classList.add("cam_off_reduced_mobile");
     }
@@ -1084,8 +1097,11 @@ function toggleStats() {
 
   if (document.getElementById("stats_container").classList.contains("hidden")) {
     document.getElementById("stats_container").classList.remove("hidden");
+    document.getElementById("toolbar").classList.add("headerOpen");
+    
   } else {
     document.getElementById("stats_container").classList.add("hidden")
+    document.getElementById("toolbar").classList.remove("headerOpen");
   }
 }
 
@@ -1134,10 +1150,8 @@ function toggleMic() {
     agoraApp.localTracks.audioTrack.setEnabled(true);
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
-
   }
 }
-
 
 let agoraApp = new AgoraMultiChanelApp();
 //agoraApp.init();
