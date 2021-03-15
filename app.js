@@ -148,7 +148,7 @@ class AgoraMultiChanelApp {
     this.outboundFrameCount = 0;
     this.InboundStatsMonitorInterval = 15;
     this.debugInboundStats = this.InboundStatsMonitorInterval;
-    this.mobileUIUpdated=false;
+    this.mobileUIUpdated=true;
     
     this.manageGridLast = 0;
     this.ManageGridWait = 300;
