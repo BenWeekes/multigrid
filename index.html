@@ -8,16 +8,12 @@
   <script src="./sdk/AgoraRTC_N-4.3.0.js"></script>
   <script src="./sdk/AgoraRTM.js"></script>
   <link rel="stylesheet" href="./index.css">
+  <link rel="stylesheet" href="./grid.css?1=3rr2">
 </head>
 
-<body class="main">
-  <div id="spinner" class="lds-ring hidden">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <div id="toolbar" ng-app="multiChannelApp" ng-controller="multiChannelCtrl">
+<body>
+  <div class="main_body">
+  <div id="toolbar"  class="header" >
 
     <div class="media_controls">
       <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_off"
@@ -32,6 +28,13 @@
       <img src='img/aami3-22-512.png' onclick="toggleStats()" id="stats_button" class="default_icon settings_icon" />
       <img src='img/Settings_control_interface-512.webp' onclick="toggleSettings()" id="settings_button"
         class="default_icon settings_icon" />
+    </div>
+
+    <div id="spinner" class="lds-ring hidden">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
 
     <!-- Modal -->
@@ -98,11 +101,14 @@
     </div>
   </div>
 
-  <div id="grid">
+  <div id="grid" class="grid_wrapper">
     <div id="local-player" class="local_video hidden"></div>
   </div>
+
+
+</div> 
 </body>
 
 <script src="./assets/jquery-3.4.1.min.js"></script>
 <script src="./assets/bootstrap.bundle.min.js"></script>
-<script src="./app.js?nocachedd"></script>
+<script src="./app.js?popopodd"></script>
