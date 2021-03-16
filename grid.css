@@ -5,18 +5,27 @@
     gap: 10px;
     grid-auto-rows: minmax(auto, auto);
     height: 100%;
-    background-color: #222;
   }
 
-  body{
-    background-color: #222 !important;
+  .main_body_mobile_landscape {
+    grid-template-columns: repeat(3, 1fr) !important;
   }
+
+  .default_icon_mobile_landscape {
+    display:block;  
+    margin-top: 18px;
+  }
+
+  .media_controls_mobile_landscape {
+    width: 40px !important;
+  }
+
   .grid_wrapper {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: 2px;
     grid-auto-rows: minmax(72px, auto);
-    height: 100%;
+    iheight: 100%;
   }
 
   .cell {
@@ -25,13 +34,9 @@
     height: 90px;
   }
 
-  .remote_video {
-    background-color: #222;
-    width: 160px;
-    height: 90px;
-  }
+
   .header {
-    height: 72px;
+    height: 60px;
     padding: 10px;
     background-color: #222;
   }

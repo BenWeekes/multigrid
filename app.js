@@ -41,14 +41,16 @@ class AgoraMultiChanelApp {
     this.VIDEO = "video";
     this.AUDIO = "audio";
 
-    this.AspectRatio=16/9;
+    this.AspectRatio = 16 / 9;
 
     // Page Parameters
     this.appId = getParameterByName("appid");
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
-    this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || (isMobile() ? 9 : 49);
+    this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || (isMobile() ? 10 : 49);
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
+    this.initialAudioAllowedSubs = getParameterByNameAsInt("initialAudioAllowedSubs") || 5;
+    this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || 5;
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
     this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
     // disable subscriptions for load testing clients 
@@ -74,8 +76,8 @@ class AgoraMultiChanelApp {
     this.audioPublishers = {};
     this.userMap = {};
     this.fpsMap = {};
-    this.allowedVideoSubs = this.minVideoAllowedSubs;
-    this.allowedAudioSubs = this.minAudioAllowedSubs;
+    this.allowedVideoSubs = this.initialVideoAllowedSubs;
+    this.allowedAudioSubs = this.initialAudioAllowedSubs;
     this.NumRenderExceed = 0;
     // first in list is more imporant person 
     this.videoPublishersByPriority = [];
@@ -102,9 +104,9 @@ class AgoraMultiChanelApp {
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
 
-    this.defaultVideoStreamType = this.LowVideoStreamType; 
-    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {  
-      this.defaultVideoStreamType= this.HighVideoStreamType; 
+    this.defaultVideoStreamType = this.LowVideoStreamType;
+    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
+      this.defaultVideoStreamType = this.HighVideoStreamType;
     }
 
     // number of subscriptions before moving to low stream
@@ -152,10 +154,13 @@ class AgoraMultiChanelApp {
     this.outboundFrameCount = 0;
     this.InboundStatsMonitorInterval = 15;
     this.debugInboundStats = this.InboundStatsMonitorInterval;
-    this.mobileUIUpdated=true;
-    
+    this.mobileUIUpdated = true;
+    this.mobileUIUpdatedLandscape = false;
+    this.mobileUIUpdatedPortrait = false;
+
+
     this.manageGridLast = 0;
-    this.ManageGridWait = getParameterByNameAsInt("ManageGridWait") || 300;
+    this.ManageGridWait = getParameterByNameAsInt("ManageGridWait") || 500;
 
     // check an appid has been passed in
     if (!this.appId) {
@@ -260,7 +265,7 @@ class AgoraMultiChanelApp {
   manageSubscriptions() {
     this.useCallStatsToAdjustNumberOfSubscriptions();
     this.voiceActivityDetection();
-    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {  
+    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
       this.doSwitchVideoStreamTypeAt();
     }
     this.manageGrid();
@@ -612,7 +617,7 @@ class AgoraMultiChanelApp {
       }
     }
 
-    if ((this.enableDualStream === "true" && !isMobile()) || this.enableDualStreamMobile==="true") {  
+    if ((this.enableDualStream === "true" && !isMobile()) || this.enableDualStreamMobile === "true") {
       this.clients[publishToIndex].enableDualStream().then(() => {
         console.log("Enable Dual stream success!");
       }).catch(err => {
@@ -620,7 +625,7 @@ class AgoraMultiChanelApp {
       })
       this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
     }
-   
+
     this.localTracks.videoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
     await this.clients[publishToIndex].publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
@@ -705,13 +710,13 @@ class AgoraMultiChanelApp {
       return;
     }
 
-    
+
     var timedelta = 0;
     if (this.outboundStatsLast > 0) {
       timedelta = now - this.outboundStatsLast;
     }
     this.outboundStatsLast = now;
-    
+
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
       var lowStream = this.clients[this.myPublishClient]._lowStream;
       if (lowStream.pc && lowStream.pc.pc) {
@@ -890,7 +895,7 @@ class AgoraMultiChanelApp {
 
           }
 
-          if (this.superOptimise !== "true"  && !isMobile()) {   
+          if (this.superOptimise !== "true" && !isMobile()) {
             if (rvs[rvskeys[k]]["packetLossRate"]) {
               packetLossCount++;
               packetLossAvg = packetLossAvg + rvs[rvskeys[k]]["packetLossRate"];
@@ -986,14 +991,14 @@ class AgoraMultiChanelApp {
     }
 
     // display stats in UI
-    if (this.superOptimise !== "true" && !isMobile()) {    
+    if (this.superOptimise !== "true" && !isMobile()) {
       var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
       var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
       document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     } else {
       document.getElementById("renderFrameRate").innerHTML = " Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
     }
-    
+
     if (this.enableFullLogging === "true") {
       console.log((new Date()).toLocaleTimeString() + " " + stats + " " + stats + " " + stats2 + " NumRenderExceed=" + this.NumRenderExceed);
     }
@@ -1030,7 +1035,11 @@ class AgoraMultiChanelApp {
   updateUILayout() {
     var height = window.innerHeight;
     var width = window.innerWidth;
-    var toolbar_height = document.getElementById("toolbar").offsetHeight;
+
+    var landscape = true;
+    if (height * this.AspectRatio > width) {
+      landscape = false;
+    }
 
     var extra = 0;
     if (agoraApp.localTracks.videoTrack && agoraApp.localTracks.videoTrack._enabled) {
@@ -1039,41 +1048,75 @@ class AgoraMultiChanelApp {
     var cells = document.getElementsByClassName('remote_video');
     var cellCount = cells.length + extra;
     var cols = this.getGridColCount(cellCount);
-    var rows =  Math.ceil(cellCount/cols);
+    var rows = Math.ceil(cellCount / cols);
     //var rows = cols;
 
     // for mobile it will be 2xX
     if (isMobile()) {
-        // landscape
-        if (width>height) {  // landscape
-          rows=2;
-          cols=Math.ceil(cellCount/rows);
-        } else { // portrait
-          cols=2;
-          rows=Math.ceil(cellCount/cols);
-        }
+      // landscape
+      if (width > height) {  // landscape
+        rows = 2;
+        cols = Math.ceil(cellCount / rows);
+      } else { // portrait
+        cols = 2;
+        rows = Math.ceil(cellCount / cols);
+      }
+    }
+
+    var toolbar_height = document.getElementById("toolbar").offsetHeight;
+    var toolbar_width = 0;
+
+    if (landscape && isMobile()) { // && !this.mobileUIUpdatedLandscape) {
+      this.mobileUIUpdatedLandscape=true;
+      this.mobileUIUpdatedPortrait = false;
+      toolbar_width = 70;
+      var that = this;
+      var els = document.getElementsByClassName("default_icon");
+      Array.prototype.forEach.call(els, function (el) {
+        if (!el.classList.contains("hidden"))
+        el.classList.add("default_icon_mobile_landscape");
+      });
+      document.getElementById("main_body").classList.add("main_body_mobile_landscape");
+      document.getElementById("media_controls").classList.add("media_controls_mobile_landscape");
+      document.getElementById("settings_controls").classList.add("hidden");
+      document.getElementById("stats_container").classList.add("hidden")
+      document.getElementById("toolbar").classList.remove("headerOpen");
+     // document.getElementById("stats_container").classList.add("hidden");
+      
+    } else if (!landscape && isMobile()) { // && !this.mobileUIUpdatedPortrait) {
+      this.mobileUIUpdatedLandscape  = false;
+      this.mobileUIUpdatedPortrait = true;
+      var that = this;
+      var els = document.getElementsByClassName("default_icon");
+      Array.prototype.forEach.call(els, function (el) {
+        el.classList.remove("default_icon_mobile_landscape");
+      });
+      document.getElementById("main_body").classList.remove("main_body_mobile_landscape");
+      document.getElementById("media_controls").classList.remove("media_controls_mobile_landscape");
+      document.getElementById("settings_controls").classList.remove("hidden");
+     // document.getElementById("stats_container").classList.remove("hidden");
     }
 
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
     var grid_padding = 10;
     var grid_available_height = height - toolbar_height - (grid_padding * rows);
-    var grid_available_width = width - (grid_padding * cols);
+    var grid_available_width = width - toolbar_width - (grid_padding * cols);
 
     // are we limited by width of height 
 
-    var cell_width=160;
-    var cell_height=90;
+    var cell_width = 160;
+    var cell_height = 90;
 
-    if (rows*grid_available_width/this.AspectRatio> cols* grid_available_height) {
+    if (rows * grid_available_width / this.AspectRatio > cols * grid_available_height) {
       // height constrained
-       cell_height = grid_available_height/rows;
-       cell_width = cell_height * (this.AspectRatio);
+      cell_height = grid_available_height / rows;
+      cell_width = cell_height * (this.AspectRatio);
     } else {
       // width constrained
-       cell_width =  grid_available_width/cols;
-       cell_height = cell_width/ (this.AspectRatio);
-    }  
+      cell_width = grid_available_width / cols;
+      cell_height = cell_width / (this.AspectRatio);
+    }
 
     for (var i = 0; i < cells.length; i++) {
       cells[i].style.width = cell_width + 'px';
@@ -1081,15 +1124,24 @@ class AgoraMultiChanelApp {
     }
 
     var grid_width = (cell_width * cols);
+    var grid_height = (cell_height * rows);
+
     document.getElementById("grid").style.width = grid_width + 'px';
-    document.getElementById("grid").style.marginLeft = (width - grid_width - grid_padding - grid_padding) / 2 + 'px';
+    if (landscape && isMobile()) { 
+      document.getElementById("grid").style.marginTop = (height - grid_height - grid_padding - grid_padding) / 2 + 'px';
+      document.getElementById("grid").style.marginLeft = '0px';
+    } else {
+      document.getElementById("grid").style.marginTop = '0px';
+      document.getElementById("grid").style.marginLeft = (width - grid_width - grid_padding - grid_padding) / 2 + 'px';
+    
+    }
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
 
     //    document.getElementById("local-player").style.width = cell_width - 2 + 'px';
     //   document.getElementById("local-player").style.height = cell_height - 2 + 'px';
-    if (!this.mobileUIUpdated &&  isMobile()) {
-      this.mobileUIUpdated=true;
+    if (!this.mobileUIUpdated && isMobile()) {
+      this.mobileUIUpdated = true;
       document.getElementById("cam_off").classList.add("default_icon_mobile");
       document.getElementById("mic_on").classList.add("default_icon_mobile");
       document.getElementById("mic_off").classList.add("default_icon_mobile");
@@ -1110,7 +1162,7 @@ function toggleStats() {
   if (document.getElementById("stats_container").classList.contains("hidden")) {
     document.getElementById("stats_container").classList.remove("hidden");
     document.getElementById("toolbar").classList.add("headerOpen");
-    
+
   } else {
     document.getElementById("stats_container").classList.add("hidden")
     document.getElementById("toolbar").classList.remove("headerOpen");
@@ -1190,6 +1242,7 @@ function resizeGrid() {
 }
 
 function isMobile() {
+  //return true;
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 }
 

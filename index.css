@@ -1,8 +1,8 @@
 
-    .ng-scope {
-      padding: 6px;
+ 
+    body{
+      background-color: #222 !important;
     }
-
     .agora_video_player {
       /*border-radius: 15%;*/
     }
@@ -32,11 +32,12 @@
 
     .hidden {
       display: none !important;
+      ivisibility: hidden;
     }
 
 
     .remote_video {
-      background-color: #222;
+      background-color: #000;
       margin: 2px;
       padding: 2px;
       width: 120px;
@@ -52,7 +53,6 @@
     }
 
     .agora_stats {
-      iwidth: 440px !important;
       width: 100% !important;
       height: 80px;
       font-size: 24px;
