@@ -57,6 +57,9 @@ class AgoraMultiChanelApp {
     this.sendVAD = getParameterByName("sendVAD") || "true";
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.superOptimise = getParameterByName("superOptimise") || "false";
+    this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "false";
+    this.enableDualStream = getParameterByName("enableDualStream") || "true";
+    this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
 
     // tokens not used in this sample
     this.token = null;
@@ -99,10 +102,11 @@ class AgoraMultiChanelApp {
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
 
-    this.defaultVideoStreamType = this.HighVideoStreamType; // high
-    if (this.superOptimise === "true") {  
-      this.defaultVideoStreamType=this.LowVideoStreamType;
+    this.defaultVideoStreamType = this.LowVideoStreamType; 
+    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {  
+      this.defaultVideoStreamType= this.HighVideoStreamType; 
     }
+
     // number of subscriptions before moving to low stream
     this.SwitchVideoStreamTypeAt = 4;
 
@@ -152,9 +156,6 @@ class AgoraMultiChanelApp {
     
     this.manageGridLast = 0;
     this.ManageGridWait = getParameterByNameAsInt("ManageGridWait") || 300;
-    //if (this.superOptimise === "true") {  
-    //  this.ManageGridWait=2000;
-   // }
 
     // check an appid has been passed in
     if (!this.appId) {
@@ -259,7 +260,7 @@ class AgoraMultiChanelApp {
   manageSubscriptions() {
     this.useCallStatsToAdjustNumberOfSubscriptions();
     this.voiceActivityDetection();
-    if (this.superOptimise !== "true") {  
+    if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {  
       this.doSwitchVideoStreamTypeAt();
     }
     this.manageGrid();
@@ -434,7 +435,7 @@ class AgoraMultiChanelApp {
             element.msRequestFullscreen();
           }
 
-          client.setRemoteVideoStreamType(that.userMap[uid_string].uid, 0);
+          client.setRemoteVideoStreamType(that.userMap[uid_string].uid, this.HighVideoStreamType);
         } else {
           if (document.exitFullscreen) {
             document.exitFullscreen();
@@ -611,13 +612,12 @@ class AgoraMultiChanelApp {
       }
     }
 
-    if (this.superOptimise !== "true") {  
+    if ((this.enableDualStream === "true" && !isMobile()) || this.enableDualStreamMobile==="true") {  
       this.clients[publishToIndex].enableDualStream().then(() => {
         console.log("Enable Dual stream success!");
       }).catch(err => {
         console.log(err);
       })
-
       this.clients[publishToIndex].setLowStreamParameter({ bitrate: this.lowVideoBitrate, framerate: this.lowVideoFPS, height: this.lowVideoHeight, width: this.lowVideoWidth });
     }
    
@@ -890,7 +890,7 @@ class AgoraMultiChanelApp {
 
           }
 
-          if (this.superOptimise !== "true") {   
+          if (this.superOptimise !== "true"  && !isMobile()) {   
             if (rvs[rvskeys[k]]["packetLossRate"]) {
               packetLossCount++;
               packetLossAvg = packetLossAvg + rvs[rvskeys[k]]["packetLossRate"];
@@ -986,7 +986,7 @@ class AgoraMultiChanelApp {
     }
 
     // display stats in UI
-    if (this.superOptimise !== "true") {    
+    if (this.superOptimise !== "true" && !isMobile()) {    
       var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
       var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
       document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
@@ -1043,7 +1043,7 @@ class AgoraMultiChanelApp {
     //var rows = cols;
 
     // for mobile it will be 2xX
-    if (this.isMobile()) {
+    if (isMobile()) {
         // landscape
         if (width>height) {  // landscape
           rows=2;
