@@ -1147,6 +1147,7 @@ class AgoraMultiChanelApp {
     if (landscape && isMobile()) { 
       //document.getElementById("grid").style.marginTop = (height - grid_height - grid_padding - grid_padding) / 2 + 'px';
       document.getElementById("grid").style.marginTop = (height-grid_actual_height) / 2 + 'px';
+      document.getElementById("media_controls").style.marginTop = (height-grid_actual_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
     } else {
       document.getElementById("grid").style.marginTop = '0px';
