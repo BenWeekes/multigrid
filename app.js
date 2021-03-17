@@ -1151,6 +1151,7 @@ class AgoraMultiChanelApp {
       document.getElementById("grid").style.marginLeft = '0px';
     } else {
       document.getElementById("grid").style.marginTop = '0px';
+      document.getElementById("media_controls").style.marginTop = '0px';
       //document.getElementById("grid").style.marginLeft = (width - grid_width - grid_padding - grid_padding) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = ((width-grid_actual_width) / 2 ) - (cell_margin+1) + 'px';    
     }
