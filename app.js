@@ -157,7 +157,7 @@ class AgoraMultiChanelApp {
     this.outboundFrameCount = 0;
     this.InboundStatsMonitorInterval = 15;
     this.debugInboundStats = this.InboundStatsMonitorInterval;
-    this.mobileUIUpdated = true;
+    this.mobileUIUpdated = false;
     this.mobileUIUpdatedLandscape = false;
     this.mobileUIUpdatedPortrait = false;
 
@@ -1160,13 +1160,15 @@ class AgoraMultiChanelApp {
     //   document.getElementById("local-player").style.height = cell_height - 2 + 'px';
     if (!this.mobileUIUpdated && isMobile()) {
       this.mobileUIUpdated = true;
-      document.getElementById("cam_off").classList.add("default_icon_mobile");
-      document.getElementById("mic_on").classList.add("default_icon_mobile");
-      document.getElementById("mic_off").classList.add("default_icon_mobile");
-      document.getElementById("stats_button").classList.add("default_icon_mobile");
-      document.getElementById("settings_button").classList.add("default_icon_mobile");
-      document.getElementById("cam_on").classList.remove("cam_off_reduced");
-      document.getElementById("cam_on").classList.add("cam_off_reduced_mobile");
+      document.getElementById("cam_off").classList.add("default_icon_left_mobile");
+      document.getElementById("mic_on").classList.add("default_icon_left_mobile");
+      document.getElementById("mic_off").classList.add("default_icon_left_mobile");
+      document.getElementById("cam_on").classList.add("default_icon_left_mobile");
+      
+      document.getElementById("stats_button").classList.add("default_icon_right_mobile");
+      document.getElementById("settings_button").classList.add("default_icon_right_mobile");
+    
+
     }
 
     if (document.getElementById(this.vadUid)) {
