@@ -61,6 +61,7 @@ class AgoraMultiChanelApp {
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "false";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
+    this.isMobile = getParameterByName("isMobile") || "false";
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
 
     // tokens not used in this sample
@@ -1015,7 +1016,10 @@ class AgoraMultiChanelApp {
 
   // web is square
   getGridColCount(cells) {
-    if (cells < 5) {
+
+    if (cells < 3) {
+      return 1;
+    } else if (cells < 5) {
       return 2;
     } else if (cells < 10) {
       return 3;
@@ -1048,13 +1052,17 @@ class AgoraMultiChanelApp {
     var cells = document.getElementsByClassName('remote_video');
     var cellCount = cells.length + extra;
     var cols = this.getGridColCount(cellCount);
+    if (cols==1 && landscape) {
+      cols=2;
+    }
     var rows = Math.ceil(cellCount / cols);
+
     //var rows = cols;
 
     // for mobile it will be 2xX
-    if (isMobile()) {
+    if (isMobile() && cols >2) {
       // landscape
-      if (width > height) {  // landscape
+      if (landscape) {  // landscape
         rows = 2;
         cols = Math.ceil(cellCount / rows);
       } else { // portrait
@@ -1107,14 +1115,14 @@ class AgoraMultiChanelApp {
 
     var cell_width = 160;
     var cell_height = 90;
-
+    var cell_margin = 4;
     if (rows * grid_available_width / this.AspectRatio > cols * grid_available_height) {
       // height constrained
-      cell_height = grid_available_height / rows;
+      cell_height = (grid_available_height - ((rows-1)*cell_margin)) / rows;
       cell_width = cell_height * (this.AspectRatio);
     } else {
       // width constrained
-      cell_width = grid_available_width / cols;
+      cell_width = (grid_available_width - ((cols-1)*cell_margin)) / cols;
       cell_height = cell_width / (this.AspectRatio);
     }
 
@@ -1123,17 +1131,23 @@ class AgoraMultiChanelApp {
       cells[i].style.height = cell_height + 'px';
     }
 
-    var grid_width = (cell_width * cols);
-    var grid_height = (cell_height * rows);
+    var grid_width = (cell_width * cols)+((cols-1)*cell_margin);
+    var grid_height = (cell_height * rows)+((rows-1)*cell_margin);
 
     document.getElementById("grid").style.width = grid_width + 'px';
+    document.getElementById("grid").style.height = grid_height + 'px';
+
+
+    var grid_actual_width= document.getElementById("grid").offsetWidth;
+    var grid_actual_height= document.getElementById("grid").offsetHeight;
     if (landscape && isMobile()) { 
-      document.getElementById("grid").style.marginTop = (height - grid_height - grid_padding - grid_padding) / 2 + 'px';
+      //document.getElementById("grid").style.marginTop = (height - grid_height - grid_padding - grid_padding) / 2 + 'px';
+      document.getElementById("grid").style.marginTop = (height-grid_actual_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
     } else {
       document.getElementById("grid").style.marginTop = '0px';
-      document.getElementById("grid").style.marginLeft = (width - grid_width - grid_padding - grid_padding) / 2 + 'px';
-    
+      //document.getElementById("grid").style.marginLeft = (width - grid_width - grid_padding - grid_padding) / 2 + 'px';
+      document.getElementById("grid").style.marginLeft = ((width-grid_actual_width) / 2 ) - (cell_margin+1) + 'px';    
     }
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
@@ -1242,6 +1256,11 @@ function resizeGrid() {
 }
 
 function isMobile() {
+try {
+  if (agoraApp && agoraApp.isMobile==="true") {
+    return true;
+  }
+} catch(e){}
   //return true;
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 }
