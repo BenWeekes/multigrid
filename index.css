@@ -55,6 +55,14 @@
       width: 100% !important;
       height: 80px;
       font-size: 24px;
+      padding: 2px;
+      margin: 2px;
+      background-color: #eee;
+      color: black;
+      display: inline-block;
+      text-align: center;
+      cursor: pointer;
+      vertical-align: middle;
     }
 
     .media_controls {
@@ -76,19 +84,6 @@
       color: black;
       display: inline-block;
     }
-
-    .imedia_buttons {
-      width: 60px;
-      padding: 2px;
-      margin: 2px;
-      background-color: #eee;
-      color: black;
-      display: inline-block;
-      text-align: center;
-      cursor: pointer;
-      vertical-align: middle;
-    }
-
 
     .main {
       background: #222;

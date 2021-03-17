@@ -1040,11 +1040,7 @@ class AgoraMultiChanelApp {
     }
   }
 
-  updateUILayout() {
-
-
-    //    document.getElementById("local-player").style.width = cell_width - 2 + 'px';
-    //   document.getElementById("local-player").style.height = cell_height - 2 + 'px';
+  setMobileOneTime() {
     if (!this.mobileUIUpdated && isMobile()) {
       this.mobileUIUpdated = true;
       document.getElementById("cam_off").classList.add("default_icon_left_mobile");
@@ -1054,6 +1050,11 @@ class AgoraMultiChanelApp {
       document.getElementById("stats_button").classList.add("default_icon_right_mobile");
       document.getElementById("settings_button").classList.add("default_icon_right_mobile");
     }
+  }
+
+  updateUILayout() {
+
+    this.setMobileOneTime()
 
     var height = window.innerHeight;
     var width = window.innerWidth;
@@ -1070,9 +1071,10 @@ class AgoraMultiChanelApp {
     var cells = document.getElementsByClassName('remote_video');
     var cellCount = cells.length + extra;
     var cols = this.getGridColCount(cellCount);
-    if (cols == 1 && landscape) {
-      cols = 2;
-    }
+    
+    //if (cols == 1 && landscape) {
+    //  cols = 2;
+    //}
     var rows = Math.ceil(cellCount / cols);
 
     if (isMobile() && cols > 2) {
