@@ -49,10 +49,12 @@ class AgoraMultiChanelApp {
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || (isMobile() ? 10 : 49);
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
-    this.initialAudioAllowedSubs = getParameterByNameAsInt("initialAudioAllowedSubs") || 5;
-    this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || 5;
+    this.initialAudioAllowedSubs = getParameterByNameAsInt("initialAudioAllowedSubs") || 4;
+    this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || 4;
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
     this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
+    this.numRenderExceedToIncrease =  getParameterByNameAsInt("numRenderExceedToIncrease") || 4;
+    this.numRenderExceedToDecrease =  getParameterByNameAsInt("numRenderExceedToDecrease") || -10;
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -79,7 +81,7 @@ class AgoraMultiChanelApp {
     this.fpsMap = {};
     this.allowedVideoSubs = this.initialVideoAllowedSubs;
     this.allowedAudioSubs = this.initialAudioAllowedSubs;
-    this.NumRenderExceed = 0;
+    this.numRenderExceed = 0;
     // first in list is more imporant person 
     this.videoPublishersByPriority = [];
     this.audioPublishersByPriority = [];
@@ -966,22 +968,22 @@ class AgoraMultiChanelApp {
 
     // increase the number of subscriptions while conditions remain perfect 
     if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold < (remotesIncrease / 10)) {
-      this.NumRenderExceed++;
+      this.numRenderExceed++;
     } // reduce the number of subscriptions when the majority of streams are failing to keep up.
     else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
-      this.NumRenderExceed--;
+      this.numRenderExceed--;
     }
 
-    if (this.NumRenderExceed >= 3 || this.dictionaryLength(this.videoSubscriptions) == 0) {
-      this.NumRenderExceed = 0;
+    if (this.numRenderExceed >= this.numRenderExceedToIncrease || this.dictionaryLength(this.videoSubscriptions) == 0) {
+      this.numRenderExceed = 0;
       if (this.allowedVideoSubs < this.getMaxVideoTiles() && this.allowedVideoSubs < (this.dictionaryLength(this.videoSubscriptions) + 1)) {
         this.allowedVideoSubs = this.dictionaryLength(this.videoSubscriptions) + 1;
       }
       if (this.allowedAudioSubs < this.maxAudioSubscriptions && this.allowedAudioSubs < (this.dictionaryLength(this.audioSubscriptions) + 1)) {
         this.allowedAudioSubs = this.dictionaryLength(this.audioSubscriptions) + 1;
       }
-    } else if (this.NumRenderExceed <= -5) {
-      this.NumRenderExceed = 0;
+    } else if (this.numRenderExceed <=  this.numRenderExceedToDecrease) {
+      this.numRenderExceed = 0;
       if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
         // console.error(" reducing  this.allowedVideoSubs "+ this.allowedVideoSubs+" "+this.minVideoAllowedSubs);
         this.allowedVideoSubs--;
@@ -1001,7 +1003,9 @@ class AgoraMultiChanelApp {
     }
 
     if (this.enableFullLogging === "true") {
-      console.log((new Date()).toLocaleTimeString() + " " + stats + " " + stats + " " + stats2 + " NumRenderExceed=" + this.NumRenderExceed);
+      var stats = "Render Rate avg:" + renderFrameRateAvg + " min:" + renderFrameRateMin + " cnt:" + renderFrameRateCount + " keys:" + uidKeyCount + " | Packet Loss min:" + Math.round(packetLossMin * 100) / 100 + " max:" + Math.round(packetLossMax * 100) / 100 + " | End-to-End avg:" + Math.round(end2EndDelayAvg * 100) / 100 + " max:" + Math.round(end2EndDelayMax * 100) / 100;
+      var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
+      console.log((new Date()).toLocaleTimeString() + " " +  stats + " " + stats2 + " numRenderExceed=" + this.numRenderExceed);
     }
   }
 
