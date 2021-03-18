@@ -55,6 +55,7 @@ class AgoraMultiChanelApp {
     this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
     this.numRenderExceedToIncrease = getParameterByNameAsInt("numRenderExceedToIncrease") || 4;
     this.numRenderExceedToDecrease = getParameterByNameAsInt("numRenderExceedToDecrease") || -10;
+    this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -967,7 +968,10 @@ class AgoraMultiChanelApp {
     }
 
     // increase the number of subscriptions while conditions remain perfect 
-    if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold < (remotesIncrease / 10)) {
+    if ( this.rampUpAgressive === "true" && remotesIncrease > (remotesDecrease + remotesHold) ) {
+      this.numRenderExceed++;
+    }
+    else if (remotesIncrease > 0 && remotesDecrease == 0 && remotesHold < (remotesIncrease / 10)) {
       this.numRenderExceed++;
     } // reduce the number of subscriptions when the majority of streams are failing to keep up.
     else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
