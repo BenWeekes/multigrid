@@ -1037,6 +1037,8 @@ class AgoraMultiChanelApp {
       return 7;
     } else if (cells < 65) {
       return 8;
+    } else {
+	    return 8;
     }
   }
 
