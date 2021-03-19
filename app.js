@@ -100,10 +100,8 @@ class AgoraMultiChanelApp {
     };
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
-    this.lowVideoHeight = 180;
-    this.lowVideoWidth = 320;
-    //this.lowVideoHeight = 154;  (1080p/7)
-    //this.lowVideoWidth = 274;  (1080p/7)
+    this.lowVideoHeight =  getParameterByNameAsInt("lowVideoHeight") || 90; //180;
+    this.lowVideoWidth =  getParameterByNameAsInt("lowVideoWidth") || 160; //320;
 
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
