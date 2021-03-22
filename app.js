@@ -354,6 +354,9 @@ class AgoraMultiChanelApp {
       expectedAudioSubs[this.audioPublishersByPriority[v]] = this.audioPublishersByPriority[v];
     }
     this.removeAudioSubsIfNotInMap(expectedAudioSubs);
+    if (!this.gridLayout && this.getMapSize(this.videoSubscriptions)==0) {
+      this.toggleLayout();
+    }
     this.updateUILayout();
   }
 
@@ -510,7 +513,7 @@ class AgoraMultiChanelApp {
       moveel.classList.add("focussed-video-inner");
       this.mainVideoId=uid_string;
     } else {
-      if (this.mainVideoId) {
+      if (this.mainVideoId && this.videoPublishers[this.mainVideoId]) {
         var prevMain=document.getElementById(this.mainVideoId);
         if (prevMain) { // put back in grid
           var gridel=document.getElementById("grid");
@@ -1245,7 +1248,7 @@ class AgoraMultiChanelApp {
     
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
-    var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * rows);
+    var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows+1));
     var grid_available_width = width - toolbar_width - (grid_padding * cols);
 
   // are we limited by width of height 
