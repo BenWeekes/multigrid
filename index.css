@@ -3,8 +3,18 @@
     body{
       background-color: #222 !important;
     }
+    .focussed-video{
+      iwidth:640px;
+      iheight:360px;
+      background-color: #FD5F00;
+      margin: auto;
+    }
     .agora_video_player {
       /*border-radius: 15%;*/
+      -moz-border-radius: 6px;
+      -webkit-border-radius: 6px;
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     .agora_select {
@@ -34,9 +44,18 @@
       display: none !important;
     }
 
+    .focussed-video-inner {
+      background-color: #111;
+      width:100% !important;
+      height:100% !important;
+    }
 
     .remote_video {
-      background-color: #000;
+      background-color: #111;
+      background-image: url("./img/novideo.png") ;
+      background-repeat: no-repeat;
+      background-size: auto 80%;
+      background-position: center 50%;
       margin: 2px;
       padding: 2px;
       width: 120px;
