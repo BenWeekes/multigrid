@@ -550,7 +550,7 @@ class AgoraMultiChanelApp {
   }
 
   initRTM() {
-    this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter: AgoraRTM.LOG_FILTER_ERROR });
+    this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter: AgoraRTM.LOG_FILTER_OFF });
     this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
     });
