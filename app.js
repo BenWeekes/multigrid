@@ -494,24 +494,29 @@ class AgoraMultiChanelApp {
   }
 
   moveToLargeWindow(uid_string) {
-    if (uid_string) {
+    if (uid_string && uid_string==this.mainVideoId) {
+      return;
+    }
+    else if (uid_string) {
       var moveel=document.getElementById(uid_string);
-      this.videoPublishers[uid_string].setRemoteVideoStreamType(this.userMap[uid_string].uid, this.HighVideoStreamType);
-      if (this.mainVideoId) {
-        var prevMain=document.getElementById(this.mainVideoId);
-        if (prevMain) { // put back in grid
-          var gridel=document.getElementById("grid");
-          prevMain.classList.add("remote_video");
-          prevMain.classList.remove("focussed-video-inner");
-          gridel.insertBefore(prevMain,moveel);
+      if (moveel && this.videoPublishers[uid_string]) {
+        this.videoPublishers[uid_string].setRemoteVideoStreamType(this.userMap[uid_string].uid, this.HighVideoStreamType);
+        if (this.mainVideoId) {
+          var prevMain=document.getElementById(this.mainVideoId);
+          if (prevMain) { // put back in grid
+            var gridel=document.getElementById("grid");
+            prevMain.classList.add("remote_video");
+            prevMain.classList.remove("focussed-video-inner");
+            gridel.insertBefore(prevMain,moveel);
+          }
+          this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
         }
-        this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
+        var parent=document.getElementById("focus-video");
+        parent.appendChild(moveel);
+        moveel.classList.remove("remote_video");
+        moveel.classList.add("focussed-video-inner");
+        this.mainVideoId=uid_string;
       }
-      var parent=document.getElementById("focus-video");
-      parent.appendChild(moveel);
-      moveel.classList.remove("remote_video");
-      moveel.classList.add("focussed-video-inner");
-      this.mainVideoId=uid_string;
     } else {
       if (this.mainVideoId && this.videoPublishers[this.mainVideoId]) {
         var prevMain=document.getElementById(this.mainVideoId);
