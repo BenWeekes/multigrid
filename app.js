@@ -152,7 +152,7 @@ class AgoraMultiChanelApp {
     this.vadSend = 0;
     this.vadSendWait = 2 * 1000;
     this.vadRecv = 0;
-    this.vadRecvWait = 1 * 1000;
+    this.vadRecvWait = 3 * 1000;
   
 
     this.outboundFPSLow = 0;
