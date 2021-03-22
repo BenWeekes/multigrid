@@ -514,6 +514,7 @@ class AgoraMultiChanelApp {
         var parent=document.getElementById("focus-video");
         parent.appendChild(moveel);
         moveel.classList.remove("remote_video");
+        moveel.classList.remove("remote_video_active");
         moveel.classList.add("focussed-video-inner");
         this.mainVideoId=uid_string;
       }
@@ -551,6 +552,7 @@ class AgoraMultiChanelApp {
 
   initRTM() {
     this.rtmClient = AgoraRTM.createInstance(this.appId, { logFilter: AgoraRTM.LOG_FILTER_OFF });
+    
     this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
     });
@@ -1311,7 +1313,7 @@ class AgoraMultiChanelApp {
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
 
-    if (document.getElementById(this.vadUid)) {
+    if (document.getElementById(this.vadUid) && this.gridLayout) {
       document.getElementById(this.vadUid).classList.add("remote_video_active");
     }
   }
