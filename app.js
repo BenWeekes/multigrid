@@ -61,6 +61,7 @@ class AgoraMultiChanelApp {
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 3*1000;
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "true";
+    this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -761,6 +762,10 @@ class AgoraMultiChanelApp {
   }
 
   async changeLowStreamResolutionIfNeeded () {
+    if ( this.dynamicallyAdjustLowStreamResolution === "false" ){
+      return;
+    }
+    
     var subs = this.getMapSize(this.videoPublishers);
     if (subs>=this.SwitchDownLowPublishResolutionAt && this.lowVideoWidthCurrent!=this.lowVideoWidthSmall ) {
       this.lowVideoWidthCurrent=this.lowVideoWidthSmall;
@@ -1120,6 +1125,8 @@ class AgoraMultiChanelApp {
     if (subs > 1 && renderFrameRateCount < (subs - 1)) { // account for missing render rates
       remotesDecrease = remotesDecrease + ((subs - 1) - renderFrameRateCount);
     }
+    
+
 
     // increase the number of subscriptions while conditions remain perfect 
     if ( this.rampUpAgressive === "true" && remotesIncrease > (remotesDecrease + remotesHold) ) {
