@@ -650,7 +650,8 @@ class AgoraMultiChanelApp {
           document.getElementById("ytid").value=vid;
           player.loadVideoById({'videoId': vid});
         }
-        player.playVideo();        
+        player.playVideo();    
+        player.setVolume(80);    
       }
       else if (command === "STOP") {
         player.stopVideo();
@@ -662,6 +663,7 @@ class AgoraMultiChanelApp {
         if ( document.getElementById("ytid").value!==vid ) {
           document.getElementById("ytid").value=vid;
           player.loadVideoById({'videoId': vid,'startSeconds': rounded});
+          player.setVolume(80);
         } else {
           if (Math.abs(player.getCurrentTime()-rounded)>2) {
             player.seekTo(to);
@@ -1499,6 +1501,7 @@ function playVideo() {
   var msg = agoraApp.WATCH + ':PLAY:'+ document.getElementById("ytid").value;
   sendWatchMessage(msg);
   player.playVideo();
+  player.setVolume(80);
   agoraApp.watchPartyOwnerPlaying=true;
 
 }
@@ -1587,7 +1590,7 @@ function pushToTalkStart() {
 function pushToTalkStop() {
   agoraApp.localTracks.audioTrack.setEnabled(false);
   document.getElementById("mic_on").classList.remove("mic_push");
-  player.setVolume(100);
+  player.setVolume(80);
 
 }
 
