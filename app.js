@@ -61,7 +61,7 @@ class AgoraMultiChanelApp {
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 3*1000;
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "true";
-    this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "true";
+    this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -111,8 +111,8 @@ class AgoraMultiChanelApp {
     };
     // All clients will share the same config.
     this.clientConfig = { mode: "rtc", codec: "h264" };
-    this.lowVideoWidthInitial =  getParameterByNameAsInt("lowVideoWidth") ||  320;
-    this.lowVideoHeightInitial =  getParameterByNameAsInt("lowVideoHeight") || 180;
+    this.lowVideoWidthInitial =  getParameterByNameAsInt("lowVideoWidth") || 160; // ||  320;
+    this.lowVideoHeightInitial =  getParameterByNameAsInt("lowVideoHeight") || 90; // || 180;
     this.lowVideoWidthCurrent= this.lowVideoWidthInitial;
     this.lowVideoHeightCurrent= this.lowVideoHeightInitial;
     this.lowVideoWidthSmall =  160;
