@@ -61,7 +61,7 @@ class AgoraMultiChanelApp {
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 3*1000;
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "true";
-    this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
+    this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "true";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
@@ -166,6 +166,9 @@ class AgoraMultiChanelApp {
     this.vadSendWait = 2 * 1000;
     this.vadRecv = 0;
     this.vadRecvWait = 3 * 1000;
+
+    this.lowStreamResolutionSwitchWait = 10 * 1000;
+    this.lowStreamResolutionSwitch = 0;
 
     this.outboundFPSLow = 0;
     this.outboundFPSHigh = 0;
@@ -591,6 +594,7 @@ class AgoraMultiChanelApp {
     if (text.startsWith(this.VAD) && (Date.now() - this.vadRecv) > this.vadRecvWait) {
       this.vadRecv = Date.now();
 
+
       var vadUid = text.split(":")[1];
       //console.log("VAD" + senderId + " vadUid= " + vadUid);
 
@@ -765,19 +769,30 @@ class AgoraMultiChanelApp {
     if ( this.dynamicallyAdjustLowStreamResolution === "false" ){
       return;
     }
-    
+
+    //agoraApp.localTracks.videoTrack._enabled
+
     var subs = this.getMapSize(this.videoPublishers);
     if (subs>=this.SwitchDownLowPublishResolutionAt && this.lowVideoWidthCurrent!=this.lowVideoWidthSmall ) {
-      this.lowVideoWidthCurrent=this.lowVideoWidthSmall;
-      this.lowVideoHeightCurrent=this.lowVideoHeightSmall;
-      await this.stopPublishingVideo();
-      //setTimeout(this.publishVideoToChannel(),5000);
-      await this.publishVideoToChannel();
+      if ( (Date.now() - this.lowStreamResolutionSwitch) > this.lowStreamResolutionSwitchWait) {
+        this.lowStreamResolutionSwitch = Date.now();
+        this.lowVideoWidthCurrent=this.lowVideoWidthSmall;
+        this.lowVideoHeightCurrent=this.lowVideoHeightSmall;
+        // avoid every client doing it together 
+        var that=this;
+        var randWait=(this.lowStreamResolutionSwitchWait/2)*Math.random();
+        setTimeout(async function(){await that.stopPublishingVideo(); await that.publishVideoToChannel(); },randWait);
+      }
     } else if (subs<this.SwitchUpLowPublishResolutionAt && this.lowVideoWidthCurrent!=this.lowVideoWidthInitial ) {
-      this.lowVideoWidthCurrent=this.lowVideoWidthInitial;
-      this.lowVideoHeightCurrent=this.lowVideoHeightInitial;
-      await this.stopPublishingVideo();
-      await this.publishVideoToChannel();
+
+      if ( (Date.now() - this.lowStreamResolutionSwitch) > this.lowStreamResolutionSwitchWait) {
+        this.lowStreamResolutionSwitch = Date.now();
+        this.lowVideoWidthCurrent=this.lowVideoWidthInitial;
+        this.lowVideoHeightCurrent=this.lowVideoHeightInitial;
+        var randWait=(this.lowStreamResolutionSwitchWait/2)*Math.random();
+        var that=this;
+        setTimeout(async function(){await that.stopPublishingVideo(); await that.publishVideoToChannel(); },randWait);
+      }
     }
   }
 
