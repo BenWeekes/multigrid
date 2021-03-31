@@ -213,6 +213,15 @@
   background-color: lightskyblue !important;
 }    
 
+.stop_icon{
+    width: 25px  !important;
+    height: 25px !important;
+    margin-top: 3px !important;
+    opacity: 63% !important;
+}    
+
+
+
     .media_buttons_enabled {
       background-color: rgb(91, 184, 137) !important;
     }
