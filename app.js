@@ -1345,10 +1345,17 @@ class AgoraMultiChanelApp {
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
     var toolbar_height_and_focus_height=toolbar_height;
     if (!this.gridLayout) {
+      if (this.landscape) {
        var focus_height= height - toolbar_height - cell_height*2 - cell_margin*3 - grid_padding*3;
        document.getElementById("focus-video").style.height=focus_height+'px';
-       document.getElementById("focus-video").style.width=focus_height*this.AspectRatio+'px';
+       document.getElementById("focus-video").style.width=focus_height*this.AspectRatio+'px';              
        toolbar_height_and_focus_height  = toolbar_height + focus_height; //document.getElementById("focus-video").offsetHeight;
+      } else {
+        var focus_width= width - (grid_padding*2);
+        document.getElementById("focus-video").style.height=focus_width/this.AspectRatio+'px';
+        document.getElementById("focus-video").style.width= focus_width+'px';              
+        toolbar_height_and_focus_height  = toolbar_height + focus_width/this.AspectRatio; //document.getElementById("focus-video").offsetHeight;
+      }
        rows=2;
        cols=Math.ceil(cellCount / rows);
      }
