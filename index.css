@@ -243,6 +243,9 @@
 
     }
 
+    .mic_push {
+      background:  rgb(91, 184, 137) !important;
+    }
     .lds-ring div {
       z-index: 100;
       left: 50%;

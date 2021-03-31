@@ -19,7 +19,7 @@
     <div id="media_controls" class="media_controls">
       <img src='img/microphone_1-512.webp' onclick="toggleMic()" id="mic_off"
         class="default_icon default_icon_left media_buttons_enabled hidden" />
-      <img src='img/icon-40-512.webp' onclick="toggleMic()" id="mic_on" class="default_icon default_icon_left button_horizontally_flip" />
+      <img src='img/icon-40-512.webp'   onmousedown="pushToTalkStart()" onmouseup="pushToTalkStop()" oldclick="toggleMic()" id="mic_on" class="default_icon default_icon_left button_horizontally_flip" />
       <img src='img/_video-512.png' onclick="toggleCam()" id="cam_off"
         class="default_icon default_icon_left media_buttons_enabled hidden" />
       <img src='img/73-512.webp' onclick="toggleCam()" id="cam_on" class="default_icon default_icon_left cam_off_reduced" />
@@ -139,7 +139,7 @@
         player = new YT.Player('player', {
           height: '100%',
           width: '100%',
-          videoId: 'oh5bOVBimIk',
+          videoId: 'kHMXNPkNTTQ',
           playerVars: { 'autoplay': 0, 'controls': 0 },
           events: {
             'onReady': onPlayerReady,
@@ -150,7 +150,7 @@
 
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
-        event.target.playVideo();
+       // event.target.playVideo();
       }
 
       // 5. The API calls this function when the player's state changes.

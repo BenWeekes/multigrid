@@ -75,7 +75,9 @@ class AgoraMultiChanelApp {
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
     this.watchParty = getParameterByName("watchParty") || "false";
     
-    this.watchPartyOwnserUid;
+    this.watchPartyOwner=false;
+    this.watchPartyOwnerPlaying=false;
+    
     // if you play a video by entering a youtube Id and pressing play
 
 
@@ -633,19 +635,38 @@ class AgoraMultiChanelApp {
       //console.log("adding FPS "+fps+" for "+fpsUid );
       this.fpsMap[fpsUid] = fps;
     }  else if (text.startsWith(this.WATCH)) {
+      agoraApp.watchPartyOwner=false; // someone else in control
+      agoraApp.watchPartyOwnerPlaying=false;
       var command = text.split(":")[1];
       var vid = text.split(":")[2];
       if (command === "CUE") {
+        if ( document.getElementById("ytid").value!==vid ) {
+          document.getElementById("ytid").value=vid;
+        }
         player.cueVideoById({'videoId': vid});
       }
       else if (command === "PLAY") {
-        player.playVideo();
+        if ( document.getElementById("ytid").value!==vid ) {
+          document.getElementById("ytid").value=vid;
+          player.loadVideoById({'videoId': vid});
+        }
+        player.playVideo();        
       }
       else if (command === "STOP") {
         player.stopVideo();
       }
       else if (command === "SEEK") {        
-        //var to = text.split(":")[3];
+        var to = text.split(":")[3];
+        var rounded = Math.round(to * 10) / 10
+        agoraApp.watchPartyOwner=false;
+        if ( document.getElementById("ytid").value!==vid ) {
+          document.getElementById("ytid").value=vid;
+          player.loadVideoById({'videoId': vid,'startSeconds': rounded});
+        } else {
+          if (Math.abs(player.getCurrentTime()-rounded)>2) {
+            player.seekTo(to);
+          }
+        }
       }
     
     } 
@@ -1469,6 +1490,7 @@ function cueVideo() {
   var msg = agoraApp.WATCH + ':CUE:'+ document.getElementById("ytid").value;
   sendWatchMessage(msg);
   player.cueVideoById({'videoId': document.getElementById("ytid").value});
+  agoraApp.watchPartyOwnerPlaying=false;
 }
 
 function playVideo() {
@@ -1477,16 +1499,27 @@ function playVideo() {
   var msg = agoraApp.WATCH + ':PLAY:'+ document.getElementById("ytid").value;
   sendWatchMessage(msg);
   player.playVideo();
+  agoraApp.watchPartyOwnerPlaying=true;
+
+}
+
+
+function broadcastSeek() {
+  if (agoraApp.watchPartyOwner && agoraApp.watchPartyOwnerPlaying) {
+    var msg = agoraApp.WATCH + ':SEEK:'+ document.getElementById("ytid").value+":"+player.getCurrentTime();
+    sendWatchMessage(msg);
+  }
 }
 
 function stopVideo() {
   var msg = agoraApp.WATCH + ':STOP:'+ document.getElementById("ytid").value;
   sendWatchMessage(msg);
+  agoraApp.watchPartyOwnerPlaying=false;
   player.stopVideo();
 }
 
 function sendWatchMessage (msg) {
-  
+  agoraApp.watchPartyOwner=true;
   agoraApp.rtmChannel.sendMessage({ text: msg }).then(() => {
     //console.log('AgoraRTM FPS send success :' + msg);
   }).catch(error => {
@@ -1542,6 +1575,20 @@ function toggleMic() {
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
   }
+}
+
+function pushToTalkStart() {
+  player.setVolume(10);
+  agoraApp.localTracks.audioTrack.setEnabled(true);
+  document.getElementById("mic_on").classList.add("mic_push");
+
+}
+
+function pushToTalkStop() {
+  agoraApp.localTracks.audioTrack.setEnabled(false);
+  document.getElementById("mic_on").classList.remove("mic_push");
+  player.setVolume(100);
+
 }
 
 let agoraApp = new AgoraMultiChanelApp();
@@ -1694,6 +1741,10 @@ var autoShowStats = getParameterByName("autoShowStats") || "false";
 if (autoShowStats === "true") {
   toggleStats();
 }
+if (agoraApp.watchParty==="true")
+setInterval(() => {
+  broadcastSeek();
+},2000);
 
 
 
