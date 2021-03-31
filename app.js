@@ -513,6 +513,11 @@ class AgoraMultiChanelApp {
   }
 
   moveToLargeWindow(uid_string) {
+
+    // if null we are moving him out only
+    // in the case of screen content we don't want to actually move the users
+
+
     if (uid_string && uid_string==this.mainVideoId) {
       return;
     }
@@ -523,17 +528,17 @@ class AgoraMultiChanelApp {
           var prevMain=document.getElementById(this.mainVideoId);
           if (prevMain) { // put back in grid
             var gridel=document.getElementById("grid");
-            prevMain.classList.add("remote_video");
-            prevMain.classList.remove("focussed-video-inner");
-            gridel.insertBefore(prevMain,moveel);
+           // prevMain.classList.add("remote_video");
+           // prevMain.classList.remove("focussed-video-inner");
+           // gridel.insertBefore(prevMain,moveel);
             this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
           }        
         }
         var parent=document.getElementById("focus-video");
-        parent.appendChild(moveel);
-        moveel.classList.remove("remote_video");
-        moveel.classList.remove("remote_video_active");
-        moveel.classList.add("focussed-video-inner");
+        //parent.appendChild(moveel);
+        //moveel.classList.remove("remote_video");
+        //moveel.classList.remove("remote_video_active");
+        //moveel.classList.add("focussed-video-inner");
         this.mainVideoId=uid_string;
         this.videoPublishers[uid_string].setRemoteVideoStreamType(this.userMap[uid_string].uid, this.HighVideoStreamType);
       }
@@ -542,9 +547,9 @@ class AgoraMultiChanelApp {
         var prevMain=document.getElementById(this.mainVideoId);
         if (prevMain) { // put back in grid
           var gridel=document.getElementById("grid");
-          gridel.insertBefore(prevMain, document.getElementsByClassName('remote_video')[0]);
-          prevMain.classList.add("remote_video");
-          prevMain.classList.remove("focussed-video-inner");
+         // gridel.insertBefore(prevMain, document.getElementsByClassName('remote_video')[0]);
+         // prevMain.classList.add("remote_video");
+         // prevMain.classList.remove("focussed-video-inner");
          
         }
         this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
