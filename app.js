@@ -54,12 +54,12 @@ class AgoraMultiChanelApp {
     this.initialAudioAllowedSubs = getParameterByNameAsInt("initialAudioAllowedSubs") || 3;
     this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || 1;
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
-    this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 100;
+    this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
     this.numRenderExceedToIncrease = getParameterByNameAsInt("numRenderExceedToIncrease") || 2;
     this.allowedVideoSubsIncreaseBy = getParameterByNameAsInt("allowedVideoSubsIncreaseBy") || 2;
     this.numRenderExceedToDecrease = getParameterByNameAsInt("numRenderExceedToDecrease") || -6;
-    this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 2;
-    this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 3 * 1000;
+    this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 1;
+    this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 6 * 1000;
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "true";
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
@@ -157,7 +157,7 @@ class AgoraMultiChanelApp {
     this.highVideoBitrateMin = 200;
     this.highVideoBitrateMax = 800;
     this.FPSThresholdToIncreaseSubs = 0.9;
-    this.FPSThresholdToReduceSubs = 0.6;
+    this.FPSThresholdToReduceSubs = 0.5;
 
     // RTM
     this.rtmClient;
@@ -1110,8 +1110,12 @@ class AgoraMultiChanelApp {
             if (this.fpsMap[rvskeys[k]]) {
               expectedFPS = this.fpsMap[rvskeys[k]];
             }
-
-            if (rfr > expectedFPS * this.FPSThresholdToIncreaseSubs) {
+            // examine render rate of remote
+            // if zero then its not properly connected.
+            if (rfr==0) {
+              remotesHold++;
+            }
+            else if (rfr > expectedFPS * this.FPSThresholdToIncreaseSubs) {
               remotesIncrease++;
             } else if (rfr < expectedFPS * this.FPSThresholdToReduceSubs) {
               remotesDecrease++;
@@ -1205,6 +1209,9 @@ class AgoraMultiChanelApp {
     else if (remotesIncrease > 0 && ((remotesIncrease / 7) > (remotesDecrease + remotesHold))) {
       this.numRenderExceed++;
     } // reduce the number of subscriptions when the majority of streams are failing to keep up.
+    else if (remotesIncrease > 0 && (remotesIncrease > (remotesDecrease + remotesHold))) {
+      this.numRenderExceed++;
+    } 
     else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
       this.numRenderExceed--;
     }
