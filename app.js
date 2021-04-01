@@ -61,7 +61,7 @@ class AgoraMultiChanelApp {
     this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 1;
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 6 * 1000;
 
-    this.rampUpAgressive = getParameterByName("rampUpAgressive") || "true";
+    this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
@@ -258,7 +258,13 @@ class AgoraMultiChanelApp {
           if (index > -1) {
             this.videoPublishersByPriority.splice(index, 0, uid_string);
           } else {
-            this.videoPublishersByPriority.push(uid_string);
+            // rather than push on the end
+            // insert them after audio count so they are not first to go
+            if (this.videoPublishersByPriority.length>this.audioPublishersByPriority.length) {
+              this.videoPublishersByPriority.splice(this.audioPublishersByPriority.length, 0, uid_string);
+            } else {
+              this.videoPublishersByPriority.push(uid_string);
+            }
           }
         }
         else if (mediaType === this.AUDIO) {
@@ -1209,10 +1215,7 @@ class AgoraMultiChanelApp {
     else if (remotesIncrease > 0 && ((remotesIncrease / 7) > (remotesDecrease + remotesHold))) {
       this.numRenderExceed++;
     } // reduce the number of subscriptions when the majority of streams are failing to keep up.
-    else if (remotesIncrease > 0 && (remotesIncrease > (remotesDecrease + remotesHold))) {
-      this.numRenderExceed++;
-    } 
-    else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)) {
+    else if (subs > 0 && remotesDecrease > (remotesHold + remotesIncrease)/2) {
       this.numRenderExceed--;
     }
 
@@ -1345,14 +1348,21 @@ class AgoraMultiChanelApp {
       if (this.landscape) {
         if (this.maxVideoTiles<16) {
           rows = 2;
+        }
+        else if (this.maxVideoTiles<24) {
+          rows = 3;
         } else {
-          rows = 4;
+          rows = 4; //
         }
         cols = Math.ceil(cellCount / rows);  
       } else {
         if (this.maxVideoTiles<16)  { // portrait and fewer than 16
-        cols = 2;       
-       } else {
+        cols = 2;               
+       }
+       else if (this.maxVideoTiles<24) {
+        cols = 3;
+       } 
+       else {
         cols = 4;
        }
         rows = Math.ceil(cellCount / cols);
