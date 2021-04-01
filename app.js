@@ -1335,7 +1335,7 @@ class AgoraMultiChanelApp {
       if (this.landscape) {
         rows = 2;
         cols = Math.ceil(cellCount / rows);
-      } else { // portrait
+      } else if (this.maxVideoTiles<16)  { // portrait and fewer than 16
         cols = 2;
         rows = Math.ceil(cellCount / cols);
       }
