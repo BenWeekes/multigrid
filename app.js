@@ -1333,10 +1333,18 @@ class AgoraMultiChanelApp {
     var rows = Math.ceil(cellCount / cols);
     if (isMobile() && cols > 2) {
       if (this.landscape) {
-        rows = 2;
-        cols = Math.ceil(cellCount / rows);
-      } else if (this.maxVideoTiles<16)  { // portrait and fewer than 16
-        cols = 2;
+        if (this.maxVideoTiles<16) {
+          rows = 2;
+        } else {
+          rows = 4;
+        }
+        cols = Math.ceil(cellCount / rows);  
+      } else {
+        if (this.maxVideoTiles<16)  { // portrait and fewer than 16
+        cols = 2;       
+       } else {
+        cols = 4;
+       }
         rows = Math.ceil(cellCount / cols);
       }
     }
