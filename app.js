@@ -1283,10 +1283,13 @@ class AgoraMultiChanelApp {
       document.getElementById("mic_on").classList.add("default_icon_left_mobile");
       document.getElementById("mic_off").classList.add("default_icon_left_mobile");
       document.getElementById("cam_on").classList.add("default_icon_left_mobile");
-      document.getElementById("play_controls").classList.add("default_icon_left_mobile");
 
       document.getElementById("stats_button").classList.add("default_icon_right_mobile");
       document.getElementById("settings_button").classList.add("default_icon_right_mobile");
+
+      if (document.getElementById("play_controls")) {
+        document.getElementById("play_controls").classList.add("default_icon_left_mobile");
+      }
     }
   }
 
