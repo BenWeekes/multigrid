@@ -1346,20 +1346,20 @@ class AgoraMultiChanelApp {
     var rows = Math.ceil(cellCount / cols);
     if (isMobile() && cols > 2) {
       if (this.landscape) {
-        if (this.maxVideoTiles<17) {
+        if (this.maxVideoTiles<16) {
           rows = 2;
         }
-        else if (this.maxVideoTiles<25) {
+        else if (this.maxVideoTiles<24) {
           rows = 3;
         } else {
           rows = 4; //
         }
         cols = Math.ceil(cellCount / rows);  
       } else {
-        if (this.maxVideoTiles<17)  { // portrait and fewer than 16
+        if (this.maxVideoTiles<16)  { // portrait and fewer than 16
         cols = 2;               
        }
-       else if (this.maxVideoTiles<25) {
+       else if (this.maxVideoTiles<24) {
         cols = 3;
        } 
        else {
