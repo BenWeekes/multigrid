@@ -68,12 +68,16 @@ class AgoraMultiChanelApp {
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
     this.sendVAD = getParameterByName("sendVAD") || "true";
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
+    this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "false";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
     this.watchParty = getParameterByName("watchParty") || "false";
+    this.vcodec = getParameterByName("vcodec") || "vp8";
+
+    this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
     this.watchPartyOwner = false;
     this.watchPartyOwnerPlaying = false;
@@ -119,7 +123,7 @@ class AgoraMultiChanelApp {
       audioTrack: null
     };
     // All clients will share the same config.
-    this.clientConfig = { mode: "rtc", codec: "h264" };
+    this.clientConfig = { mode: "rtc", codec: this.vcodec};
     this.lowVideoWidthInitial = getParameterByNameAsInt("lowVideoWidth") || 160; // ||  320;
     this.lowVideoHeightInitial = getParameterByNameAsInt("lowVideoHeight") || 90; // || 180;
     this.lowVideoWidthCurrent = this.lowVideoWidthInitial;
@@ -485,10 +489,10 @@ class AgoraMultiChanelApp {
       var client = that.videoPublishers[uid_string];
       playerDomDiv.onclick = function () {
 
-        if (that.mobile && that.landscape) {
+        if (isMobile() && that.landscape) {
           return;
         }
-        if (that.gridLayout) {
+        if (that.gridLayout && that.enableContentSpeakerMode==="true")  {
           that.toggleLayout(false);
         }
         if (that.mainVideoId !== uid_string) {
@@ -536,7 +540,7 @@ class AgoraMultiChanelApp {
           var prevMain = document.getElementById(this.mainVideoId);
           if (prevMain) { // put back in grid
             var gridel = document.getElementById("grid");
-            if (!this.shareContentOnDisplay) {
+            if (!this.shareContentOnDisplay  && this.enableContentSpeakerMode==="true") {
               prevMain.classList.add("remote_video");
               prevMain.classList.remove("focussed-video-inner");
               gridel.insertBefore(prevMain, moveel);
@@ -545,7 +549,7 @@ class AgoraMultiChanelApp {
           }
         }
         var parent = document.getElementById("focus-video");
-        if (!this.shareContentOnDisplay) {
+        if (!this.shareContentOnDisplay && this.enableContentSpeakerMode==="true") {
           parent.appendChild(moveel);
           moveel.classList.remove("remote_video");
           moveel.classList.remove("remote_video_active");
@@ -559,7 +563,7 @@ class AgoraMultiChanelApp {
         var prevMain = document.getElementById(this.mainVideoId);
         if (prevMain) { // put back in grid
           var gridel = document.getElementById("grid");
-          if (!this.shareContentOnDisplay) {
+          if (!this.shareContentOnDisplay && this.enableContentSpeakerMode==="true") {
             gridel.insertBefore(prevMain, document.getElementsByClassName('remote_video')[0]);
             prevMain.classList.add("remote_video");
             prevMain.classList.remove("focussed-video-inner");
@@ -764,10 +768,8 @@ class AgoraMultiChanelApp {
     if (this.muteMicOnJoin === "true") {
       toggleMic();
     }
-    if (this.watchParty === "true") {
-      toggleLayout();
-    }
   }
+
 
   async publishScreenShareToChannel() {
     // cancel any existing SS in the group via RTM
