@@ -767,6 +767,10 @@ class AgoraMultiChanelApp {
   }
 
   async startCamMic(cameraId, micId) {
+    if (isChromeIOS()) {
+      return; // chrome on iOS doesn't support getUserMedia
+    }
+
     this.getFirstOpenChannel();
     this.cameraId = cameraId;
     this.micId = micId;
@@ -1605,7 +1609,18 @@ function isMobile() {
     }
   } catch (e) { }
 
+
+  if ((getParameterByName("isMobile") || "false") === "true"){
+      return true;
+  }
+
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+}
+
+
+function isChromeIOS() {
+  //return true;
+  return (/CriOS/i.test(navigator.userAgent))
 }
 
 async function switchCamera(label) {
@@ -1711,7 +1726,7 @@ window.addEventListener('resize', resizeGrid);
 
 var showDeviceSelection = getParameterByName("showDeviceSelection") || "true";
 
-if (showDeviceSelection === "true") {
+if (showDeviceSelection === "true" && !isChromeIOS()) {
   showMediaDeviceTest();
 } else {
   connect();
