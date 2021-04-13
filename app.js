@@ -1326,7 +1326,7 @@ class AgoraMultiChanelApp {
     var height = window.innerHeight;
     var width = window.innerWidth;
 
-    if (height * this.AspectRatio > width) {
+    if (height > width) {
       this.landscape = false;
     } else {
       this.landscape = true;
