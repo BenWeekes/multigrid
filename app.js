@@ -226,6 +226,9 @@ class AgoraMultiChanelApp {
   async createClients() {
     let i = 0;
     // Create the max number of client objects.
+    AgoraRTC.enableLogUpload();
+    AgoraRTC.setLogLevel(1);
+    
     for (i; i < this.maxClients; i++) {
       this.clients[i] = AgoraRTC.createClient(this.clientConfig);
       let currentClient = this.clients[i];
