@@ -419,7 +419,6 @@ class AgoraMultiChanelApp {
 
   async addAudioSubIfNotExisting(uid_string) {
     if (this.audioSubscriptions[uid_string]) {
-      //   console.warn(" already subscribed to Audio "+uid_string);
       return;
     }
     var user = this.userMap[uid_string];
@@ -482,6 +481,15 @@ class AgoraMultiChanelApp {
   removeSlotsIfNotInMap(expected) {
     var els = document.getElementsByClassName("remote_video");
     var that = this;
+    Array.prototype.forEach.call(els, function (el) {
+      if (!expected[el.id]) {
+        that.numVideoTiles--;
+        el.remove();
+      }
+    });
+
+    // remove tile if in follow speaker area
+    var els = document.getElementsByClassName("focussed-video-inner");
     Array.prototype.forEach.call(els, function (el) {
       if (!expected[el.id]) {
         that.numVideoTiles--;
