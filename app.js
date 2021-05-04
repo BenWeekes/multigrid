@@ -1386,7 +1386,7 @@ class AgoraMultiChanelApp {
 
     var video_subs = this.getMapSize(this.videoSubscriptions);
     // show full video UI if two people in the call
-    if (video_subs == 1 && this.gridLayout && !this.shownPersonToPerson) {
+    if (video_subs == 1 && this.gridLayout) { //&& !this.shownPersonToPerson) {
       this.shownPersonToPerson = true;
       this.toggleLayout(true);
     } else if (video_subs != 1 && this.shownPersonToPerson && !this.gridLayout) {
