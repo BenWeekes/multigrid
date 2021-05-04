@@ -77,6 +77,12 @@ var AgoraRTCUtils = (function () {
     stopAutoAdjustResolution: function () {
       clearInterval(_autoAdjustInterval);
     },
+    changeUp: function () {
+      changeProfile(_currentProfile + 1); // increase profile
+    },
+    changeDown: function () {
+      changeProfile(_currentProfile - 1); // reduce profile
+    },
     isIOS: function () {
       return isIOS();
     },
