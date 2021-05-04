@@ -149,10 +149,13 @@ class AgoraMultiChanelApp {
     this.CellHeightBase = 90;
 
     this.maxFPS = 24;
-    this.lowVideoFPS = isMobile() ? 15 : this.maxFPS;
+    //this.lowVideoFPS = isMobile() ? 15 : this.maxFPS;
     this.lowVideoBitrate = 200;
-    this.highVideoWidth = isMobile() ? 320 : 640;
-    this.highVideoHeight = isMobile() ? 180 : 360;
+    this.highVideoWidth = 640;
+    this.highVideoHeight = 360;
+    
+    //this.highVideoWidth = isMobile() ? 320 : 640;
+    //this.highVideoHeight = isMobile() ? 180 : 360;
     this.highVideoFPS = isMobile() ? 15 : this.maxFPS;
     this.highVideoBitrateMin = 200;
     this.highVideoBitrateMax = 800;
@@ -474,7 +477,7 @@ class AgoraMultiChanelApp {
         delete that.videoSubscriptions[uid_string];
         console.error(e);
       });
-    }
+    } 
   }
 
   removeSlotsIfNotInMap(expected) {
@@ -1382,8 +1385,18 @@ class AgoraMultiChanelApp {
     var grid_padding = 6;
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
     var toolbar_height_and_focus_height = toolbar_height;
+
     if (!this.gridLayout) {
-      if (this.landscape) {
+      if (cellCount==extra) {    // handle two people - me and one other
+        var focus_height = height - toolbar_height - grid_padding * 3;
+        var focus_width = width - (grid_padding * 2);
+        document.getElementById("focus-video").style.height = focus_height + 'px';
+        document.getElementById("focus-video").style.width = focus_width + 'px';
+        toolbar_height_and_focus_height = toolbar_height + focus_height;
+        rows = 1;
+        cols = 1;
+      }
+      else if (this.landscape) {
         var focus_height = height - toolbar_height - cell_height * 2 - cell_margin * 3 - grid_padding * 3;
         document.getElementById("focus-video").style.height = focus_height + 'px';
         document.getElementById("focus-video").style.width = focus_height * this.AspectRatio + 'px';
@@ -1393,9 +1406,7 @@ class AgoraMultiChanelApp {
         document.getElementById("focus-video").style.height = focus_width / this.AspectRatio + 'px';
         document.getElementById("focus-video").style.width = focus_width + 'px';
         toolbar_height_and_focus_height = toolbar_height + focus_width / this.AspectRatio; //document.getElementById("focus-video").offsetHeight;
-      }
-      rows = 2;
-      cols = Math.ceil(cellCount / rows);
+      }    
     }
 
     var toolbar_width = 0;
@@ -1435,13 +1446,18 @@ class AgoraMultiChanelApp {
       }
     }
 
-
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
     var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 1));
     var grid_available_width = width - toolbar_width - (grid_padding * cols);
 
-    // are we limited by width of height 
+    if (cellCount==extra && !this.gridLayout) { // 1 other person to display larger
+      document.getElementById("grid").classList.add("grid_over");
+      grid_available_height=90;
+    } else {
+      document.getElementById("grid").classList.remove("grid_over");
+    }
+    // are we limited by width or height 
     if (rows * grid_available_width / this.AspectRatio > cols * grid_available_height) {
       // height constrained
       cell_height = (grid_available_height - ((rows - 1) * cell_margin)) / rows;
@@ -1481,7 +1497,7 @@ class AgoraMultiChanelApp {
     if (this.landscape && isMobile() && rows > 1) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
-      document.getElementById("media_controls").style.marginTop = ((height / 2) - 100) + 'px'; //(height-grid_actual_height) / 2 + 'px';
+      document.getElementById("media_controls").style.marginTop = ((height / 2) - 100) + 'px'; 
     }
     else if (this.landscape && isMobile()) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height - toolbar_height_and_focus_height) / 2 + 'px';

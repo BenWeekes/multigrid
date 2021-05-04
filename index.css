@@ -12,6 +12,7 @@
   -webkit-border-radius: 6px;
   border-radius: 6px;
   overflow: hidden;
+  object-fit: contain !important;
   }
 
   .agora_select {
@@ -87,8 +88,6 @@
   .media_controls {
   font-family: Arial, Helvetica, sans-serif;
   width: 160px;
-  ipadding: 4px;
-  imargin: 2px;
   color: black;
   display: inline-block;
   }
@@ -99,8 +98,6 @@
   color: black;
   display: inline-block;
   }
-
-
 
   .main {
   background: #222;
@@ -293,5 +290,11 @@
   }
   }
   .modal-content{
-  background-color: #fafafa;
+    background-color: #fafafa;
+  }
+
+  .grid_over{
+    position:absolute;
+    bottom: 10px;
+    right: 10px;
   }
