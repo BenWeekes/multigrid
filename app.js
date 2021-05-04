@@ -1639,7 +1639,8 @@ function isMobile() {
 
 function isChromeIOS() {
   //return true;
-  return (/CriOS/i.test(navigator.userAgent))
+  return false;
+  //return (/CriOS/i.test(navigator.userAgent))
 }
 
 async function switchCamera(label) {
