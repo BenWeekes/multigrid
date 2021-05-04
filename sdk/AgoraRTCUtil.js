@@ -11,8 +11,8 @@ var AgoraRTCUtils = (function () {
   var _brHighObserved = 0;
   var _profiles = [
                   { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 60, bitrateMinDesired: 100, bitrateMax: 400 },
-                  { id: "360p", width: 640, height: 360, frameRate: 24, bitrateMin: 100, bitrateMinDesired: 250, bitrateMax: 900 },
-                  { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 200, bitrateMinDesired: 600, bitrateMax: 1800 },
+                  { id: "360p", width: 640, height: 360, frameRate: 24, bitrateMin: 200, bitrateMinDesired: 250, bitrateMax: 900 },
+                  { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 300, bitrateMinDesired: 600, bitrateMax: 1800 },
                   ];
 
   // private methods
