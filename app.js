@@ -1421,7 +1421,7 @@ class AgoraMultiChanelApp {
 
     if (isMobile()) {
       // for mobile in landscape put back to grid mode
-      if (!this.gridLayout && this.landscape && !this.shareContentOnDisplay) {
+      if (!this.gridLayout && this.landscape && !this.shareContentOnDisplay && video_subs!=1) {
         this.toggleLayout();
       }
       if (this.landscape && rows > 1) {
