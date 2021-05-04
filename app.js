@@ -70,7 +70,7 @@ class AgoraMultiChanelApp {
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
     this.superOptimise = getParameterByName("superOptimise") || "false";
-    this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "false";
+    this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
