@@ -5,7 +5,7 @@ var AgoraRTCUtils = (function () {
 
   var _autoAdjustInterval;
   var _publishClient;
-  var _currentProfile = 1;
+  var _currentProfile = 0;
   var _fpsLowObserved = 0;
   var _brLowObserved = 0;
   var _brHighObserved = 0;
@@ -70,7 +70,7 @@ var AgoraRTCUtils = (function () {
   return { // public interface
     startAutoAdjustResolution: function (client) {
       _publishClient = client;
-      //changeProfile(_currentProfile);
+      _currentProfile = 0;
       _autoAdjustInterval = setInterval(() => {
         autoAdjustResolution();
       }, AdjustFrequency);
