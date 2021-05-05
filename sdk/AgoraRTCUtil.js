@@ -1,7 +1,32 @@
 var AgoraRTCUtils = (function () {
+
+  // This utility will adjust the camera encoding profile dynamically in order to adapt to slower networks 
+  // and also to support devices which insufficient CPU/GPU resources required to encode and decode higher resolution video streams
+  // This utility is intended mainly for iOS devices where both Safari and Chrome do not automatically 
+  // lower the encoding resolution when the outgoing bitrate is reduced or the encoder is stuggling to reach the desired FPS
+
+  // It is useful on other browsers as well to avoid the bit rate dropping too low too quickly in the presence of packet loss.
+
+  /* To use this module, simply include this JS file e.g.
+     <script src="./sdk/AgoraRTCUtil.js"></script>
+
+     and call the following after client.publish(..)
+
+     AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient],"360p_11");
+  
+     It is recommended that you start with the following settings in your app which correspond to the 360p_11 profile from the list below
+     
+          [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+          { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width:640, height: 360, frameRate: 24, bitrateMin: 400, bitrateMax: 1000} });
+  
+    
+*/
   var AdjustFrequency = 500; // ms between checks
-  var MinFPSPercent = 90;
-  var MinVideoKbps=100; // below this and the video is off
+  var ResultCountToStepUp=6; // number of consecutive positive results before step up occurrs
+  var ResultCountToStepDown=10; // number of consecutive negative results before step down occurrs
+  var MinFPSPercent = 90; // Below this percentage of expected outbound FPS for a period of time will trigger step down
+  var MinVideoKbps=100; // below this and the video is likely off or static 
+  
   var _autoAdjustInterval;
   var _publishClient;
   var _currentProfile = 0;
@@ -9,18 +34,27 @@ var AgoraRTCUtils = (function () {
   var _brLowObserved = 0;
   var _maxProfileDueToLowFPS = 1000; // make progile 
   var _brHighObserved = 0;
-  var _profiles = [
-                 // { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 60, bitrateMinDesired: 100, bitrateMax: 500 },
-                 { id: "360p_1", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 }, 
-                 { id: "360p_2", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000 },
-                  { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
 
+  var _profiles = [
+                // { id: "180p", width: 320, height: 180, frameRate: 15, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
+                 { id: "360p_low", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 }, 
+                 { id: "360p_11", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000 },
+                 { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
                 //  { id: "1080p", width: 1920, height: 1080, frameRate: 24, bitrateMin: 600, bitrateMinDesired: 1200, bitrateMax: 3600 },
                   ];
 
   // private methods
   function isIOS() {
     return (/iPhone|iPad|iPod/i.test(navigator.userAgent))
+  }
+
+  function getProfileIndex(profile) {
+    for (var i=0; i<_profiles.length; i++) {
+      if (_profiles[i].id===profile) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   function autoAdjustResolution() {
@@ -56,16 +90,16 @@ var AgoraRTCUtils = (function () {
     // +", sendPacketsLost:"+videoStats.sendPacketsLost does not work on Safari
     
     // after 5 seconds of low bandwidth out
-    if (_brLowObserved>10) {
+    if (_brLowObserved>ResultCountToStepDown) {
       changeProfile(_currentProfile - 1); // reduce profile
     }
-    else if (_fpsLowObserved>10) {
+    else if (_fpsLowObserved>ResultCountToStepDown) {
       _maxProfileDueToLowFPS=_currentProfile-1; // do not return here
       changeProfile(_currentProfile - 1); // reduce profile
     }
 
     // after about 5 seconds of very good
-    if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile<_maxProfileDueToLowFPS && _brHighObserved > 6 && _currentProfile < _profiles.length - 1) {
+    if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile<_maxProfileDueToLowFPS && _brHighObserved > ResultCountToStepUp && _currentProfile < _profiles.length - 1) {
       changeProfile(_currentProfile + 1); // increase profile
     }
   }
@@ -78,14 +112,16 @@ var AgoraRTCUtils = (function () {
     _brHighObserved = 0;
     _fpsLowObserved = 0;
     var profile = _profiles[profileInd];
-    console.log("CHANGING PROFILE  " + _currentProfile);
+    console.log("Auto Adjust Changing Profile to " + profile.id);
     _publishClient._highStream.videoTrack.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
   }
 
   return { // public interface
-    startAutoAdjustResolution: function (client) {
+    startAutoAdjustResolution: function (client, initialProfile) {
       _publishClient = client;
-      _currentProfile = 1;
+      _currentProfile = getProfileIndex(initialProfile);
+      if (_currentProfile<0)
+          throw 'Auto Adjust Profile Not Found'; 
       _autoAdjustInterval = setInterval(() => {
         autoAdjustResolution();
       }, AdjustFrequency);

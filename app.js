@@ -843,7 +843,7 @@ class AgoraMultiChanelApp {
     this.localTracks.videoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
     await this.clients[this.myPublishClient].publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
-    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient]);
+    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient],"360p_11");
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
     document.getElementById("cam_on").classList.add("hidden");
@@ -917,7 +917,7 @@ class AgoraMultiChanelApp {
 
     this.localTracks.videoTrack.play("local-player");
     await this.clients[this.myPublishClient].publish(this.localTracks.videoTrack);
-    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient]);
+    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient],"360p_11");
     console.log("### PUBLISHED VIDEO Low Res changed " + this.lowVideoHeightCurrent + "p ###");
   }
 
