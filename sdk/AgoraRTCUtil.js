@@ -11,7 +11,7 @@ var AgoraRTCUtils = (function () {
   var _profiles = [
                  // { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 60, bitrateMinDesired: 100, bitrateMax: 500 },
                  { id: "360p_1", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 }, 
-                 { id: "360p_2", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 450, moveUpThreshold: 750, bitrateMax: 1000 },
+                 { id: "360p_2", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 750, bitrateMax: 1000 },
                   { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
 
                 //  { id: "1080p", width: 1920, height: 1080, frameRate: 24, bitrateMin: 600, bitrateMinDesired: 1200, bitrateMax: 3600 },
@@ -28,6 +28,8 @@ var AgoraRTCUtils = (function () {
 
     var profile = _profiles[_currentProfile];
     var sendBitratekbps = Math.floor(videoStats.sendBitrate / 1000);
+
+    videoStats.s
 
     // check encoding FPS not too low
     if (videoStats.sendFrameRate && videoStats.sendFrameRate>0 && videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100)) {
@@ -50,8 +52,9 @@ var AgoraRTCUtils = (function () {
       _brHighObserved = 0;
     }
 
+    
     // log details
-    console.log("AutoAdjustAlgo profile:"+_currentProfile+", width:"+videoStats.sendResolutionWidth+", height:"+videoStats.sendResolutionHeight+", fps:" + videoStats.sendFrameRate + ", br_kbps:" + sendBitratekbps + ", bad_fps:" + _fpsLowObserved + ", bad_br:" + _brLowObserved + ", good_br:" + _brHighObserved+" ios="+isIOS());
+    console.log("AutoAdjustAlgo profile:"+_currentProfile+", sendPacketsLost:"+videoStats.sendPacketsLost+", width:"+videoStats.sendResolutionWidth+", height:"+videoStats.sendResolutionHeight+", fps:" + videoStats.sendFrameRate + ", br_kbps:" + sendBitratekbps + ", bad_fps:" + _fpsLowObserved + ", bad_br:" + _brLowObserved + ", good_br:" + _brHighObserved+" ios="+isIOS());
 
     // after 5 seconds of bad
     if (_fpsLowObserved>10 || _brLowObserved>10) {
