@@ -1753,6 +1753,9 @@ async function showMediaDeviceTest() {
     var currentCam = cams.find(cam => cam.label === $(".cam-input").val());
     var currentMic = mics.find(mic => mic.label === $(".mic-input").val());
 
+
+    await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+    await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
     await agoraApp.startCamMic(currentCam.deviceId, currentMic.deviceId);
 
     hideLoadingSpinner();
@@ -1764,8 +1767,6 @@ async function showMediaDeviceTest() {
   agoraApp.cameraId=currentCam.deviceId;
   agoraApp.micId = currentMic.deviceId;
 
-  //await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
-  //await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
 }
 
 async function showMediaDeviceChange() {
