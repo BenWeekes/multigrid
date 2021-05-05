@@ -45,7 +45,7 @@ var AgoraRTCUtils = (function () {
     }
 
     // see if performing well enough to increase profile
-    if (videoStats.sendResolutionWidth > 0 && sendBitratekbps > profile.moveUpThreshold) {
+    if (videoStats.sendResolutionWidth > 0 && videoStats.sendResolutionWidth==profile.width && sendBitratekbps > profile.moveUpThreshold) {
       _brHighObserved++;
     } else {
       _brHighObserved = 0;
