@@ -29,8 +29,6 @@ var AgoraRTCUtils = (function () {
     var profile = _profiles[_currentProfile];
     var sendBitratekbps = Math.floor(videoStats.sendBitrate / 1000);
 
-    videoStats.s
-
     // check encoding FPS not too low
     if (videoStats.sendFrameRate && videoStats.sendFrameRate>0 && videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100)) {
       _fpsLowObserved++;
