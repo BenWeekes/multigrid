@@ -1703,7 +1703,7 @@ function hideLoadingSpinner() {
 
 function selectBestCam(cams) {
   for (var i=0; i<cams.length; i++) {
-    if (cams[i].label.indexOf("Facetime")==0) {
+    if (cams[i].label.indexOf("FaceTime")==0) {
       return i;
     }
   }
