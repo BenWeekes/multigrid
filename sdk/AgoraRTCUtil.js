@@ -24,15 +24,15 @@ var AgoraRTCUtils = (function () {
   var AdjustFrequency = 500; // ms between checks
   var ResultCountToStepUp=6; // number of consecutive positive results before step up occurrs
   var ResultCountToStepDown=10; // number of consecutive negative results before step down occurrs
-  var MinFPSPercent = 90; // Below this percentage of expected outbound FPS for a period of time will trigger step down
+  var MinFPSPercent = 90; // below this percentage FPS will a trigger step down
   var MinVideoKbps=100; // below this and the video is likely off or static 
-  
+
   var _autoAdjustInterval;
   var _publishClient;
   var _currentProfile = 0;
   var _fpsLowObserved = 0;
   var _brLowObserved = 0;
-  var _maxProfileDueToLowFPS = 1000; // make progile 
+  var _maxProfileDueToLowFPS = 1000; 
   var _brHighObserved = 0;
 
   var _profiles = [
@@ -79,7 +79,7 @@ var AgoraRTCUtils = (function () {
     }
 
     // see if performing well enough to increase profile
-    if (videoStats.sendResolutionWidth > 0 && videoStats.sendResolutionWidth==profile.width && sendBitratekbps > profile.moveUpThreshold) {
+    if (videoStats.sendResolutionWidth > 0 && (videoStats.sendResolutionWidth==profile.width || videoStats.sendResolutionWidth==profile.height) && sendBitratekbps > profile.moveUpThreshold) {
       _brHighObserved++;
     } else {
       _brHighObserved = 0;
