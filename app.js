@@ -1747,8 +1747,8 @@ async function showMediaDeviceTest() {
   })
 
   volumeAnimation = requestAnimationFrame(setVolumeWave);
-  //await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
-  //await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+  await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+  await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
 }
 
 async function showMediaDeviceChange() {
