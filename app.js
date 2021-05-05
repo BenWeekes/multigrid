@@ -1702,7 +1702,20 @@ function showLoadingSpinner() {
 function hideLoadingSpinner() {
   document.getElementById("spinner").classList.add("hidden");
 }
+
+function selectBestCam(cams) {
+  for (var i=0; i<cams.length; i++) {
+    if (cams[i].indexOf("Facetime")==0) {
+      return i;
+    }
+  }
+  // usually first in the list 
+  // unless its Facetime 
+  return 0;
+}
+
 let volumeAnimation;
+
 async function showMediaDeviceTest() {
 
   await agoraApp.loadDevices();
@@ -1726,7 +1739,8 @@ async function showMediaDeviceTest() {
 
   // get cameras
   cams = await AgoraRTC.getCameras();
-  currentCam = cams[0];
+  //currentCam = cams[0];
+  currentCam = cams[selectBestCam(cams)];
   $(".cam-input").val(currentCam.label);
   cams.forEach(cam => {
     $(".cam-list").append(`<a class="dropdown-item" href="#">${cam.label}</a>`);
@@ -1747,8 +1761,13 @@ async function showMediaDeviceTest() {
   })
 
   volumeAnimation = requestAnimationFrame(setVolumeWave);
-  await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
-  await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+
+  // without setting it like this you can't be sure you are using the correct device 
+  agoraApp.cameraId=currentCam.deviceId;
+  agoraApp.micId = currentMic.deviceId;
+
+  //await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+  //await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
 }
 
 async function showMediaDeviceChange() {
