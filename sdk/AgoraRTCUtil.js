@@ -7,6 +7,7 @@ var AgoraRTCUtils = (function () {
   var _currentProfile = 0;
   var _fpsLowObserved = 0;
   var _brLowObserved = 0;
+  var _maxProfileDueToLowFPS = 1000; // make progile 
   var _brHighObserved = 0;
   var _profiles = [
                  // { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 60, bitrateMinDesired: 100, bitrateMax: 500 },
@@ -52,14 +53,19 @@ var AgoraRTCUtils = (function () {
     
     // log details
     console.log("AutoAdjustAlgo profile:"+_currentProfile+", width:"+videoStats.sendResolutionWidth+", height:"+videoStats.sendResolutionHeight+", fps:" + videoStats.sendFrameRate + ", br_kbps:" + sendBitratekbps + ", bad_fps:" + _fpsLowObserved + ", bad_br:" + _brLowObserved + ", good_br:" + _brHighObserved+" ios="+isIOS());
-// +", sendPacketsLost:"+videoStats.sendPacketsLost does not work on Safari
-    // after 5 seconds of bad
-    if (_fpsLowObserved>10 || _brLowObserved>10) {
+    // +", sendPacketsLost:"+videoStats.sendPacketsLost does not work on Safari
+    
+    // after 5 seconds of low bandwidth out
+    if (_brLowObserved>10) {
+      changeProfile(_currentProfile - 1); // reduce profile
+    }
+    else if (_fpsLowObserved>10) {
+      _maxProfileDueToLowFPS=_currentProfile-1; // do not return here
       changeProfile(_currentProfile - 1); // reduce profile
     }
 
     // after about 5 seconds of very good
-    if (_fpsLowObserved == 0 && _brLowObserved == 0 && _brHighObserved > 6 && _currentProfile < _profiles.length - 1) {
+    if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile<_maxProfileDueToLowFPS && _brHighObserved > 6 && _currentProfile < _profiles.length - 1) {
       changeProfile(_currentProfile + 1); // increase profile
     }
   }
