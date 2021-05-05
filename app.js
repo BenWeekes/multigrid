@@ -1611,14 +1611,12 @@ function pushToTalkStart() {
   player.setVolume(10);
   agoraApp.localTracks.audioTrack.setEnabled(true);
   document.getElementById("mic_on").classList.add("mic_push");
-
 }
 
 function pushToTalkStop() {
   agoraApp.localTracks.audioTrack.setEnabled(false);
   document.getElementById("mic_on").classList.remove("mic_push");
   player.setVolume(80);
-
 }
 
 let agoraApp = new AgoraMultiChanelApp();
@@ -1705,7 +1703,7 @@ function hideLoadingSpinner() {
 
 function selectBestCam(cams) {
   for (var i=0; i<cams.length; i++) {
-    if (cams[i].indexOf("Facetime")==0) {
+    if (cams[i].label.indexOf("Facetime")==0) {
       return i;
     }
   }
