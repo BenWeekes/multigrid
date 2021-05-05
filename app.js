@@ -189,6 +189,9 @@ class AgoraMultiChanelApp {
     this.OutboundStatsWait = 2000;
     this.outboundStatsLast = 0;
     this.outboundFPSHigh2 = 0;
+    this.outboundWidth = 0;
+    this.outboundHeight = 0;
+    this.outboundBitrate = 0;
     this.outboundFPSLow2 = 0;
     this.outboundFrameCountHigh = 0;
     this.outboundFrameCountLow = 0;
@@ -998,6 +1001,12 @@ class AgoraMultiChanelApp {
 
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._highStream) {
       var highStream = this.clients[this.myPublishClient]._highStream;
+
+      var videoStats = this.clients[this.myPublishClient].getLocalVideoStats();
+      this.outboundWidth = videoStats.sendResolutionWidth;
+      this.outboundHeight = videoStats.sendResolutionHeight;
+      this.outboundBitrate = Math.floor(videoStats.sendBitrate / 1000);
+
       if (highStream.pc && highStream.pc.pc) {
         highStream.pc.pc.getStats(null).then(stats => {
           stats.forEach(report => {
@@ -1273,7 +1282,9 @@ class AgoraMultiChanelApp {
       var stats2 = " Outbound FPS Low:" + this.outboundFPSLow2 + " High:" + this.outboundFPSHigh2 + " | Audio Subs " + this.getMapSize(this.audioSubscriptions) + "/" + this.maxAudioSubscriptions + "(" + this.audioPublishersByPriority.length + ")" + " | Video Subs " + this.getMapSize(this.videoSubscriptions) + "/" + this.getMaxVideoTiles() + "(" + this.allowedVideoSubs + "/" + this.videoPublishersByPriority.length + ")" + " | Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
       document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     } else {
-      document.getElementById("renderFrameRate").innerHTML = " Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
+      var stats=" Inc:" + remotesIncrease + " Dec:" + remotesDecrease + " Hold:" + remotesHold;
+      var stats2=  this.outboundWidth + "x" + this.outboundHeight + " "+this.outboundFPSHigh2+"fps "+ this.outboundBitrate+"kbps";  
+      document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
     }
 
     if (this.enableFullLogging === "true") {
