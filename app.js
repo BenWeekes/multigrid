@@ -155,7 +155,7 @@ class AgoraMultiChanelApp {
     this.highVideoWidth = 640; //isMobile() ? 320 : 640;
     this.highVideoHeight = 360; // isMobile() ? 180 : 360;
     this.highVideoFPS = this.maxFPS; //isMobile() ? 15 : this.maxFPS;
-    this.highVideoBitrateMin = 200;
+    this.highVideoBitrateMin = 400;
     this.highVideoBitrateMax = 1000;
     this.FPSThresholdToIncreaseSubs = 0.9;
     this.FPSThresholdToReduceSubs = 0.5;
@@ -324,7 +324,7 @@ class AgoraMultiChanelApp {
     if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
       this.doSwitchVideoStreamTypeAt();
     }
-    this.changeLowStreamResolutionIfNeeded();
+    //this.changeLowStreamResolutionIfNeeded();
     this.manageGrid();
   }
 
@@ -816,6 +816,8 @@ class AgoraMultiChanelApp {
   }
 
   async publishAudioVideoToChannel() {
+
+    // create together for single allow
     if (!this.localTracks.audioTrack) {
       if (this.cameraId && this.micId) {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
@@ -845,6 +847,7 @@ class AgoraMultiChanelApp {
     document.getElementById("cam_off").classList.remove("hidden");
   }
 
+  /*
   async changeLowStreamResolutionIfNeeded() {
     if (this.dynamicallyAdjustLowStreamResolution === "false") {
       return;
@@ -872,7 +875,7 @@ class AgoraMultiChanelApp {
       }
     }
   }
-
+*/
   async stopPublishingVideo() {
     if (this.localTracks.videoTrack != null) {
       console.log("### stopPublishingVideo VIDEO! ###");
@@ -1744,8 +1747,8 @@ async function showMediaDeviceTest() {
   })
 
   volumeAnimation = requestAnimationFrame(setVolumeWave);
-  await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
-  await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+  //await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+  //await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
 }
 
 async function showMediaDeviceChange() {
