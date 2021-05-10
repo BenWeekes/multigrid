@@ -128,8 +128,9 @@
   width: 100%;
   float: left;
   margin-right: 3px;
-  margin-top: 3px;
-  padding: 10px;
+  margin-top: 12px;
+  padding: 6px;
+  padding-top: 11px;
   display: inline-block;
   background-color: lightskyblue !important;
   }
@@ -210,13 +211,25 @@
   background-color: lightskyblue !important;
   }    
 
+
+  ._icon{
+    background-color: lightskyblue !important;
+    }    
+
+
   .stop_icon{
   width: 25px  !important;
   height: 25px !important;
-  margin-top: 3px !important;
+  margin-top: -3px !important;
   opacity: 63% !important;
   }    
 
+  .cue_icon{
+    width: 32px  !important;
+    height: 32px !important;
+    margin-top: -3px !important;
+    }    
+  
 
 
   .media_buttons_enabled {
@@ -297,4 +310,15 @@
     position:absolute;
     bottom: 10px;
     right: 10px;
+  }
+
+  .mp4label{
+    margin-left: 5px;
+    margin-right: 5px !important;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .watch_input{
+    width: 350px;
   }
