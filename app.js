@@ -40,7 +40,7 @@ class AgoraMultiChanelApp {
     this.FPS = "FPS";
     this.WATCH = "WATCH";
     this.WATCHYT = "WATCHYT";
-    
+
     this.VIDEO = "video";
     this.AUDIO = "audio";
 
@@ -76,7 +76,7 @@ class AgoraMultiChanelApp {
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
-    
+
     this.vcodec = getParameterByName("vcodec") || "vp8";
 
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
@@ -551,20 +551,20 @@ class AgoraMultiChanelApp {
   }
 
   enableShareContent() {
-    if (agoraApp.mainVideoId) { 
-        agoraApp.moveToLargeWindow(); // removes mainVideoId if no arg passed
+    if (agoraApp.mainVideoId) {
+      agoraApp.moveToLargeWindow(); // removes mainVideoId if no arg passed
     }
     // don't set until above called to take person out of this view
     agoraApp.shareContentOnDisplay = true;
     if (agoraApp.gridLayout) {
-        agoraApp.toggleLayout(true);
+      agoraApp.toggleLayout(true);
     }
   }
 
   disableShareContent() {
     agoraApp.shareContentOnDisplay = false;
     if (!agoraApp.gridLayout) {
-        agoraApp.toggleLayout();
+      agoraApp.toggleLayout();
     }
   }
 
@@ -666,7 +666,7 @@ class AgoraMultiChanelApp {
       this.vadUid = vadUid;
       if (document.getElementById(this.vadUid)) {
         //move this user to the large window if in follow mode
-        if (!this.gridLayout &&  !this.shareContentOnDisplay) {
+        if (!this.gridLayout && !this.shareContentOnDisplay) {
           this.moveToLargeWindow(this.vadUid);
         } else {
           document.getElementById(this.vadUid).classList.add("remote_video_active");
@@ -1296,7 +1296,7 @@ class AgoraMultiChanelApp {
 
   // web is square
   getGridColCount(cells) {
-    if (cells < 2 || ( this.gridLayout && cells < 3) ) {
+    if (cells < 2 || (this.gridLayout && cells < 3)) {
       return 1;
     } else if (cells < 5) {
       return 2;
@@ -1409,12 +1409,12 @@ class AgoraMultiChanelApp {
     var video_subs = this.getMapSize(this.videoSubscriptions);
 
     // show full video UI if two people in the call
-    
-    if (video_subs == 1 && this.gridLayout  && !this.shareContentOnDisplay) { 
+
+    if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
       this.shownPersonToPerson = true;
       this.toggleLayout(true);
     } else if (video_subs != 1 && this.shownPersonToPerson && !this.gridLayout && !this.shareContentOnDisplay) {
-      this.shownPersonToPerson = false;      
+      this.shownPersonToPerson = false;
       this.toggleLayout();
     }
 
@@ -1430,25 +1430,25 @@ class AgoraMultiChanelApp {
       }
       else if (this.landscape) {
         var focus_height = height - toolbar_height - cell_height * 2 - cell_margin * 3 - grid_padding * 3;
-        if (focus_height<180) 
-          focus_height=180;
+        if (focus_height < 180)
+          focus_height = 180;
         document.getElementById("focus-video").style.height = focus_height + 'px';
         document.getElementById("focus-video").style.width = focus_height * this.AspectRatio + 'px';
         toolbar_height_and_focus_height = toolbar_height + focus_height; //document.getElementById("focus-video").offsetHeight;
       } else {
         var focus_width = width - (grid_padding * 2);
-        if (focufocus_widths_height<320) 
-          focus_width=320;
+        if (focufocus_widths_height < 320)
+          focus_width = 320;
         document.getElementById("focus-video").style.height = focus_width / this.AspectRatio + 'px';
         document.getElementById("focus-video").style.width = focus_width + 'px';
         toolbar_height_and_focus_height = toolbar_height + focus_width / this.AspectRatio; //document.getElementById("focus-video").offsetHeight;
       }
     }
 
-    
 
-    document.getElementById("agoravideoplayer").style.height =document.getElementById("focus-video").style.height ;
-    document.getElementById("agoravideoplayer").style.width =document.getElementById("focus-video").style.width ;
+
+    document.getElementById("agoravideoplayer").style.height = document.getElementById("focus-video").style.height;
+    document.getElementById("agoravideoplayer").style.width = document.getElementById("focus-video").style.width;
 
     var toolbar_width = 0;
 
@@ -1493,7 +1493,7 @@ class AgoraMultiChanelApp {
     var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 1));
     var grid_available_width = width - toolbar_width - (grid_padding * cols);
 
-    if (video_subs == 1 && !this.gridLayout  && !this.shareContentOnDisplay) { // 1 other person to display larger
+    if (video_subs == 1 && !this.gridLayout && !this.shareContentOnDisplay) { // 1 other person to display larger
       document.getElementById("grid").classList.add("grid_over");
       grid_available_height = 90;
     } else {

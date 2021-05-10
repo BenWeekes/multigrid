@@ -24,21 +24,15 @@ class AgoraWatchParty {
 
     */
 
-
-
-
     constructor() {
-        this.RTM_SEPARATOR="###";
-
-        this.STATE_PLAY="PLAY";
-        this.STATE_PAUSE="PAUSE";
-        this.STATE_STOP="STOP";
-
+        this.RTM_SEPARATOR = "###";
+        this.STATE_PLAY = "PLAY";
+        this.STATE_PAUSE = "PAUSE";
+        this.STATE_STOP = "STOP";
         this.player;
         this.playerInit = false;
         this.watchPartyOwner = false; // this user is player
     }
-
 
     togglePlayerControls() {
         if (document.getElementById("player_container").classList.contains("hidden")) {
@@ -52,13 +46,11 @@ class AgoraWatchParty {
 
     enableShareContent() {
         if (!this.playerInit) {
-            this.initWatchPlayer();  
+            this.initWatchPlayer();
             this.playerInit = true;
         }
         document.getElementById("agoraplayer").classList.remove("hidden");
         agoraApp.enableShareContent();
-        
-
     }
 
     disableShareContent() {
@@ -68,22 +60,22 @@ class AgoraWatchParty {
 
     initWatchPlayer() {
 
-        this.player=document.getElementById("agoravideoplayer");
-        var that=this;
-        this.player.onseeking = function() {
-          console.log("onseek "+that.player.currentTime);
-          that.broadcastState();
+        this.player = document.getElementById("agoravideoplayer");
+        var that = this;
+        this.player.onseeking = function () {
+            console.log("onseek " + that.player.currentTime);
+            that.broadcastState();
         };
 
-        this.player.onplay = function(evt) {
-            console.log("onplay "+that.player.currentTime+" "+evt);
+        this.player.onplay = function (evt) {
+            console.log("onplay " + that.player.currentTime + " " + evt);
             that.broadcastState();
-          };
+        };
 
-          this.player.onpause = function(evt) {
-            console.log("onpause "+that.player.currentTime+" "+evt);
+        this.player.onpause = function (evt) {
+            console.log("onpause " + that.player.currentTime + " " + evt);
             that.broadcastState();
-          };
+        };
 
         // only the person who cues a video will have controls
         // he will send RTM to others
@@ -96,24 +88,24 @@ class AgoraWatchParty {
     }
 
     broadcastState() {
-        if (this.watchPartyOwner ) {
+        if (this.watchPartyOwner) {
             this.sendStateRTM();
         }
     }
 
-    sendStateRTM(stopped){
-        var msg = agoraApp.WATCH + this.RTM_SEPARATOR + (stopped ? this.STATE_STOP : this.player.paused) + this.RTM_SEPARATOR  + document.getElementById("watchid").value +  this.RTM_SEPARATOR+ this.player.currentTime;
+    sendStateRTM(stopped) {
+        var msg = agoraApp.WATCH + this.RTM_SEPARATOR + (stopped ? this.STATE_STOP : this.player.paused) + this.RTM_SEPARATOR + document.getElementById("watchid").value + this.RTM_SEPARATOR + this.player.currentTime;
         this.sendWatchMessage(msg);
     }
 
     cueVideo() {
         this.watchPartyOwner = true;
         this.enableShareContent();
-        this.player.src=document.getElementById("watchid").value;
+        this.player.src = document.getElementById("watchid").value;
         AgoraRTC.processExternalMediaAEC(this.player);
         this.player.pause();
-        this.player.currentTime=0;
-        this.player.controls=true;
+        this.player.currentTime = 0;
+        this.player.controls = true;
         this.sendStateRTM();
     }
 
@@ -132,13 +124,13 @@ class AgoraWatchParty {
     }
 
 
-    handleRTM(text){
+    handleRTM(text) {
 
         console.log(text);
 
         this.enableShareContent(); // sets player up if needed.
         this.watchPartyOwner = false; // someone else in control
-       // this.player.controls = false;  
+        // this.player.controls = false;  
 
         var command = text.split(this.RTM_SEPARATOR)[1];
         var vid = text.split(this.RTM_SEPARATOR)[2];
@@ -147,23 +139,23 @@ class AgoraWatchParty {
         if (command === this.STATE_STOP) {
             this.player.pause();
             this.disableShareContent();
-            return;    
+            return;
         }
-        
+
 
 
         if (document.getElementById("watchid").value !== vid) {
             document.getElementById("watchid").value = vid;
         }
-        
-        if (this.player.src!=vid) {
-            this.player.src=vid;
+
+        if (this.player.src != vid) {
+            this.player.src = vid;
         }
 
         // command is  set to player.paused
-        if (""+this.player.paused!==command) {
-            if (this.player.paused){
-                this.player.currentTime=playerTime;
+        if ("" + this.player.paused !== command) {
+            if (this.player.paused) {
+                this.player.currentTime = playerTime;
                 AgoraRTC.processExternalMediaAEC(this.player);
                 this.player.play();
             } else {
@@ -171,13 +163,13 @@ class AgoraWatchParty {
             }
         }
 
-        if (this.player.paused){
-            this.player.currentTime=playerTime;
+        if (this.player.paused) {
+            this.player.currentTime = playerTime;
         } else {
             // only nudge if needed
             if (Math.abs(this.player.currentTime - playerTime) > 2) {
-                this.player.currentTime=playerTime+0.2;
-                console.log(" set this.player.currentTime to "+this.player.currentTime);
+                this.player.currentTime = playerTime + 0.2;
+                console.log(" set this.player.currentTime to " + this.player.currentTime);
             }
         }
 
