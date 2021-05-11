@@ -322,3 +322,7 @@
   .watch_input{
     width: 350px;
   }
+
+  .watch_input_mobile{
+    width: 70px;
+  }

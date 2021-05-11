@@ -44,6 +44,13 @@ class AgoraWatchParty {
         }
     }
 
+    hidePlayerControls() {
+        if (!document.getElementById("player_container").classList.contains("hidden")) {
+            document.getElementById("player_container").classList.add("hidden")
+            document.getElementById("toolbar").classList.remove("headerOpenPlay");
+        }
+    }
+
     enableShareContent() {
         if (!this.playerInit) {
             this.initWatchPlayer();
@@ -64,16 +71,19 @@ class AgoraWatchParty {
         var that = this;
         this.player.onseeking = function () {
             console.log("onseek " + that.player.currentTime);
+            //that.checkOwner();
             that.broadcastState();
         };
 
         this.player.onplay = function (evt) {
             console.log("onplay " + that.player.currentTime + " " + evt);
+            //that.checkOwner() ;
             that.broadcastState();
         };
 
         this.player.onpause = function (evt) {
             console.log("onpause " + that.player.currentTime + " " + evt);
+            //that.checkOwner() ;
             that.broadcastState();
         };
 
@@ -85,6 +95,12 @@ class AgoraWatchParty {
         setInterval(() => {
             this.broadcastState();
         }, 2000);
+    }
+
+    checkOwner() {
+        if (!this.watchPartyOwner) {
+           alert("You are not presenting this video. \n Press the Cue button first to present.");
+        }
     }
 
     broadcastState() {
@@ -110,6 +126,9 @@ class AgoraWatchParty {
     }
 
     stopVideo() {
+        if (!this.playerInit) {
+            return;
+        }
         this.watchPartyOwner = false;
         this.sendStateRTM(true);
         this.player.pause();

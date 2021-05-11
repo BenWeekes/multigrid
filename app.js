@@ -1,6 +1,7 @@
 /******************************************************************************
- * Application: Grid View Demo
- * Author:  Ben Weekes & Shankara Shivagana
+ * Application: Web Demo for multi channel, watch party, screen share with network and device adaptation.
+ * 
+ * Author:  Ben Weekes
  * Company: Agora.io
  * Date: Mar 1st
  * 
@@ -74,6 +75,8 @@ class AgoraMultiChanelApp {
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
+    this.enableHDAdjust = getParameterByName("enableHDAdjust") || "false";
+    this.enableHDAdjustiOS = getParameterByName("enableHDAdjustiOS") || "true";
 
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
 
@@ -403,6 +406,8 @@ class AgoraMultiChanelApp {
       expectedAudioSubs[this.audioPublishersByPriority[v]] = this.audioPublishersByPriority[v];
     }
     this.removeAudioSubsIfNotInMap(expectedAudioSubs);
+
+    //#B3
     if (!this.gridLayout && this.getMapSize(this.videoSubscriptions) == 0 && !this.shareContentOnDisplay) {
       this.toggleLayout();
     }
@@ -476,6 +481,17 @@ class AgoraMultiChanelApp {
         // 1 is for low quality
         client.setStreamFallbackOption(user.uid, 1);
         client.setRemoteVideoStreamType(user.uid, that.defaultVideoStreamType);
+        //
+
+        if (parseInt(uid_string, 10) <100) {
+          if (that.gridLayout && that.enableContentSpeakerMode === "true") {
+            that.toggleLayout(false);
+          }
+          if (that.mainVideoId !== uid_string) {
+            that.moveToLargeWindow(uid_string);
+          }
+        }
+
       }).catch(e => {
         delete that.videoSubscriptions[uid_string];
         console.error(e);
@@ -499,6 +515,8 @@ class AgoraMultiChanelApp {
       if (!expected[el.id]) {
         that.numVideoTiles--;
         el.remove();
+        that.mainVideoId=null;
+        that.showGridView();
       }
     });
   }
@@ -550,26 +568,55 @@ class AgoraMultiChanelApp {
     }
   }
 
+  showGridView() {
+    if (!this.gridLayout) {
+      this.toggleLayout();
+    }
+  }
+
+  showContentView() {
+    if (this.gridLayout) {
+      this.toggleLayout();
+    }
+  }
+
+  toggleLayout(loadUser) {
+    if (this.gridLayout) {
+      if (this.videoPublishersByPriority.length > 0 || this.shareContentOnDisplay) {
+        this.gridLayout = false;
+        document.getElementById("focus-video").classList.remove("hidden");
+        document.getElementById("grid").classList.add("grid_wrapper_follow");
+        if (loadUser) {
+          this.moveToLargeWindow(this.videoPublishersByPriority[0]);
+        }
+      }
+    } else { // follow speaker
+      this.gridLayout = true;
+      document.getElementById("focus-video").classList.add("hidden");
+      document.getElementById("grid").classList.remove("grid_wrapper_follow");
+      this.returnLargeToGrid(); // removes current large window user
+    }
+  }
+
   enableShareContent() {
-    if (agoraApp.mainVideoId) {
-      agoraApp.moveToLargeWindow(); // removes mainVideoId if no arg passed
+    if (this.mainVideoId) {
+      this.returnLargeToGrid(); 
     }
     // don't set until above called to take person out of this view
-    agoraApp.shareContentOnDisplay = true;
-    if (agoraApp.gridLayout) {
-      agoraApp.toggleLayout(true);
-    }
+    this.shareContentOnDisplay = true;
+    this.showContentView();
   }
 
   disableShareContent() {
-    agoraApp.shareContentOnDisplay = false;
-    if (!agoraApp.gridLayout) {
-      agoraApp.toggleLayout();
-    }
+    this.shareContentOnDisplay = false;
+    this.showGridView();
+  }
+
+  returnLargeToGrid(){
+    this.moveToLargeWindow(); // removes mainVideoId if no arg passed
   }
 
   moveToLargeWindow(uid_string) {
-
     // if null we are moving him out only
     // in the case of screen content we don't want to actually move the users
     if (uid_string && uid_string == this.mainVideoId) {
@@ -783,16 +830,20 @@ class AgoraMultiChanelApp {
     }
   }
 
+  async stopScreenShare(){
+    if (this.screenClient) {
+      await this.screenClient.leave();
+      this.screenClient=null;
+    }
+  }
 
   async publishScreenShareToChannel() {
 
     // TODO cancel any existing SS in the group via RTM
-    if (this.screenClient) {
-      await this.screenClient.leave();
-    }
+    this.stopScreenShare();
     this.screenClient = AgoraRTC.createClient(this.clientConfig);
     let tempChannelName = this.baseChannelName + '0';
-    this.ssUid = await this.screenClient.join(this.appId, tempChannelName, null, 'ss1');
+    this.ssUid = await this.screenClient.join(this.appId, tempChannelName, null, 11);
 
     var screenRet = await Promise.all([
       AgoraRTC.createScreenVideoTrack({ optimizationMode: "detail", encoderConfig: { width: 1280, height: 720, frameRate: 24, bitrateMin: 1200, bitrateMax: 3000 } }, "auto")
@@ -804,17 +855,24 @@ class AgoraMultiChanelApp {
         if (screenRet[0][1]) {
           this.screenTracks.audioTrack = screenRet[0][1];
         }
+        await this.screenClient.publish(Object.values(this.screenTracks));
       }
       else {
         this.screenTracks.videoTrack = screenRet[0];
         this.screenTracks.audioTrack = null;
+
+        await this.screenClient.publish(this.screenTracks.videoTrack);
       }
+
+      var that=this;
+      this.screenTracks.videoTrack._originMediaStreamTrack.onended = function () {
+        that.stopScreenShare();  that.showGridView(); agoraWatchParty.togglePlayerControls(); 
+       };
     }
 
     // send RTM to stop anyone else publishing screen
     // local should put into focussed directly now
-    this.screenTracks.videoTrack.play("focus-video");
-    await this.screenClient.publish(Object.values(this.screenTracks));
+    //await this.screenTracks.videoTrack.play("focus-video");
     console.log("publish success");
   }
 
@@ -843,7 +901,11 @@ class AgoraMultiChanelApp {
     this.localTracks.videoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
     await this.clients[this.myPublishClient].publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
-    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+    
+    if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+    }
+    
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
     document.getElementById("cam_on").classList.add("hidden");
@@ -917,7 +979,11 @@ class AgoraMultiChanelApp {
 
     this.localTracks.videoTrack.play("local-player");
     await this.clients[this.myPublishClient].publish(this.localTracks.videoTrack);
-    AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+    
+    if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+    }
+
     console.log("### PUBLISHED VIDEO Low Res changed " + this.lowVideoHeightCurrent + "p ###");
   }
 
@@ -970,13 +1036,11 @@ class AgoraMultiChanelApp {
       return;
     }
 
-
     var timedelta = 0;
     if (this.outboundStatsLast > 0) {
       timedelta = now - this.outboundStatsLast;
     }
     this.outboundStatsLast = now;
-
     if (this.myPublishClient > -1 && this.clients[this.myPublishClient] && this.clients[this.myPublishClient]._lowStream) {
       var lowStream = this.clients[this.myPublishClient]._lowStream;
       if (lowStream.pc && lowStream.pc.pc) {
@@ -1229,13 +1293,10 @@ class AgoraMultiChanelApp {
       packetLossMin = -1;
     }
 
-
     var subs = this.getMapSize(this.videoSubscriptions);
     if (subs > 1 && renderFrameRateCount < (subs - 1)) { // account for missing render rates
       remotesDecrease = remotesDecrease + ((subs - 1) - renderFrameRateCount);
     }
-
-
 
     // increase the number of subscriptions while conditions remain perfect 
     if (this.rampUpAgressive === "true" && remotesIncrease > (remotesDecrease + remotesHold)) {
@@ -1333,26 +1394,14 @@ class AgoraMultiChanelApp {
       if (document.getElementById("play_controls")) {
         document.getElementById("play_controls").classList.add("default_icon_left_mobile");
       }
+
+      if (document.getElementById("watchid")) {
+        document.getElementById("watchid").classList.add("watch_input_mobile");
+      }
+
     }
   }
 
-  toggleLayout(loadUser) {
-    if (this.gridLayout) {
-      if (this.videoPublishersByPriority.length > 0 || this.shareContentOnDisplay) {
-        this.gridLayout = false;
-        document.getElementById("focus-video").classList.remove("hidden");
-        document.getElementById("grid").classList.add("grid_wrapper_follow");
-        if (loadUser) {
-          this.moveToLargeWindow(this.videoPublishersByPriority[0]);
-        }
-      }
-    } else { // follow speaker
-      this.gridLayout = true;
-      document.getElementById("focus-video").classList.add("hidden");
-      document.getElementById("grid").classList.remove("grid_wrapper_follow");
-      this.moveToLargeWindow(); // removes current large window user
-    }
-  }
 
   updateUILayout() {
     this.setMobileOneTime()
@@ -1419,13 +1468,20 @@ class AgoraMultiChanelApp {
     }
 
     if (!this.gridLayout) { // follow speaker/content
+      rows = 1;
+      if (cellCount>6) {
+        rows = 2;
+      }
+     
+      cols = Math.ceil(cellCount / rows);
+
       if (video_subs == 1 && !this.shareContentOnDisplay) {  // handle two people - me and one other
         var focus_height = height - toolbar_height - grid_padding * 3;
         var focus_width = width - (grid_padding * 2);
         document.getElementById("focus-video").style.height = focus_height + 'px';
         document.getElementById("focus-video").style.width = focus_width + 'px';
         toolbar_height_and_focus_height = toolbar_height + focus_height;
-        rows = 1;
+        rows=1;
         cols = 1;
       }
       else if (this.landscape) {
@@ -1444,8 +1500,6 @@ class AgoraMultiChanelApp {
         toolbar_height_and_focus_height = toolbar_height + focus_width / this.AspectRatio; //document.getElementById("focus-video").offsetHeight;
       }
     }
-
-
 
     document.getElementById("agoravideoplayer").style.height = document.getElementById("focus-video").style.height;
     document.getElementById("agoravideoplayer").style.width = document.getElementById("focus-video").style.width;
@@ -1571,6 +1625,13 @@ function toggleSettings() {
 
 function publishScreenShareToChannel() {
   agoraApp.publishScreenShareToChannel();
+}
+
+function hideStats() {
+  if (!document.getElementById("stats_container").classList.contains("hidden")) {
+    document.getElementById("stats_container").classList.add("hidden")
+    document.getElementById("toolbar").classList.remove("headerOpen");
+  }
 }
 
 function toggleStats() {

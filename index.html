@@ -29,7 +29,7 @@
         <img src='img/73-512.webp' onclick="toggleCam()" id="cam_on"
           class="default_icon default_icon_left cam_off_reduced" />
 
-        <img src='img/play.png' onclick="agoraWatchParty.togglePlayerControls()" id="play_controls"
+        <img src='img/play.png' onclick="hideStats(); agoraWatchParty.togglePlayerControls()" id="play_controls"
           class="default_icon default_icon_left play_icon" />
 
       </div>
@@ -38,7 +38,7 @@
 
         <img src='img/iconfinder_apps_326511.png' onclick="toggleLayout()" id="settings_button"
           class="default_icon default_icon_right settings_icon" />
-        <img src='img/aami3-22-512.png' onclick="toggleStats()" id="stats_button"
+        <img src='img/aami3-22-512.png' onclick="agoraWatchParty.hidePlayerControls();  toggleStats()" id="stats_button"
           class="default_icon default_icon_right settings_icon" />
         <img src='img/Settings_control_interface-512.webp' onclick="toggleSettings()" id="settings_button"
           class="default_icon default_icon_right settings_icon" />
@@ -127,10 +127,14 @@
           <label class="mp4label" for="fname">Content URL </label>
           <input type="text" class="watch_input" id="watchid" name="watchid"
             value="https://sokool.io/media/h264_1080_best.mp4">
-          <img src='img/cue.webp' onclick="agoraWatchParty.cueVideo()" id="cue"
+          <img src='img/cue.webp' alt="cue" onclick="agoraWatchParty.cueVideo()" id="cue"
             class="default_icon default_icon_left play_icon cue_icon" />
-          <img src='img/stop.webp' onclick="agoraWatchParty.stopVideo()" id="stop"
+            <img src='img/ss.png'  alt="screen share"  onclick="publishScreenShareToChannel() " id="ss"
             class="default_icon default_icon_left play_icon stop_icon" />
+
+          <img src='img/stop.webp'  alt="stop"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreenShare();  agoraApp.showGridView(); agoraWatchParty.togglePlayerControls(); " id="stop"
+            class="default_icon default_icon_left play_icon stop_icon" />
+
           <!--<img src='img/play.png' onclick="agoraWatchParty.playVideo()" id="play" class="default_icon default_icon_left play_icon" />
          
           -->
