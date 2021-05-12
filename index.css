@@ -220,7 +220,8 @@
   .stop_icon{
   width: 28px  !important;
   height: 28px !important;
-
+  margin-top: -3px !important;
+  margin-left: 12px;
   opacity: 80% !important;
   }    
 
