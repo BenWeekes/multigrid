@@ -127,12 +127,12 @@
           <label class="mp4label" for="fname">Content URL </label>
           <input type="text" class="watch_input" id="watchid" name="watchid"
             value="https://sokool.io/media/h264_1080_best.mp4">
-          <img src='img/cue.webp' alt="cue" onclick="agoraWatchParty.cueVideo()" id="cue"
+          <img src='img/cue.webp' title="Load watch party video" onclick=" agoraWatchParty.cueVideo()" id="cue"
             class="default_icon default_icon_left play_icon cue_icon" />
-            <img src='img/ss.png'  alt="screen share"  onclick="publishScreenShareToChannel() " id="ss"
-            class="default_icon default_icon_left play_icon stop_icon" />
+            <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo(); publishScreenShareToChannel() " id="ss"
+            class="default_icon default_icon_left play_icon cue_icon" />
 
-          <img src='img/stop.webp'  alt="stop"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreenShare();  agoraApp.showGridView(); agoraWatchParty.togglePlayerControls(); " id="stop"
+          <img src='img/stop.png'  title="Stop presenting"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreensharePublish();  agoraApp.showGridView(); agoraWatchParty.togglePlayerControls(); " id="stop"
             class="default_icon default_icon_left play_icon stop_icon" />
 
           <!--<img src='img/play.png' onclick="agoraWatchParty.playVideo()" id="play" class="default_icon default_icon_left play_icon" />

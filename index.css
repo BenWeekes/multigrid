@@ -66,9 +66,9 @@
   padding: 0px;
   border-color: #FD5F00;
   border-width: 2px;
-  -moz-border-radius: 8px;
-  -webkit-border-radius: 8px;
-  border-radius: 8px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius:5px;
+  border-radius: 5px;
   }
 
   .agora_stats {
@@ -218,10 +218,10 @@
 
 
   .stop_icon{
-  width: 25px  !important;
-  height: 25px !important;
-  margin-top: -3px !important;
-  opacity: 63% !important;
+  width: 28px  !important;
+  height: 28px !important;
+
+  opacity: 80% !important;
   }    
 
   .cue_icon{

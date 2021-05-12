@@ -31,7 +31,6 @@ class AgoraWatchParty {
         this.STATE_STOP = "STOP";
         this.player;
         this.playerInit = false;
-        this.watchPartyOwner = false; // this user is player
     }
 
     togglePlayerControls() {
@@ -71,19 +70,16 @@ class AgoraWatchParty {
         var that = this;
         this.player.onseeking = function () {
             console.log("onseek " + that.player.currentTime);
-            //that.checkOwner();
             that.broadcastState();
         };
 
         this.player.onplay = function (evt) {
             console.log("onplay " + that.player.currentTime + " " + evt);
-            //that.checkOwner() ;
             that.broadcastState();
         };
 
         this.player.onpause = function (evt) {
             console.log("onpause " + that.player.currentTime + " " + evt);
-            //that.checkOwner() ;
             that.broadcastState();
         };
 
@@ -91,20 +87,15 @@ class AgoraWatchParty {
         // he will send RTM to others
         // anyone receiving RTM will stop themselves as owner and will lose controls
         // add control listen
+        this.player.volume=0.7;
 
         setInterval(() => {
             this.broadcastState();
         }, 2000);
     }
 
-    checkOwner() {
-        if (!this.watchPartyOwner) {
-           alert("You are not presenting this video. \n Press the Cue button first to present.");
-        }
-    }
-
     broadcastState() {
-        if (this.watchPartyOwner) {
+        if (agoraApp.hostingWatchParty) {
             this.sendStateRTM();
         }
     }
@@ -115,7 +106,8 @@ class AgoraWatchParty {
     }
 
     cueVideo() {
-        this.watchPartyOwner = true;
+        agoraApp.stopScreensharePublish();
+        agoraApp.hostingWatchParty = true;
         this.enableShareContent();
         this.player.src = document.getElementById("watchid").value;
         AgoraRTC.processExternalMediaAEC(this.player);
@@ -129,7 +121,7 @@ class AgoraWatchParty {
         if (!this.playerInit) {
             return;
         }
-        this.watchPartyOwner = false;
+        this.hostingWatchParty = false;
         this.sendStateRTM(true);
         this.player.pause();
         this.disableShareContent();
@@ -142,15 +134,21 @@ class AgoraWatchParty {
         });
     }
 
+    scrapeVideo(url) {
+        $.ajax({
+            url : url,
+            success : function(result){
+                alert(result);
+            }
+        });
+    }
 
     handleRTM(text) {
-
         console.log(text);
-
+        agoraApp.stopScreensharePublish();
         this.enableShareContent(); // sets player up if needed.
-        this.watchPartyOwner = false; // someone else in control
+        agoraApp.hostingWatchParty = false; // someone else in control
         // this.player.controls = false;  
-
         var command = text.split(this.RTM_SEPARATOR)[1];
         var vid = text.split(this.RTM_SEPARATOR)[2];
         var playerTime = Math.round(text.split(this.RTM_SEPARATOR)[3] * 10) / 10;
