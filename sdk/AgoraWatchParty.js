@@ -122,7 +122,7 @@ class AgoraWatchParty {
         if (!this.playerInit) {
             return;
         }
-        this.hostingWatchParty = false;
+        agoraApp.hostingWatchParty = false;
         this.sendStateRTM(true);
         this.player.pause();
         this.disableShareContent();

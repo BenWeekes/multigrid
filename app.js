@@ -1497,7 +1497,8 @@ class AgoraMultiChanelApp {
 
 
   updateUILayout() {
-    this.setMobileOneTime()
+    this.setMobileOneTime();
+    this.removeInnerStyling();
     var height = window.innerHeight;
     var width = window.innerWidth;
 
