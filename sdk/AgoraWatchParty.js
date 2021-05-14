@@ -183,8 +183,8 @@ class AgoraWatchParty {
         } else {
             // only nudge if needed
             if (Math.abs(this.player.currentTime - playerTime) > 1) {
-                this.player.currentTime = playerTime + 0.2;
-                console.log(" set this.player.currentTime to " + this.player.currentTime);
+            //    this.player.currentTime = playerTime + 0.2;
+                console.log("skip set this.player.currentTime to " + this.player.currentTime);
             }
         }
 
