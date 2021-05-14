@@ -137,7 +137,7 @@
   padding: 6px;
   padding-top: 11px;
   display: inline-block;
-  background-color: lightskyblue !important;
+  background-color: #81bfe4 !important;
   }
 
   #mic_mute {
@@ -202,7 +202,7 @@
   padding: 2px;
   imargin: 6px;
 
-  background-color: #c44;
+  background-color: #cd5656;
   color: white;
   display: inline-block;
   text-align: center;
@@ -213,12 +213,12 @@
 
 
   .play_icon{
-  background-color: lightskyblue !important;
+  background-color: #81bfe4 !important;
   }    
 
 
   ._icon{
-    background-color: lightskyblue !important;
+    background-color: #81bfe4 !important;
     }    
 
 
@@ -239,7 +239,7 @@
 
 
   .media_buttons_enabled {
-  background-color: rgb(91, 184, 137) !important;
+  background-color: #47aa79 !important;
   }
 
   .settings_icon {

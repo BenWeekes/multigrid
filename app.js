@@ -539,6 +539,20 @@ class AgoraMultiChanelApp {
           
         });
       });
+
+      // remove tile if in follow speaker area
+      els = document.getElementsByClassName("player");
+      Array.prototype.forEach.call(els, function (el) {        
+        var children = el.childNodes;
+        children.forEach(function(item){
+          if (!item.className.match(/\bremove_agora_video_style\b/)){
+            item.classList.add("remove_agora_video_style");
+          }
+          
+        });
+      });
+
+      
     
   }
 
@@ -1881,6 +1895,7 @@ async function showMediaDeviceTest() {
   await agoraApp.loadDevices();
 
   agoraApp.localTracks.videoTrack.play("pre-local-player");
+  agoraApp.removeInnerStyling();
   $("#media-device-test").modal("show");
   $(".cam-list").delegate("a", "click", function (e) {
     switchCamera(this.text);
