@@ -1586,7 +1586,7 @@ class AgoraMultiChanelApp {
         toolbar_height_and_focus_height = toolbar_height + focus_height; //document.getElementById("focus-video").offsetHeight;
       } else {
         var focus_width = width - (grid_padding * 2);
-        if (focufocus_widths_height < 320)
+        if (focus_width < 320)
           focus_width = 320;
         document.getElementById("focus-video").style.height = focus_width / this.AspectRatio + 'px';
         document.getElementById("focus-video").style.width = focus_width + 'px';
