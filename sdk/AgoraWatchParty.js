@@ -159,8 +159,6 @@ class AgoraWatchParty {
             return;
         }
 
-
-
         if (document.getElementById("watchid").value !== vid) {
             document.getElementById("watchid").value = vid;
         }
@@ -184,7 +182,7 @@ class AgoraWatchParty {
             this.player.currentTime = playerTime;
         } else {
             // only nudge if needed
-            if (Math.abs(this.player.currentTime - playerTime) > 2) {
+            if (Math.abs(this.player.currentTime - playerTime) > 1) {
                 this.player.currentTime = playerTime + 0.2;
                 console.log(" set this.player.currentTime to " + this.player.currentTime);
             }

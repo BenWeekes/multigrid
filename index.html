@@ -125,8 +125,14 @@
           <img src='img/stop.webp' onclick="agoraWatchYT.stopVideo()" id="ytstop" class="default_icon default_icon_left play_icon stop_icon" />
           -->
           <label class="mp4label" for="fname">Content URL </label>
-          <input type="text" class="watch_input" id="watchid" name="watchid"
-            value="https://sokool.io/media/h264_1080_best.mp4">
+
+          <input type="text" class="watch_input" id="watchid" value="">  
+          <select id="watchiddd" onchange="document.getElementById('watchid').value=(this.value); ">
+              <option></option>
+              <option>https://sokool.io/media/h264_720.mp4</option>
+              <option>https://sokool.io/media/h264_1080_best.mp4</option>
+          </select>
+
           <img src='img/cue.webp' title="Load watch party video" onclick=" agoraWatchParty.cueVideo()" id="cue"
             class="default_icon default_icon_left play_icon cue_icon" />
             <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo(); publishScreenShareToChannel() " id="ss"
