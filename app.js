@@ -507,7 +507,6 @@ class AgoraMultiChanelApp {
     var els = document.getElementsByClassName("remote_video");
     var that = this;
     Array.prototype.forEach.call(els, function (el) {
-        
         var children = el.childNodes;
         children.forEach(function(item){
           if (!item.className.match(/\bremove_agora_video_style\b/)){
@@ -528,6 +527,19 @@ class AgoraMultiChanelApp {
        
       });
     });
+
+      // remove tile if in follow speaker area
+      els = document.getElementsByClassName("local_video");
+      Array.prototype.forEach.call(els, function (el) {        
+        var children = el.childNodes;
+        children.forEach(function(item){
+          if (!item.className.match(/\bremove_agora_video_style\b/)){
+            item.classList.add("remove_agora_video_style");
+          }
+          
+        });
+      });
+    
   }
 
   removeSlotsIfNotInMap(expected) {
