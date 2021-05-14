@@ -111,6 +111,7 @@ class AgoraWatchParty {
         this.enableShareContent();
         this.player.src = document.getElementById("watchid").value;
         AgoraRTC.processExternalMediaAEC(this.player);
+        this.player.load();
         this.player.pause();
         this.player.currentTime = 0;
         this.player.controls = true;
@@ -165,6 +166,8 @@ class AgoraWatchParty {
 
         if (this.player.src != vid) {
             this.player.src = vid;
+            this.player.load();
+            this.player.pause();
         }
 
         // command is  set to player.paused
@@ -182,8 +185,8 @@ class AgoraWatchParty {
             this.player.currentTime = playerTime;
         } else {
             // only nudge if needed
-            if (Math.abs(this.player.currentTime - playerTime) > 1) {
-            //    this.player.currentTime = playerTime + 0.2;
+            if (Math.abs(this.player.currentTime - playerTime) > 2) {
+                this.player.currentTime = playerTime + 0.2;
                 console.log("skip set this.player.currentTime to " + this.player.currentTime);
             }
         }
