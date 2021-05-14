@@ -4,7 +4,7 @@
   background-color: #222 !important;
   }
   .focussed-video{
-  background-color: #111;
+  ffbackground-color: #111;
   margin: auto;
   }
   .agora_video_player {
@@ -42,14 +42,19 @@
   display: none !important;
   }
 
+
+  .remove_agora_video_style{
+    background-color: transparent !important;
+  }
+
   .focussed-video-inner {
-  background-color: #111;
+  ffbackground-color: #111;
   width:100% !important;
   height:100% !important;
   }
 
   .remote_video {
-  background-color: #111;
+  ffbackground-color: #111;
   background-image: url("./img/novideo.png") ;
   background-repeat: no-repeat;
   background-size: auto 80%;

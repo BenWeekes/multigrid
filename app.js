@@ -487,6 +487,7 @@ class AgoraMultiChanelApp {
       await client.subscribe(user, this.VIDEO).then(response => {
 
         user.videoTrack.play(uid_string);
+        that.removeInnerStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
         client.setStreamFallbackOption(user.uid, 1);
@@ -501,6 +502,34 @@ class AgoraMultiChanelApp {
     }
   }
 
+
+  removeInnerStyling() {
+    var els = document.getElementsByClassName("remote_video");
+    var that = this;
+    Array.prototype.forEach.call(els, function (el) {
+        
+        var children = el.childNodes;
+        children.forEach(function(item){
+          if (!item.className.match(/\bremove_agora_video_style\b/)){
+            item.classList.add("remove_agora_video_style");
+          }
+         
+        });
+      });
+
+    // remove tile if in follow speaker area
+    els = document.getElementsByClassName("focussed-video-inner");
+    Array.prototype.forEach.call(els, function (el) {        
+      var children = el.childNodes;
+      children.forEach(function(item){
+        if (!item.className.match(/\bremove_agora_video_style\b/)){
+          item.classList.add("remove_agora_video_style");
+        }
+       
+      });
+    });
+  }
+
   removeSlotsIfNotInMap(expected) {
     var els = document.getElementsByClassName("remote_video");
     var that = this;
@@ -512,7 +541,7 @@ class AgoraMultiChanelApp {
     });
 
     // remove tile if in follow speaker area
-    var els = document.getElementsByClassName("focussed-video-inner");
+    els = document.getElementsByClassName("focussed-video-inner");
     Array.prototype.forEach.call(els, function (el) {
       if (!expected[el.id]) {
         that.numVideoTiles--;
