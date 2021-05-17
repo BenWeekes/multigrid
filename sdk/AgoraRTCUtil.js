@@ -1,5 +1,8 @@
 var AgoraRTCUtils = (function () {
 
+
+  // Auto Adjust Resolutions
+
   // This utility will adjust the camera encoding profile dynamically in order to adapt to slower networks 
   // and also to support devices which insufficient CPU/GPU resources required to encode and decode higher resolution video streams
   // This utility is intended mainly for iOS devices where both Safari and Chrome do not automatically 
@@ -121,7 +124,49 @@ var AgoraRTCUtils = (function () {
     }
   }
 
-  return { // public interface
+   // Bandwidth and Call Stats Utils
+   // fire events if necessary
+
+  var _rtc_clients;
+  var _rtc_num_clients;
+  var _monitorInboundAudioLevelsInterval;
+
+  function monitorInboundAudioLevels() {
+
+  for (var i = 0; i < _rtc_num_clients; i++) {
+    var client = _rtc_clients[i];
+    if (!client._users.length) {
+      continue;
+    }
+
+    if (client._remoteStream) {
+      for (var u = 0; u < client._users.length; u++) {
+        var uid = client._users[u].uid;
+        var rc = client._remoteStream.get(uid);
+        if (rc) {
+          if (rc.pc && rc.pc.pc) {
+            rc.pc.pc.getStats(null).then(stats => {
+              stats.forEach(report => {
+                if (report.type === "inbound-rtp" && report.kind === "audio") {
+                    if (report["audioLevel"]) {                      
+                      console.log("sweet audioLevel " + report["audioLevel"]);
+                      AgoraRTCUtilEvents.emit("InboundAudioExceedsThreshold",report["audioLevel"]);
+                    }
+                    
+                 // Object.keys(report).forEach(statName => { console.log(`UTILS inbound-rtp ${report.kind} for ${uid} ${statName} ${report[statName]}`); });
+                } else {
+                 // Object.keys(report).forEach(statName => { console.log(`${report.type} ${report.kind} ${uid}  ${statName}: ${report[statName]}`); });
+                }
+              })
+            });
+          }
+        }
+      }
+    } 
+   }
+  }
+
+  return { // public interfaces
     startAutoAdjustResolution: function (client, initialProfile) {
       _publishClient = client;
       _currentProfile = getProfileIndex(initialProfile);
@@ -144,7 +189,58 @@ var AgoraRTCUtils = (function () {
       return isIOS();
     },
 
-    publicMethod2: function () {
-    }
+    setRTCClient: function(clientArray, numClients) {
+      _rtc_clients=clientArray;
+      _rtc_num_clients=numClients;
+    },
+
+    startInboundVolumeMonitor: function (inboundVolumeMonitorFrequency) {
+      _monitorInboundAudioLevelsInterval = setInterval(() => {
+        monitorInboundAudioLevels();
+      }, inboundVolumeMonitorFrequency);
+    },
+
+    stopInboundVolumeMonitor: function () {
+      clearInterval(_monitorInboundAudioLevelsInterval);
+    },
+
   };
+})();
+
+
+
+var AgoraRTCUtilEvents = (function() {
+
+  var events = {};
+
+  function on(eventName, fn) {
+      events[eventName] = events[eventName] || [];
+      events[eventName].push(fn);
+  }
+
+  function off(eventName, fn) {
+      if (events[eventName]) {
+          for (var i = 0; i < events[eventName].length; i++) {
+              if( events[eventName][i] === fn ) {
+                  events[eventName].splice(i, 1);
+                  break;
+              }
+          }
+      }
+  }
+
+  function emit(eventName, data) {
+      if (events[eventName]) {
+          events[eventName].forEach(function(fn) {
+              fn(data);
+          });
+      }
+  }
+
+  return {
+      on: on,
+      off: off,
+      emit: emit
+  };
+
 })();

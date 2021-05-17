@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="./assets/bootstrap.min.css">
   <script src="./sdk/ng4.5b.js"></script>
   <script src="./sdk/AgoraRTM.js"></script>
-  <script src="./sdk/AgoraRTCUtil.js"></script>
+  <script src="./sdk/AgoraRTCUtil.js?gg=yyyy"></script>
   <!--script src="./sdk/AgoraWatchYT.js"></script-->
-  <script src="./sdk/AgoraWatchParty.js?a=c"></script>
-  <link rel="stylesheet" href="./index.css?1=edd4">
-  <link rel="stylesheet" href="./grid.css?1=3rddr2">
+  <script src="./sdk/AgoraWatchParty.js?a444=cEEE"></script>
+  <link rel="stylesheet" href="./index.css?1=e44dd4">
+  <link rel="stylesheet" href="./grid.css?1=3r44ddr2">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -133,12 +133,12 @@
               <option>https://sokool.io/media/h264_1080_best.mp4</option>
           </select>
 
-          <img src='img/cue.webp' title="Load watch party video" onclick=" agoraWatchParty.cueVideo()" id="cue"
+          <img src='img/cue.webp' title="Load watch party video" onclick=" agoraWatchParty.cueVideo();  agoraWatchParty.hidePlayerControls();" id="cue"
             class="default_icon default_icon_left play_icon cue_icon" />
-            <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo(); publishScreenShareToChannel() " id="ss"
+            <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo(); publishScreenShareToChannel(); agoraWatchParty.hidePlayerControls(); " id="ss"
             class="default_icon default_icon_left play_icon cue_icon" />
 
-          <img src='img/stop.png'  title="Stop presenting"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreensharePublish();  agoraApp.showGridView(); agoraWatchParty.togglePlayerControls(); " id="stop"
+          <img src='img/stop.png'  title="Stop presenting"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreensharePublish();  agoraApp.showGridView(); agoraWatchParty.hidePlayerControls(); " id="stop"
             class="default_icon default_icon_left play_icon stop_icon" />
 
           <!--<img src='img/play.png' onclick="agoraWatchParty.playVideo()" id="play" class="default_icon default_icon_left play_icon" />
@@ -173,4 +173,4 @@
 
 <script src="./assets/jquery-3.4.1.min.js"></script>
 <script src="./assets/bootstrap.bundle.min.js"></script>
-<script src="./app.js?aaaaaaa=b"></script>
+<script src="./app.js?44aaa=bXX"></script>

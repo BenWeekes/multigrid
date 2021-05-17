@@ -84,12 +84,6 @@ class AgoraMultiChanelApp {
 
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
-
-
-    // if you play a video by entering a youtube Id and pressing play
-
-
-
     // tokens not used in this sample
     this.token = null;
 
@@ -240,6 +234,9 @@ class AgoraMultiChanelApp {
     setInterval(() => {
       this.manageSubscriptions();
     }, this.intervalManageSubscriptions);
+
+    AgoraRTCUtils.setRTCClient(this.clients,this.numClients);
+    AgoraRTCUtils.startInboundVolumeMonitor(100); // ms interval
   }
 
   async createClients() {
@@ -1286,15 +1283,20 @@ class AgoraMultiChanelApp {
                     //  console.log(" framesDropped " + report["framesDropped"]);
                     Object.keys(report).forEach(statName => { console.log(`inbound-rtp video for ${uid}  ${statName}: ${report[statName]}`); });
                   }
+                  if (report.type === "inbound-rtp" && report.kind === "audio") {
+                    Object.keys(report).forEach(statName => { console.log(`inbound-rtp audio for ${uid}  ${statName}: ${report[statName]}`); });
+                  }
                 })
               });
             }
           }
         }
-      }
+      } 
       */
-
+      
       // END INBOUND STATS EXAMPLE 
+
+
       var rvs = client.getRemoteVideoStats();
       if (rvs) {
         var rvskeys = Object.keys(rvs);
@@ -1691,8 +1693,8 @@ class AgoraMultiChanelApp {
       cells[i].classList.add("hidden");
     }
 
-    var grid_width = (cell_width * cols) + ((cols - 1) * cell_margin);
-    var grid_height = (cell_height * rows) + ((rows - 1) * cell_margin)+4;
+    var grid_width = (cell_width * cols) + ((cols) * cell_margin);
+    var grid_height = (cell_height * rows) + ((rows) * cell_margin);
     if (grid_width > width) {
       grid_width = width;
     }

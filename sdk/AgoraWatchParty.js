@@ -29,13 +29,18 @@ class AgoraWatchParty {
         this.STATE_PLAY = "PLAY";
         this.STATE_PAUSE = "PAUSE";
         this.STATE_STOP = "STOP";
+        this.VOL_HIGH = 0.5;
+        this.VOL_LOW = 0.1;
         this.RTMUpdateTimeout=5*1000;
         this.BroadcastInterval=2*1000;
+        this.AudioExceedThreshold=0.2; 
+        this.InboundAudioTurnBackUpTimeout=1000;
         
         this.player;
         this.playerInit = false;
         this.lastRTMUpdate = 0;
         this.remoteHost = false;
+        this.lastInboundAudioTurnDown = 0 ;
     }
 
     togglePlayerControls() {
@@ -73,6 +78,19 @@ class AgoraWatchParty {
         agoraApp.disableShareContent();
     }
 
+    // call back can't handle this so used agoraWatchParty
+    processInboundAudioExceedsThreshold(data) {        
+        if (data> agoraWatchParty.AudioExceedThreshold ) {            
+            if ( agoraWatchParty.player.volume!=agoraWatchParty.VOL_LOW) {
+                console.log("WP set audio vol low");
+                agoraWatchParty.player.volume= agoraWatchParty.VOL_LOW;
+            }
+            agoraWatchParty.lastInboundAudioTurnDown = Date.now();
+        }
+       
+
+    }
+
     initWatchPlayer() {
 
         this.player = document.getElementById("agoravideoplayer");
@@ -96,11 +114,15 @@ class AgoraWatchParty {
         // he will send RTM to others
         // anyone receiving RTM will stop themselves as owner and will lose controls
         // add control listen
-        this.player.volume=0.7;
+        this.player.volume= this.VOL_HIGH;
 
         setInterval(() => {
             this.broadcastState();
         }, this.BroadcastInterval);
+
+
+        AgoraRTCUtilEvents.on("InboundAudioExceedsThreshold",this.processInboundAudioExceedsThreshold);
+
     }
 
     broadcastState() {
@@ -115,6 +137,11 @@ class AgoraWatchParty {
          agoraApp.hostingWatchParty = false;
          this.player.pause();
          this.disableShareContent();
+        }
+
+        if  (Date.now() -  this.lastInboundAudioTurnDown > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH) {
+            console.log("WP set audio vol high");
+            this.player.volume= this.VOL_HIGH;
         }
      }
 
