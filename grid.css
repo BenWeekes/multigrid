@@ -7,6 +7,9 @@
     height: 100%;
   }
 
+  .main_body_mobile{
+    gap: 2px;
+  }
   .main_body_mobile_landscape {
     grid-template-columns: repeat(3, 1fr) !important;
   }

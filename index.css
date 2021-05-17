@@ -66,6 +66,12 @@
   display: inline-block;
   }
 
+
+  .remote_video_mobile {
+    margin: 1px;
+    padding: 1px;
+  }
+
   .remote_video_active {
   border-style: solid;
   padding: 0px;

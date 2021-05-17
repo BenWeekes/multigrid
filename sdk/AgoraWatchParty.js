@@ -29,8 +29,13 @@ class AgoraWatchParty {
         this.STATE_PLAY = "PLAY";
         this.STATE_PAUSE = "PAUSE";
         this.STATE_STOP = "STOP";
+        this.RTMUpdateTimeout=5*1000;
+        this.BroadcastInterval=2*1000;
+        
         this.player;
         this.playerInit = false;
+        this.lastRTMUpdate = 0;
+        this.remoteHost = false;
     }
 
     togglePlayerControls() {
@@ -54,6 +59,10 @@ class AgoraWatchParty {
         if (!this.playerInit) {
             this.initWatchPlayer();
             this.playerInit = true;
+            setInterval(() => {
+                this.checkSessionOngoing();
+              }, this.BroadcastInterval);
+
         }
         document.getElementById("agoraplayer").classList.remove("hidden");
         agoraApp.enableShareContent();
@@ -91,7 +100,7 @@ class AgoraWatchParty {
 
         setInterval(() => {
             this.broadcastState();
-        }, 2000);
+        }, this.BroadcastInterval);
     }
 
     broadcastState() {
@@ -99,6 +108,15 @@ class AgoraWatchParty {
             this.sendStateRTM();
         }
     }
+
+    checkSessionOngoing() {
+        if (this.remoteHost &&  (Date.now() -  this.lastRTMUpdate) > this.RTMUpdateTimeout) {
+         this.remoteHost=false;
+         agoraApp.hostingWatchParty = false;
+         this.player.pause();
+         this.disableShareContent();
+        }
+     }
 
     sendStateRTM(stopped) {
         var msg = agoraApp.WATCH + this.RTM_SEPARATOR + (stopped ? this.STATE_STOP : this.player.paused) + this.RTM_SEPARATOR + document.getElementById("watchid").value + this.RTM_SEPARATOR + this.player.currentTime;
@@ -108,6 +126,7 @@ class AgoraWatchParty {
     cueVideo() {
         agoraApp.stopScreensharePublish();
         agoraApp.hostingWatchParty = true;
+        this.remoteHost=false;
         this.enableShareContent();
         this.player.src = document.getElementById("watchid").value;
         AgoraRTC.processExternalMediaAEC(this.player);
@@ -123,6 +142,7 @@ class AgoraWatchParty {
             return;
         }
         agoraApp.hostingWatchParty = false;
+        this.remoteHost=false;
         this.sendStateRTM(true);
         this.player.pause();
         this.disableShareContent();
@@ -144,11 +164,15 @@ class AgoraWatchParty {
         });
     }
 
+
+
     handleRTM(text) {
         console.log(text);
         agoraApp.stopScreensharePublish();
         this.enableShareContent(); // sets player up if needed.
         agoraApp.hostingWatchParty = false; // someone else in control
+        
+        this.lastRTMUpdate = Date.now();
         // this.player.controls = false;  
         var command = text.split(this.RTM_SEPARATOR)[1];
         var vid = text.split(this.RTM_SEPARATOR)[2];
@@ -157,9 +181,11 @@ class AgoraWatchParty {
         if (command === this.STATE_STOP) {
             this.player.pause();
             this.disableShareContent();
+            this.remoteHost=false;
             return;
         }
 
+        this.remoteHost=true;
         if (document.getElementById("watchid").value !== vid) {
             document.getElementById("watchid").value = vid;
         }

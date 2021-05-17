@@ -487,7 +487,7 @@ class AgoraMultiChanelApp {
       await client.subscribe(user, this.VIDEO).then(response => {
 
         user.videoTrack.play(uid_string);
-        that.removeInnerStyling();
+        that.removeAgoraInnerVideoStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
         client.setStreamFallbackOption(user.uid, 1);
@@ -503,7 +503,7 @@ class AgoraMultiChanelApp {
   }
 
 
-  removeInnerStyling() {
+  removeAgoraInnerVideoStyling() {
     var els = document.getElementsByClassName("remote_video");
     var that = this;
     Array.prototype.forEach.call(els, function (el) {
@@ -583,7 +583,12 @@ class AgoraMultiChanelApp {
     if (!document.getElementById(uid_string)) {
       const playerDomDiv = document.createElement("div");
       playerDomDiv.id = uid_string;
-      playerDomDiv.className = "remote_video";
+      var setClass= "remote_video";
+      if (isMobile())
+        setClass= "remote_video remote_video_mobile";
+
+      playerDomDiv.className =setClass;
+      
       // click to expand and subscribe to high quality
       var that = this;
       var client = that.videoPublishers[uid_string];
@@ -612,6 +617,7 @@ class AgoraMultiChanelApp {
           } else if (element.msRequestFullscreen) {
             element.msRequestFullscreen();
           }
+          
 
           client.setRemoteVideoStreamType(that.userMap[uid_string].uid, this.HighVideoStreamType);
         } else {
@@ -1483,6 +1489,8 @@ class AgoraMultiChanelApp {
 
       document.getElementById("stats_button").classList.add("default_icon_right_mobile");
       document.getElementById("settings_button").classList.add("default_icon_right_mobile");
+      document.getElementById("main_body").classList.add("main_body_mobile");
+      
 
       if (document.getElementById("play_controls")) {
         document.getElementById("play_controls").classList.add("default_icon_left_mobile");
@@ -1497,26 +1505,28 @@ class AgoraMultiChanelApp {
 
 
   updateUILayout() {
+
     this.setMobileOneTime();
-    this.removeInnerStyling();
+    this.removeAgoraInnerVideoStyling();
+
     var height = window.innerHeight;
     var width = window.innerWidth;
-
     if (height > width) {
       this.landscape = false;
     } else {
       this.landscape = true;
     }
 
-    var cells = document.getElementsByClassName('remote_video');
+    var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
     var cellCount = cells.length;
     if (agoraApp.localTracks.videoTrack && agoraApp.localTracks.videoTrack._enabled) {
       cellCount = cellCount + 1;
     }
 
     var cols = this.getGridColCount(cellCount);
-
     var rows = Math.ceil(cellCount / cols);
+
+    // less square on mobile
     if (isMobile() && cols > 2) {
       if (this.landscape) {
         if (this.maxVideoTiles < 16) {
@@ -1525,7 +1535,7 @@ class AgoraMultiChanelApp {
         else if (this.maxVideoTiles < 24) {
           rows = 3;
         } else {
-          rows = 4; //
+          rows = 4; 
         }
         cols = Math.ceil(cellCount / rows);
       } else {
@@ -1553,6 +1563,7 @@ class AgoraMultiChanelApp {
 
     // show full video UI if two people in the call
 
+    // shownPersonToPerson is 2 person face time style call
     if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
       this.shownPersonToPerson = true;
       this.toggleLayout(true);
@@ -1561,7 +1572,9 @@ class AgoraMultiChanelApp {
       this.toggleLayout();
     }
 
-    if (!this.gridLayout) { // follow speaker/content
+    //  follow speaker/content mode
+    if (!this.gridLayout) { //
+      // keep single row
       rows = 1;
       if (cellCount>6) {
         rows = 2;
@@ -1600,11 +1613,15 @@ class AgoraMultiChanelApp {
 
     var toolbar_width = 0;
 
+    // mobile special layouts
+    /*
     if (isMobile()) {
-      // for mobile in landscape put back to grid mode
+      
+      //TODOX for mobile in landscape put back to grid mode (if not share content or shownPersonToPerson)
       if (!this.gridLayout && this.landscape && !this.shareContentOnDisplay && video_subs != 1) {
         this.toggleLayout();
       }
+
       if (this.landscape && rows > 1) {
         this.mobileUIUpdatedLandscape = true;
         this.mobileUIUpdatedPortrait = false;
@@ -1634,7 +1651,7 @@ class AgoraMultiChanelApp {
         document.getElementById("settings_controls").classList.remove("hidden");
         // document.getElementById("stats_container").classList.remove("hidden");
       }
-    }
+    }*/
 
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
@@ -1685,12 +1702,13 @@ class AgoraMultiChanelApp {
 
     var grid_actual_width = document.getElementById("grid").offsetWidth;
     var grid_actual_height = document.getElementById("grid").offsetHeight;
-    if (this.landscape && isMobile() && rows > 1) {
+    
+    if (1==3 && this.landscape && isMobile() && rows > 1 &&  !this.shareContentOnDisplay) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
       document.getElementById("media_controls").style.marginTop = ((height / 2) - 100) + 'px';
     }
-    else if (this.landscape && isMobile()) {
+    else if (1==3 && this.landscape && isMobile() &&  !this.shareContentOnDisplay) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height - toolbar_height_and_focus_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
       document.getElementById("media_controls").style.marginTop = '0px';
@@ -1896,7 +1914,7 @@ async function showMediaDeviceTest() {
   await agoraApp.loadDevices();
 
   agoraApp.localTracks.videoTrack.play("pre-local-player");
-  agoraApp.removeInnerStyling();
+  agoraApp.removeAgoraInnerVideoStyling();
   $("#media-device-test").modal("show");
   $(".cam-list").delegate("a", "click", function (e) {
     switchCamera(this.text);
