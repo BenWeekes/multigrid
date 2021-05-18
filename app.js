@@ -229,7 +229,7 @@ class AgoraMultiChanelApp {
       this.manageSubscriptions();
     }, this.intervalManageSubscriptions);
 
-    AgoraRTCUtils.setRTCClient(this.clients,this.numClients);
+    AgoraRTCUtils.setRTCClients(this.clients,this.numClients);
     AgoraRTCUtils.startInboundVolumeMonitor(100); // ms interval
   }
 

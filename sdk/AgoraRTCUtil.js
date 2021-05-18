@@ -128,8 +128,8 @@ var AgoraRTCUtils = (function () {
    // Bandwidth and Call Stats Utils
    // fire events if necessary
 
-  var _rtc_clients;
-  var _rtc_num_clients;
+  var _rtc_clients = [];
+  var _rtc_num_clients = 0;
   var _monitorInboundAudioLevelsInterval;
 
   function monitorInboundAudioLevels() {
@@ -250,14 +250,13 @@ var AgoraRTCUtils = (function () {
     isIOS: function () {
       return isIOS();
     },
-
     setRTCClients: function(clientArray, numClients) {
       _rtc_clients=clientArray;
       _rtc_num_clients=numClients;
     },
     setRTCClient: function(client) {
-     // _rtc_clients[0]=client;
-     // _rtc_num_clients=1;
+      _rtc_clients[0]=client;
+      _rtc_num_clients=1;
     },
     startInboundVolumeMonitor: function (inboundVolumeMonitorFrequency) {
       _monitorInboundAudioLevelsInterval = setInterval(() => {
