@@ -256,8 +256,8 @@ var AgoraRTCUtils = (function () {
       _rtc_num_clients=numClients;
     },
     setRTCClient: function(client) {
-      _rtc_clients[0]=client;
-      _rtc_num_clients=1;
+     // _rtc_clients[0]=client;
+     // _rtc_num_clients=1;
     },
     startInboundVolumeMonitor: function (inboundVolumeMonitorFrequency) {
       _monitorInboundAudioLevelsInterval = setInterval(() => {
