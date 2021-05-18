@@ -120,7 +120,6 @@ class AgoraWatchParty {
             this.broadcastState();
         }, this.BroadcastInterval);
 
-
         AgoraRTCUtilEvents.on("InboundAudioExceedsThreshold",this.processInboundAudioExceedsThreshold);
 
     }
@@ -132,6 +131,7 @@ class AgoraWatchParty {
     }
 
     checkSessionOngoing() {
+        
         if (this.remoteHost &&  (Date.now() -  this.lastRTMUpdate) > this.RTMUpdateTimeout) {
          this.remoteHost=false;
          agoraApp.hostingWatchParty = false;
@@ -140,7 +140,7 @@ class AgoraWatchParty {
         }
 
         if  (Date.now() -  this.lastInboundAudioTurnDown > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH) {
-            console.log("WP set audio vol high");
+            console.log("WP set audio vol high from "+this.player.volume);
             this.player.volume= this.VOL_HIGH;
         }
      }
