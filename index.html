@@ -133,9 +133,9 @@
               <option>https://sokool.io/media/h264_1080_best.mp4</option>
           </select>
 
-          <img src='img/cue.webp' title="Load watch party video" onclick=" agoraWatchParty.cueVideo();  agoraWatchParty.hidePlayerControls();" id="cue"
+          <img src='img/cue.webp' title="Load watch party video" onclick=" agoraApp.stopScreensharePublish(); agoraWatchParty.cueVideo();  agoraWatchParty.hidePlayerControls();" id="cue"
             class="default_icon default_icon_left play_icon cue_icon" />
-            <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo(); publishScreenShareToChannel(); agoraWatchParty.hidePlayerControls(); " id="ss"
+            <img src='img/screen.png'  title="Screenshare"  onclick="agoraWatchParty.stopVideo();  agoraApp.stopScreensharePublish(); agoraApp.publishScreenShareToChannel(); agoraWatchParty.hidePlayerControls(); " id="ss"
             class="default_icon default_icon_left play_icon cue_icon" />
 
           <img src='img/stop.png'  title="Stop presenting"  onclick="agoraWatchParty.stopVideo(); agoraApp.stopScreensharePublish();  agoraApp.showGridView(); agoraWatchParty.hidePlayerControls(); " id="stop"

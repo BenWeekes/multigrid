@@ -41,6 +41,7 @@ class AgoraMultiChanelApp {
     this.FPS = "FPS";
     this.WATCH = "WATCH";
     this.WATCHYT = "WATCHYT";
+    this.STOP_SCREENSHARE="STOP_SCREENSHARE";
 
     this.VIDEO = "video";
     this.AUDIO = "audio";
@@ -489,7 +490,7 @@ class AgoraMultiChanelApp {
         // 1 is for low quality
         client.setStreamFallbackOption(user.uid, 1);
         client.setRemoteVideoStreamType(user.uid, that.defaultVideoStreamType);
-        //
+        // handleScreenshareSub
         that.handleScreenshareSub(uid_string);
 
       }).catch(e => {
@@ -660,6 +661,11 @@ class AgoraMultiChanelApp {
     }
   }
 
+  // share content covers both screen and watchparty
+  // if you start a screen share you cancel existing watch for all
+  // you cancel screenshare if local
+  // on receiving another screenshare previous is dropped 
+  // better to send RTM
   enableShareContent() {
     if (this.mainVideoId) {
       this.returnLargeToGrid(); 
@@ -686,11 +692,19 @@ class AgoraMultiChanelApp {
     if (uidi < this.maxScreenshareUID) {
       this.currScreenshareUID=uidi;
 
-      this.showContentView();
-      if (this.mainVideoId !== uid_string) {
-        this.moveToLargeWindow(uid_string);
+      if (!this.shareContentOnDisplay) {
+        this.showContentView();
+        if (this.mainVideoId !== uid_string) {
+          this.moveToLargeWindow(uid_string);
+        }
+        this.shareContentOnDisplay = true;
+      } else {
+        this.stopScreensharePublish(); // will stop current one if local
+        if (this.mainVideoId !== uid_string) {
+          this.moveToLargeWindow(uid_string);
+        }
+        this.shareContentOnDisplay = true;
       }
-      this.shareContentOnDisplay = true;
     }
   }
 
@@ -817,7 +831,10 @@ class AgoraMultiChanelApp {
       agoraWatchYT.handleRTM(text);
     } else if (text.startsWith(this.WATCH)) {
       agoraWatchParty.handleRTM(text);
+    } else if (text.startsWith(this.STOP_SCREENSHARE)) {
+        this.stopScreensharePublishLocal();
     }
+    
   }
 
   getInputLevel(track) {
@@ -914,19 +931,30 @@ class AgoraMultiChanelApp {
     }
   }
 
-  async stopScreensharePublish(){
+  
+  async stopScreensharePublishLocal(){
     if (this.screenClient) {
-      if (  this.screenTracks &&   this.screenTracks.videoTrack) {
+      if (this.screenTracks &&   this.screenTracks.videoTrack) {
         this.screenTracks.videoTrack.close(); // close on screen
       }      
       await this.screenClient.leave();
       this.screenClient=null;            
+    } 
+  }
+
+  async stopScreensharePublish(){
+    if (this.screenClient) {
+      this.stopScreensharePublishLocal();   
+    } else {
+      var msg = this.STOP_SCREENSHARE;
+      this.rtmChannel.sendMessage({ text: msg }).then(() => {
+      }).catch(error => {
+          console.log('AgoraRTM send failure for stopScreensharePublish');
+      });
     }
   }
 
   async publishScreenShareToChannel() {
-    // TODO cancel any existing SS in the group via RTM
-    this.stopScreensharePublish();
     this.screenClient = AgoraRTC.createClient(this.clientConfig);
     var availableClient= this.getFirstOpenChannelInner();
     let tempChannelName = this.baseChannelName + availableClient.toString(); 
@@ -957,7 +985,7 @@ class AgoraMultiChanelApp {
 
       var that=this;
       this.screenTracks.videoTrack._originMediaStreamTrack.onended = function () {
-        that.stopScreenShare();  that.showGridView(); agoraWatchParty.togglePlayerControls(); 
+        that.stopScreensharePublishLocal();  that.showGridView(); agoraWatchParty.togglePlayerControls(); 
        };
     }
 
