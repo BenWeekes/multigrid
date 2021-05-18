@@ -1519,7 +1519,7 @@ class AgoraMultiChanelApp {
 
       document.getElementById("stats_button").classList.add("default_icon_right_mobile");
       document.getElementById("settings_button").classList.add("default_icon_right_mobile");
-      document.getElementById("main_body").classList.add("main_body_mobile");
+      //document.getElementById("main_body").classList.add("main_body_mobile");
       
 
       if (document.getElementById("play_controls")) {
@@ -1547,6 +1547,27 @@ class AgoraMultiChanelApp {
       this.landscape = true;
     }
 
+    // shownPersonToPerson is 2 person face time style call
+    // TODO move this to checking after subs
+    if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
+      this.shownPersonToPerson = true;
+      this.toggleLayout(true);
+    } else if (video_subs != 1 && this.shownPersonToPerson && !this.gridLayout && !this.shareContentOnDisplay) {
+      this.shownPersonToPerson = false;
+      this.toggleLayout();
+    }
+
+
+    var cell_width = this.CellWidthBase;
+    var cell_height = this.CellHeightBase;
+    var cell_margin = 4;
+    var grid_padding = 6;
+    var toolbar_height = document.getElementById("toolbar").offsetHeight;
+    var toolbar_height_and_focus_height = toolbar_height;
+
+    var video_subs = this.getMapSize(this.videoSubscriptions);
+
+
     var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
     var cellCount = cells.length;
     if (agoraApp.localTracks.videoTrack && agoraApp.localTracks.videoTrack._enabled) {
@@ -1559,20 +1580,20 @@ class AgoraMultiChanelApp {
     // less square on mobile
     if (isMobile() && cols > 2) {
       if (this.landscape) {
-        if (this.maxVideoTiles < 16) {
+        if (cellCount < 16) {
           rows = 2;
         }
-        else if (this.maxVideoTiles < 24) {
+        else if (cellCount < 24) {
           rows = 3;
         } else {
           rows = 4; 
         }
         cols = Math.ceil(cellCount / rows);
       } else {
-        if (this.maxVideoTiles < 16) { // portrait and fewer than 16
+        if (cellCount< 16) { // portrait and fewer than 16
           cols = 2;
         }
-        else if (this.maxVideoTiles < 24) {
+        else if (cellCount < 24) {
           cols = 3;
         }
         else {
@@ -1582,36 +1603,28 @@ class AgoraMultiChanelApp {
       }
     }
 
-    var cell_width = this.CellWidthBase;
-    var cell_height = this.CellHeightBase;
-    var cell_margin = 4;
-    var grid_padding = 6;
-    var toolbar_height = document.getElementById("toolbar").offsetHeight;
-    var toolbar_height_and_focus_height = toolbar_height;
-
-    var video_subs = this.getMapSize(this.videoSubscriptions);
-
-    // show full video UI if two people in the call
-
-    // shownPersonToPerson is 2 person face time style call
-    if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
-      this.shownPersonToPerson = true;
-      this.toggleLayout(true);
-    } else if (video_subs != 1 && this.shownPersonToPerson && !this.gridLayout && !this.shareContentOnDisplay) {
-      this.shownPersonToPerson = false;
-      this.toggleLayout();
-    }
-
     //  follow speaker/content mode
     if (!this.gridLayout) { //
       // keep single row
-      rows = 1;
-      if (cellCount>6) {
-        rows = 2;
+
+      // portrait mobile can handle up to 3 rows of 2
+      if (isMobile()) {
+        if (!this.landscape) { // portrait
+          if (cellCount>6) {
+            rows=2;
+          }
+        } else {  // landscape
+          rows=1; 
+        }
+      } else {
+        rows = 1;
+        if (cellCount>6) {
+          rows = 2;
+        }
       }
+        
      
       cols = Math.ceil(cellCount / rows);
-
       if (video_subs == 1 && !this.shareContentOnDisplay) {  // handle two people - me and one other
         var focus_height = height - toolbar_height - grid_padding * 3;
         var focus_width = width - (grid_padding * 2);
@@ -1683,6 +1696,27 @@ class AgoraMultiChanelApp {
       }
     }*/
 
+    // mobile grid gaps
+    if (isMobile()) {
+      var mel= document.getElementById("main_body");
+      if (!this.landscape) { // portrait
+       if (!mel.classList.contains("main_body_mobile_portrait")) {
+        mel.classList.add("main_body_mobile_portrait")
+       }
+       if (mel.classList.contains("main_body_mobile_landscape")) {
+        mel.classList.remove("main_body_mobile_landscape")
+       }
+      } else {  // landscape
+        if (!mel.classList.contains("main_body_mobile_landscape")) {
+          mel.classList.add("main_body_mobile_landscape")
+         }
+         if (mel.classList.contains("main_body_mobile_portrait")) {
+          mel.classList.remove("main_body_mobile_portrait")
+         }
+      }
+    }
+
+
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
     var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 1));
@@ -1748,6 +1782,7 @@ class AgoraMultiChanelApp {
       document.getElementById("grid").style.marginLeft = ((width - grid_actual_width) / 2) - (cell_margin + 1) + 'px';
       document.getElementById("media_controls").style.marginTop = '0px';
     }
+
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
 
