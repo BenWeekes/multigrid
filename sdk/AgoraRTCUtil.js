@@ -124,6 +124,7 @@ var AgoraRTCUtils = (function () {
     }
   }
 
+  // Fire Inbound Audio Levels for Remote Streams
    // Bandwidth and Call Stats Utils
    // fire events if necessary
 
@@ -166,6 +167,67 @@ var AgoraRTCUtils = (function () {
    }
   }
 
+   // Voice Activity Detection
+   // fire events if necessary
+
+   var _vad_audioTrack=null;
+   var _voiceActivityDetectionFrequency=150;
+  
+   var _vad_MaxAudioSamples = 400;
+   var _vad_MaxBackgroundNoiseLevel = 30;
+   var _vad_SilenceOffeset = 10;
+   var _vad_audioSamplesArr = [];
+   var _vad_audioSamplesArrSorted = [];
+   var _vad_exceedCount = 0;
+   var _vad_exceedCountThreshold = 2;
+   var _voiceActivityDetectionInterval;
+
+  function getInputLevel(track) {
+    var analyser = track._source.analyserNode;
+    const bufferLength = analyser.frequencyBinCount;
+    var data = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(data);
+    var values = 0;
+    var average;
+    var length = data.length;
+    for (var i = 0; i < length; i++) {
+      values += data[i];
+    }
+    average = Math.floor(values / length);
+    return average;
+  }
+
+  function voiceActivityDetection() {
+    if (!_vad_audioTrack)
+      return;
+
+    var audioLevel = getInputLevel(_vad_audioTrack); 
+    if (audioLevel <=_vad_MaxBackgroundNoiseLevel) {
+      if (_vad_audioSamplesArr.length >= _vad_MaxAudioSamples) {
+        var removed = _vad_audioSamplesArr.shift();
+        var removedIndex = _vad_audioSamplesArrSorted.indexOf(removed);
+        if (removedIndex > -1) {
+          _vad_audioSamplesArrSorted.splice(removedIndex, 1);
+        }
+      }
+      _vad_audioSamplesArr.push(audioLevel);
+      _vad_audioSamplesArrSorted.push(audioLevel);
+      _vad_audioSamplesArrSorted.sort((a, b) => a - b);
+    }
+    var background = Math.floor(3 * _vad_audioSamplesArrSorted[Math.floor(_vad_audioSamplesArrSorted.length / 2)] / 2);
+    if (audioLevel > background + _vad_SilenceOffeset) {
+      _vad_exceedCount++;
+    } else {
+      _vad_exceedCount = 0;
+    }
+
+    if (_vad_exceedCount > _vad_exceedCountThreshold) {
+      _vad_exceedCount = 0;
+      AgoraRTCUtilEvents.emit("VoiceActivityDetected",_vad_exceedCount);
+      /// FIRE EVENTS
+    }
+  }
+
   return { // public interfaces
     startAutoAdjustResolution: function (client, initialProfile) {
       _publishClient = client;
@@ -189,20 +251,38 @@ var AgoraRTCUtils = (function () {
       return isIOS();
     },
 
-    setRTCClient: function(clientArray, numClients) {
+    setRTCClients: function(clientArray, numClients) {
       _rtc_clients=clientArray;
       _rtc_num_clients=numClients;
     },
-
+    setRTCClient: function(client) {
+      _rtc_clients[0]=client;
+      _rtc_num_clients=1;
+    },
     startInboundVolumeMonitor: function (inboundVolumeMonitorFrequency) {
       _monitorInboundAudioLevelsInterval = setInterval(() => {
         monitorInboundAudioLevels();
       }, inboundVolumeMonitorFrequency);
     },
-
     stopInboundVolumeMonitor: function () {
       clearInterval(_monitorInboundAudioLevelsInterval);
+      _monitorInboundAudioLevelsInterval=null;
     },
+
+    startVoiceActivityDetection: function (vad_audioTrack) {
+      _vad_audioTrack=vad_audioTrack;
+      if (_voiceActivityDetectionInterval) {
+        return;
+      }
+      _voiceActivityDetectionInterval = setInterval(() => {
+        voiceActivityDetection();
+      }, _voiceActivityDetectionFrequency);
+    },
+    stopVoiceActivityDetection: function () {
+      clearInterval(_voiceActivityDetectionInterval);
+      _voiceActivityDetectionInterval=null;
+    },
+
 
   };
 })();

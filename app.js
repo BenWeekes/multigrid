@@ -168,13 +168,6 @@ class AgoraMultiChanelApp {
     this.rtmChannel;
 
     // VAD
-    this.MaxAudioSamples = 400;
-    this.MaxBackgroundNoiseLevel = 30;
-    this.SilenceOffeset = 10;
-    this.audioSamplesArr = [];
-    this.audioSamplesArrSorted = [];
-    this.exceedCount = 0;
-    this.exceedCountThreshold = 2;
     this.vadUid;
     this.mainVideoId;
     this.vadSend = 0;
@@ -335,7 +328,7 @@ class AgoraMultiChanelApp {
 
   manageSubscriptions() {
     this.useCallStatsToAdjustNumberOfSubscriptions();
-    this.voiceActivityDetection();
+    //this.voiceActivityDetection();
     if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
       this.doSwitchRxVideoStreamTypeAt();
     }
@@ -878,19 +871,7 @@ class AgoraMultiChanelApp {
 
     if (this.exceedCount > this.exceedCountThreshold) {
       this.exceedCount = 0;
-      if ((Date.now() - this.vadSend) > this.vadSendWait) {
-        this.vadSend = Date.now();
-        this.rtmChannel.sendMessage({ text: this.VAD + ':' + this.myUid[this.myPublishClient] }).then(() => {
-          if (this.vadUid && document.getElementById(this.vadUid)) {
-            document.getElementById(this.vadUid).classList.remove("remote_video_active");
-          }
-          this.vadUid="local-player";
-          document.getElementById(this.vadUid).classList.add("remote_video_active");
-          
-        }).catch(error => {
-          console.log('AgoraRTM VAD send failure');
-        });
-      }
+
     }
   }
 
@@ -1025,10 +1006,36 @@ class AgoraMultiChanelApp {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
     }
     
+    
+    AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
+    AgoraRTCUtilEvents.on("VoiceActivityDetected",agoraApp.handleVADEvents);
+
     document.getElementById("mic_on").classList.add("hidden");
     document.getElementById("mic_off").classList.remove("hidden");
     document.getElementById("cam_on").classList.add("hidden");
     document.getElementById("cam_off").classList.remove("hidden");
+  }
+
+
+  handleVADEvents(_vad_exceedCount) {
+
+    if (!agoraApp.rtmChannel || agoraApp.sendVAD !== "true") {
+      return;
+    }
+
+    if ((Date.now() - agoraApp.vadSend) > agoraApp.vadSendWait) {
+      agoraApp.vadSend = Date.now();
+      agoraApp.rtmChannel.sendMessage({ text: agoraApp.VAD + ':' + agoraApp.myUid[agoraApp.myPublishClient] }).then(() => {
+        if (agoraApp.vadUid && document.getElementById(agoraApp.vadUid)) {
+          document.getElementById(agoraApp.vadUid).classList.remove("remote_video_active");
+        }
+        agoraApp.vadUid="local-player";
+        document.getElementById(agoraApp.vadUid).classList.add("remote_video_active");
+        
+      }).catch(error => {
+        console.log('AgoraRTM VAD send failure');
+      });
+    }
   }
 
   /*
@@ -1119,6 +1126,7 @@ class AgoraMultiChanelApp {
       microphoneId: microphoneId,
     });
     await this.clients[publishToIndex].publish(this.localTracks.audioTrack);
+    AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
     console.log("### PUBLISHED AUDIO TO " + publishToIndex + "! ###");
   }
 
