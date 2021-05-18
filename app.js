@@ -1549,6 +1549,7 @@ class AgoraMultiChanelApp {
 
     // shownPersonToPerson is 2 person face time style call
     // TODO move this to checking after subs
+    var video_subs = this.getMapSize(this.videoSubscriptions); 
     if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
       this.shownPersonToPerson = true;
       this.toggleLayout(true);
@@ -1565,7 +1566,7 @@ class AgoraMultiChanelApp {
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
     var toolbar_height_and_focus_height = toolbar_height;
 
-    var video_subs = this.getMapSize(this.videoSubscriptions);
+
 
 
     var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
