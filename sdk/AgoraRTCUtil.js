@@ -154,7 +154,7 @@ var AgoraRTCUtils = (function () {
                       if (audioLevel>1.0) {
                         audioLevel=audioLevel/100000.0
                       }           
-                      console.log("sweet audioLevel " +audioLevel );
+                      //console.log(" audioLevel " +audioLevel );
                       // Safari has much bigger numbers 
                       // need to divide by around 10000
                       AgoraRTCUtilEvents.emit("InboundAudioExceedsThreshold", audioLevel);
