@@ -228,9 +228,8 @@ var AgoraRTCUtils = (function () {
     }
 
     if (_vad_exceedCount > _vad_exceedCountThreshold) {
-      _vad_exceedCount = 0;
       AgoraRTCUtilEvents.emit("VoiceActivityDetected",_vad_exceedCount);
-      /// FIRE EVENTS
+      _vad_exceedCount = 0;
     }
   }
 
