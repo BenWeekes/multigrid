@@ -149,9 +149,15 @@ var AgoraRTCUtils = (function () {
             rc.pc.pc.getStats(null).then(stats => {
               stats.forEach(report => {
                 if (report.type === "inbound-rtp" && report.kind === "audio") {
-                    if (report["audioLevel"]) {                      
-                      console.log("sweet audioLevel " + report["audioLevel"]);
-                      AgoraRTCUtilEvents.emit("InboundAudioExceedsThreshold",report["audioLevel"]);
+                    if (report["audioLevel"]) {      
+                      var audioLevel=  report["audioLevel"];
+                      if (audioLevel>1.0) {
+                        audioLevel=audioLevel/100000.0
+                      }           
+                      console.log("sweet audioLevel " +audioLevel );
+                      // Safari has much bigger numbers 
+                      // need to divide by around 10000
+                      AgoraRTCUtilEvents.emit("InboundAudioExceedsThreshold", audioLevel);
                     }
                     
                  // Object.keys(report).forEach(statName => { console.log(`UTILS inbound-rtp ${report.kind} for ${uid} ${statName} ${report[statName]}`); });
