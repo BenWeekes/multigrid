@@ -31,6 +31,7 @@ class AgoraWatchParty {
         this.STATE_STOP = "STOP";
         this.VOL_HIGH = 0.5;
         this.VOL_LOW = 0.1;
+        this.volumeCurrent;
         this.RTMUpdateTimeout=5*1000;
         this.BroadcastInterval=2*1000;
         this.AudioExceedThreshold=0.2; 
@@ -84,7 +85,10 @@ class AgoraWatchParty {
             if ( agoraWatchParty.player.volume!=agoraWatchParty.VOL_LOW) {
 
                 console.log("WP set audio vol to VOL_LOW ("+ agoraWatchParty.VOL_LOW +") from "+agoraWatchParty.player.volume);
-                agoraWatchParty.player.volume= agoraWatchParty.VOL_LOW;
+                if (agoraWatchParty.player.volume>agoraWatchParty.VOL_LOW) {
+                    agoraWatchParty.volumeCurrent=agoraWatchParty.player.volume;
+                    agoraWatchParty.player.volume= agoraWatchParty.VOL_LOW;
+                }
             }
             agoraWatchParty.lastInboundAudioTurnDown = Date.now();
         }
@@ -113,7 +117,10 @@ class AgoraWatchParty {
         // he will send RTM to others
         // anyone receiving RTM will stop themselves as owner and will lose controls
         // add control listen
-        this.player.volume= this.VOL_HIGH;
+    
+        if  ( !AgoraRTCUtils.isIOS()) {
+            this.player.volume= this.VOL_HIGH;
+        }
 
         setInterval(() => {
             this.broadcastState();
@@ -140,8 +147,14 @@ class AgoraWatchParty {
         }
 
         if  ( !AgoraRTCUtils.isIOS() && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH) {
-            console.log("WP set audio vol to VOL_HIGH ("+ this.VOL_HIGH +") from "+this.player.volume);
-            this.player.volume= this.VOL_HIGH;
+            
+            if (this.volumeCurrent>this.VOL_LOW) {
+                this.player.volume=this.volumeCurrent; //    this.VOL_HIGH;
+            } else {
+                this.player.volume=this.VOL_HIGH;
+            }
+            console.log("WP set audio vol high to "+this.player.volume);
+            
         }
      }
 
