@@ -49,8 +49,8 @@ class AgoraMultiChanelApp {
     this.AspectRatio = 16 / 9;
 
     // Page Parameters
-    this.appId = getParameterByName("appid");
-    this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
+    this.appId = getParameterByName("appid") || "20b7c51ff4c644ab80cf5a4e646b0537";
+    this.baseChannelName = getParameterByName("channelBase") || "SA-FOX";
     this.isMobile = getParameterByName("isMobile") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
