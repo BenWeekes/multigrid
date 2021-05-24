@@ -140,7 +140,7 @@ class AgoraMultiChanelApp {
     }
 
     // number of subscriptions before moving to low stream
-    this.SwitchVideoStreamTypeAt = 9;
+    this.SwitchVideoStreamTypeAt =  getParameterByNameAsInt("switchVideoStreamTypeAt") || 9; 
     // drop the low quality stream as more users join to ensure the aggregate resolution keeps low
     // not used - caused blink
     //this.SwitchDownLowPublishResolutionAt = 15; // will drop the lowbandwidth stream shown in grid from 180p to 90p
@@ -436,12 +436,12 @@ class AgoraMultiChanelApp {
     this.audioSubscriptions[uid_string] = client;
     var that = this;
     if (this.performSubscriptions === "true") {
-      await client.subscribe(user, this.AUDIO).then(response => {
-        user.audioTrack.play();
-      }).catch(e => {
-        delete that.audioSubscriptions[uid_string];
-        console.error(e);
-      });
+        await client.subscribe(user, this.AUDIO).then(response => {
+          user.audioTrack.play();
+        }).catch(e => {
+          delete that.audioSubscriptions[uid_string];
+          console.error(e);
+        });
     }
   }
 
