@@ -29,9 +29,18 @@ class AgoraWatchParty {
         this.STATE_PLAY = "PLAY";
         this.STATE_PAUSE = "PAUSE";
         this.STATE_STOP = "STOP";
-        this.VOL_HIGH = 0.5;
-        this.VOL_LOW = 0.1;
-        this.volumeCurrent;
+
+        // the player will be set to VOL_HIGH on initialisation 
+        // then toggle low/high based on local / remote talking
+        // if there is a volumne change event with value not equal to what has been set 
+        // this means the user has changed it
+        // from this point on it should be up to the user to set manually
+
+        this.VOL_HIGH = 0.7;
+        this.VOL_LOW = 0.2;
+        this.volumeSet = -1;
+        this.autoVolume = true;
+
         this.RTMUpdateTimeout=5*1000;
         this.BroadcastInterval=2*1000;
         this.AudioExceedThreshold=0.2; 
@@ -82,13 +91,10 @@ class AgoraWatchParty {
     // call back can't handle this so used agoraWatchParty
     processInboundAudioExceedsThreshold(data) {        
         if (!AgoraRTCUtils.isIOS()  &&  (!data || data> agoraWatchParty.AudioExceedThreshold) ) {            
-            if ( agoraWatchParty.player.volume!=agoraWatchParty.VOL_LOW) {
+            if (agoraWatchParty.autoVolume && agoraWatchParty.player.volume!=agoraWatchParty.VOL_LOW) {
 
+                agoraWatchParty.setPlayerVolume(agoraWatchParty.VOL_LOW);
                 console.log("WP set audio vol to VOL_LOW ("+ agoraWatchParty.VOL_LOW +") from "+agoraWatchParty.player.volume);
-                if (agoraWatchParty.player.volume>agoraWatchParty.VOL_LOW) {
-                    agoraWatchParty.volumeCurrent=agoraWatchParty.player.volume;
-                    agoraWatchParty.player.volume= agoraWatchParty.VOL_LOW;
-                }
             }
             agoraWatchParty.lastInboundAudioTurnDown = Date.now();
         }
@@ -113,13 +119,21 @@ class AgoraWatchParty {
             that.broadcastState();
         };
 
+        this.player.onvolumechange = function (evt) {
+            console.log("onvolumechange " + that.player.volume + " " + evt);
+            if ( that.volumeSet > 0 && that.player.volume!= that.volumeSet ) {
+                that.autoVolume=false;
+                console.log("autoVolume false ");
+            }
+        };
+
         // only the person who cues a video will have controls
         // he will send RTM to others
         // anyone receiving RTM will stop themselves as owner and will lose controls
         // add control listen
     
         if  ( !AgoraRTCUtils.isIOS()) {
-            this.player.volume= this.VOL_HIGH;
+            this.setPlayerVolume(this.VOL_HIGH);
         }
 
         setInterval(() => {
@@ -129,6 +143,11 @@ class AgoraWatchParty {
         AgoraRTCUtilEvents.on("InboundAudioExceedsThreshold",this.processInboundAudioExceedsThreshold);
         AgoraRTCUtilEvents.on("VoiceActivityDetected",this.processInboundAudioExceedsThreshold);
 
+    }
+
+    setPlayerVolume(vol) {
+        this.volumeSet = vol;
+        this.player.volume= vol;
     }
 
     broadcastState() {
@@ -146,13 +165,8 @@ class AgoraWatchParty {
          this.disableShareContent();
         }
 
-        if  ( !AgoraRTCUtils.isIOS() && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH) {
-            
-            if (this.volumeCurrent>this.VOL_LOW) {
-                this.player.volume=this.volumeCurrent; //    this.VOL_HIGH;
-            } else {
-                this.player.volume=this.VOL_HIGH;
-            }
+        if  (this.autoVolume && !AgoraRTCUtils.isIOS() && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH  && this.player.volume!= this.volumeCurrent) {            
+            this.setPlayerVolume(this.VOL_HIGH);
             console.log("WP set audio vol high to "+this.player.volume);
             
         }
@@ -226,9 +240,9 @@ class AgoraWatchParty {
         }
 
         this.remoteHost=true;
-        if (document.getElementById("watchid").value !== vid) {
-            document.getElementById("watchid").value = vid;
-        }
+    //    if (document.getElementById("watchid").value !== vid) {
+    //        document.getElementById("watchid").value = vid;
+    //    }
 
         if (this.player.src != vid) {
             this.player.src = vid;

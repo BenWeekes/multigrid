@@ -328,7 +328,7 @@ class AgoraMultiChanelApp {
 
   manageSubscriptions() {
     this.useCallStatsToAdjustNumberOfSubscriptions();
-    //this.voiceActivityDetection();
+
     if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
       this.doSwitchRxVideoStreamTypeAt();
     }
@@ -828,51 +828,6 @@ class AgoraMultiChanelApp {
         this.stopScreensharePublishLocal();
     }
     
-  }
-
-  getInputLevel(track) {
-    var analyser = track._source.analyserNode;
-    const bufferLength = analyser.frequencyBinCount;
-    var data = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(data);
-    var values = 0;
-    var average;
-    var length = data.length;
-    for (var i = 0; i < length; i++) {
-      values += data[i];
-    }
-    average = Math.floor(values / length);
-    return average;
-  }
-
-  voiceActivityDetection() {
-    if (!this.localTracks.audioTrack || !this.rtmChannel || this.sendVAD !== "true") {
-      return;
-    }
-    var audioLevel = this.getInputLevel(this.localTracks.audioTrack); //Math.floor(this.getInputLevel(this.localTracks.audioTrack));
-    if (audioLevel <= this.MaxBackgroundNoiseLevel) {
-      if (this.audioSamplesArr.length >= this.MaxAudioSamples) {
-        var removed = this.audioSamplesArr.shift();
-        var removedIndex = this.audioSamplesArrSorted.indexOf(removed);
-        if (removedIndex > -1) {
-          this.audioSamplesArrSorted.splice(removedIndex, 1);
-        }
-      }
-      this.audioSamplesArr.push(audioLevel);
-      this.audioSamplesArrSorted.push(audioLevel);
-      this.audioSamplesArrSorted.sort((a, b) => a - b);
-    }
-    var background = Math.floor(3 * this.audioSamplesArrSorted[Math.floor(this.audioSamplesArrSorted.length / 2)] / 2);
-    if (audioLevel > background + this.SilenceOffeset) {
-      this.exceedCount++;
-    } else {
-      this.exceedCount = 0;
-    }
-
-    if (this.exceedCount > this.exceedCountThreshold) {
-      this.exceedCount = 0;
-
-    }
   }
 
   // Publishing Local Streams
