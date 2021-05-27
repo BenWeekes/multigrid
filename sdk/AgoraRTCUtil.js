@@ -186,6 +186,7 @@ var AgoraRTCUtils = (function () {
    var _vad_audioSamplesArrSorted = [];
    var _vad_exceedCount = 0;
    var _vad_exceedCountThreshold = 2;
+   var _vad_exceedCountThresholdLow = 1;
    var _voiceActivityDetectionInterval;
 
   function getInputLevel(track) {
@@ -227,11 +228,28 @@ var AgoraRTCUtils = (function () {
       _vad_exceedCount = 0;
     }
 
+    if (_vad_exceedCount > _vad_exceedCountThresholdLow) {
+      AgoraRTCUtilEvents.emit("VoiceActivityDetectedFast",_vad_exceedCount);
+    }
+
     if (_vad_exceedCount > _vad_exceedCountThreshold) {
       AgoraRTCUtilEvents.emit("VoiceActivityDetected",_vad_exceedCount);
       _vad_exceedCount = 0;
     }
+
+
   }
+
+// Network Statistics
+
+
+
+
+// End Network Statistics
+
+
+
+
 
   return { // public interfaces
     startAutoAdjustResolution: function (client, initialProfile) {

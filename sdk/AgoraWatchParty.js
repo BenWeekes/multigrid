@@ -44,7 +44,7 @@ class AgoraWatchParty {
         this.RTMUpdateTimeout=5*1000;
         this.BroadcastInterval=2*1000;
         this.AudioExceedThreshold=0.2; 
-        this.InboundAudioTurnBackUpTimeout=500;
+        this.InboundAudioTurnBackUpTimeout=200;
         
         this.player;
         this.playerInit = false;
@@ -141,7 +141,7 @@ class AgoraWatchParty {
         }, this.BroadcastInterval);
 
         AgoraRTCUtilEvents.on("InboundAudioExceedsThreshold",this.processInboundAudioExceedsThreshold);
-        AgoraRTCUtilEvents.on("VoiceActivityDetected",this.processInboundAudioExceedsThreshold);
+        AgoraRTCUtilEvents.on("VoiceActivityDetectedFast",this.processInboundAudioExceedsThreshold);
 
     }
 
