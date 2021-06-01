@@ -230,8 +230,22 @@ class AgoraMultiChanelApp {
     }, this.intervalManageSubscriptions);
 
     AgoraRTCUtils.setRTCClients(this.clients,this.numClients);
-    AgoraRTCUtils.startInboundVolumeMonitor(100); // ms interval
+    AgoraRTCUtils.startInboundVolumeMonitor(150); // ms interval
+    AgoraRTCUtils.startRemoteCallStatsMonitor(250); // ms interval
+    AgoraRTCUtilEvents.on("RemoteVideoStatistics",agoraApp.processRemoteVideoStatistics);
+
   }
+
+   processRemoteVideoStatistics(userStats) {
+    var a=userStats.lastStatsRead ;
+    var b=userStats.lastNack;
+    var c=userStats.lastPacketsRecvd ;
+    var d=userStats.renderRateMean;
+    var e=userStats.renderRateStdDeviation;
+    console.log("lastStatsRead "+a+" lastNack "+b+" lastPacketsRecvd "+c+" renderRateMean "+d+" renderRateStdDeviation "+e);
+
+  }
+
 
   async createClients() {
     let i = 0;
