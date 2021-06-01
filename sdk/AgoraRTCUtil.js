@@ -353,7 +353,7 @@ var AgoraRTCUtils = (function () {
               var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
               console.log(uid+" renderFrameRate "+renderFrameRate);
               
-              _userLastStats[uid].renderFrameRate=parseInt(renderFrameRate, 10)+ Math.floor(Math.random()*10);
+              _userLastStats[uid].renderFrameRate=parseInt(renderFrameRate, 10);
               if ( _userLastStats[uid].renderFrameRate > 0 ) {
                 calculateRenderRateVolatility(_userLastStats[uid]);
               }
