@@ -24,6 +24,15 @@
   color: #ddd;
   }
 
+  .stats_display {
+
+    color: lime;
+    margin-left: 8px;
+    margin-top: 68px;
+    position: absolute;
+    z-index: 100;
+  }
+
   .mic_talking {
   background-color: lime-green;
   }

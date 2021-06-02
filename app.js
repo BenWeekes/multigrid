@@ -73,6 +73,8 @@ class AgoraMultiChanelApp {
     this.sendVAD = getParameterByName("sendVAD") || "true";
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
+    this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "false";
+    
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
@@ -231,18 +233,29 @@ class AgoraMultiChanelApp {
 
     AgoraRTCUtils.setRTCClients(this.clients,this.numClients);
     AgoraRTCUtils.startInboundVolumeMonitor(150); // ms interval
-    AgoraRTCUtils.startRemoteCallStatsMonitor(250); // ms interval
+   
+    if (this.enableRemoteCallStatsMonitor === "true") {
+      AgoraRTCUtils.startRemoteCallStatsMonitor(500); // ms interval
+    }
     AgoraRTCUtilEvents.on("RemoteVideoStatistics",agoraApp.processRemoteVideoStatistics);
 
   }
 
    processRemoteVideoStatistics(userStats) {
+     /*
     var a=userStats.lastStatsRead ;
     var b=userStats.lastNack;
     var c=userStats.lastPacketsRecvd ;
     var d=userStats.renderRateMean;
     var e=userStats.renderRateStdDeviation;
-    console.log("lastStatsRead "+a+" lastNack "+b+" lastPacketsRecvd "+c+" renderRateMean "+d+" renderRateStdDeviation "+e);
+    */
+    var stats_display=document.getElementById(userStats.uid +"_stats_display");
+    if (stats_display) {
+      stats_display.innerHTML = "Nack Rate: "+userStats.nackRate +" <br/> Render Rate Volatility: "+userStats.renderRateStdDeviation.toFixed(3); ;
+    }
+      
+    //console.log("lastStatsRead "+a+" lastNack "+b+" lastPacketsRecvd "+c+" renderRateMean "+d+" renderRateStdDeviation "+e);
+
 
   }
 
@@ -633,6 +646,12 @@ class AgoraMultiChanelApp {
         }
         */
       };
+
+      const stats_display = document.createElement("div");
+      stats_display.className ="stats_display";   
+      stats_display.id = uid_string+"_stats_display";
+      playerDomDiv.append(stats_display);
+      
       document.getElementById("grid").append(playerDomDiv);
       this.numVideoTiles++;
     }

@@ -324,6 +324,7 @@ var AgoraRTCUtils = (function () {
                   uid : uid,
                   lastStatsRead : 0,
                   lastNack : 0,
+                  nackRate : 0,
                   lastPacketsRecvd: 0,
                   renderFrameRate: 0,
                   renderRates: []
@@ -343,15 +344,16 @@ var AgoraRTCUtils = (function () {
                     var nackRate = Math.floor((nackChange / packetChange) * (timeDiff / 10));
                     _userLastStats[uid].lastStatsRead = now;
                     _userLastStats[uid].lastNack = nack;
+                    _userLastStats[uid].nackRate = nackRate;
                     _userLastStats[uid].lastPacketsRecvd = packetsReceived;
-                    console.log(uid+" nackRate "+nackRate);
+                   // console.log(uid+" nackRate "+nackRate);
                    }
                 })
               });
 
               const remoteTracksStats = { video: client.getRemoteVideoStats()[uid], audio: client.getRemoteAudioStats()[uid] };
               var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
-              console.log(uid+" renderFrameRate "+renderFrameRate);
+             // console.log(uid+" renderFrameRate "+renderFrameRate);
               
               _userLastStats[uid].renderFrameRate=parseInt(renderFrameRate, 10);
               if ( _userLastStats[uid].renderFrameRate > 0 ) {
