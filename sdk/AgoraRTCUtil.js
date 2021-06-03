@@ -353,12 +353,14 @@ var AgoraRTCUtils = (function () {
 
               const remoteTracksStats = { video: client.getRemoteVideoStats()[uid], audio: client.getRemoteAudioStats()[uid] };
               var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
-             // console.log(uid+" renderFrameRate "+renderFrameRate);
-              
+              var totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0)
+
               _userLastStats[uid].renderFrameRate=parseInt(renderFrameRate, 10);
               if ( _userLastStats[uid].renderFrameRate > 0 ) {
                 calculateRenderRateVolatility(_userLastStats[uid]);
               }
+
+              _userLastStats[uid].totalDuration=parseInt(totalDuration, 10);
 
               // emit user
               AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userLastStats[uid]);

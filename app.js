@@ -74,6 +74,8 @@ class AgoraMultiChanelApp {
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
     this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "false";
+    this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "true";
+    
     
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
@@ -241,22 +243,26 @@ class AgoraMultiChanelApp {
 
   }
 
+
    processRemoteVideoStatistics(userStats) {
-     /*
-    var a=userStats.lastStatsRead ;
-    var b=userStats.lastNack;
-    var c=userStats.lastPacketsRecvd ;
-    var d=userStats.renderRateMean;
-    var e=userStats.renderRateStdDeviation;
-    */
-    var stats_display=document.getElementById(userStats.uid +"_stats_display");
-    if (stats_display) {
-      stats_display.innerHTML = "Nack Rate: "+userStats.nackRate +" <br/> Render Rate Volatility: "+userStats.renderRateStdDeviation.toFixed(3); ;
+
+    var stats_display=document.getElementById(userStats.uid +"_stats_display");    
+    if (stats_display) {      
+    //  if (document.getElementById("stats_container").classList.contains("hidden")) {
+    //    stats_display.innerHTML = "";
+    //  } else {
+        stats_display.innerHTML = "<span class='stats_display_inner'> Nack Rate: "+userStats.nackRate +" <br/> Render FPS: "+userStats.renderRateMean.toFixed(0) +" <br/> Render Vol: "+userStats.renderRateStdDeviation.toFixed(2)+" <br/> Duration: "+userStats.totalDuration+" </span> ";
+    //  }
+
     }
-      
+    
+    // ramp up or down?
+    // need duration of each
+
+    // 
+
+
     //console.log("lastStatsRead "+a+" lastNack "+b+" lastPacketsRecvd "+c+" renderRateMean "+d+" renderRateStdDeviation "+e);
-
-
   }
 
 
@@ -354,12 +360,15 @@ class AgoraMultiChanelApp {
   }
 
   manageSubscriptions() {
-    this.useCallStatsToAdjustNumberOfSubscriptions();
+
+    if (this.enableCallStatsToAdjustNumberOfSubscriptions === "true") {
+      this.useCallStatsToAdjustNumberOfSubscriptions();
+    }
 
     if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
       this.doSwitchRxVideoStreamTypeAt();
     }
-    //this.changeLowStreamResolutionIfNeeded();
+    //this.changeLowStreamResolutionIfNeeded(); // not reliable or cross browser
     this.manageGrid();
   }
 
@@ -488,7 +497,6 @@ class AgoraMultiChanelApp {
     });
   }
 
-
   async addVideoSubIfNotExisting(uid_string) {
     if (this.videoSubscriptions[uid_string]) {
       return;
@@ -519,7 +527,6 @@ class AgoraMultiChanelApp {
       });
     }
   }
-
 
   removeAgoraInnerVideoStyling() {
     var els = document.getElementsByClassName("remote_video");
@@ -569,9 +576,6 @@ class AgoraMultiChanelApp {
           
         });
       });
-
-      
-    
   }
 
   removeSlotsIfNotInMap(expected) {
