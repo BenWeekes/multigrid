@@ -42,7 +42,8 @@ var AgoraRTCUtils = (function () {
   var _brHighObserved = 0;
 
   var _profiles = [
-    // { id: "180p", width: 320, height: 180, frameRate: 15, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
+    // 180p for mobile only
+    { id: "180p", width: 320, height: 180, frameRate: 15, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
     { id: "360p_low", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 },
     { id: "360p_11", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000 },
     { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
@@ -111,8 +112,9 @@ var AgoraRTCUtils = (function () {
   }
 
   function changeProfile(profileInd) {
-    if (profileInd < 0 || profileInd >= _profiles.length)
+    if (profileInd < 0 || profileInd >= _profiles.length) {
       return;
+    }
     _currentProfile = profileInd;
     _brLowObserved = 0;
     _brHighObserved = 0;
@@ -364,7 +366,9 @@ var AgoraRTCUtils = (function () {
               // calculate group stats \\ 
               
               // avg nackRate
+
               // avg rrVol
+
               // min/max/avg nackRate, rrVol
 
               // outliers 
@@ -380,7 +384,8 @@ var AgoraRTCUtils = (function () {
               // do we want to unsubsribe completely in the case of just a few streamas
 
               // if increased nackRate is due to my connection it will be seen for all remotes
-              // 
+              
+              // do we want to reduce outgoing fps if lots of remote RV? Ensure outgoing FPS good by limiting RVs also
             
 
               // emit user
