@@ -144,7 +144,9 @@ class AgoraMultiChanelApp {
     }
 
     // number of subscriptions before moving to low stream
-    this.SwitchVideoStreamTypeAt =  getParameterByNameAsInt("switchVideoStreamTypeAt") || 9; 
+
+    this.SwitchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 2 : 9);
+
     // drop the low quality stream as more users join to ensure the aggregate resolution keeps low
     // not used - caused blink
     //this.SwitchDownLowPublishResolutionAt = 15; // will drop the lowbandwidth stream shown in grid from 180p to 90p
@@ -244,8 +246,9 @@ class AgoraMultiChanelApp {
   
   processLocalVideoStatistics(userStats) {
     var stats = " Outbound ";
-    var stats2 = " Profile:" + userStats.profile + " Bitrate:" + userStats.sendBitratekbps + " Framerate:" + userStats.sendFrameRate;    
+    var stats2 = " Profile:" + userStats.profile + " Br:" + userStats.sendBitratekbps + " Fps:" + userStats.sendFrameRate  + " low Br:" + userStats.brLowObserved + " low Fps:" + userStats.fpsLowObserved; 
     document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
+ 
   }
   
   processRemoteVideoStatistics(userStats) {
@@ -529,7 +532,8 @@ class AgoraMultiChanelApp {
         that.removeAgoraInnerVideoStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
-        client.setStreamFallbackOption(user.uid, 1);
+        //client.setStreamFallbackOption(user.uid, 1); // Automatically subscribe to the low-quality video stream under poor network.
+        client.setStreamFallbackOption(user.uid, 0); //disable fall back
         client.setRemoteVideoStreamType(user.uid, that.defaultVideoStreamType);
         // handleScreenshareSub
         that.handleScreenshareSub(uid_string);

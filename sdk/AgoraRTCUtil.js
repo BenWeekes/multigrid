@@ -42,11 +42,11 @@ var AgoraRTCUtils = (function () {
   var _brHighObserved = 0;
 
   var _profiles = [
-    // 180p for mobile only
-    { id: "180p", width: 320, height: 180, frameRate: 15, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
+    // 180p for mobile only, putting frameRate 15 here doesn't seem to stick
+    { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
     { id: "360p_low", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 },
     { id: "360p_11", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000 },
-    { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
+   // { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
     //  { id: "1080p", width: 1920, height: 1080, frameRate: 24, bitrateMin: 600, bitrateMinDesired: 1200, bitrateMax: 3600 },
   ];
 
@@ -113,6 +113,8 @@ var AgoraRTCUtils = (function () {
     var localVideoStats={
       profile : profile.id,
       sendBitratekbps : sendBitratekbps,
+      brLowObserved: _brLowObserved,
+      fpsLowObserved: _fpsLowObserved,
       sendFrameRate : videoStats.sendFrameRate
     };
     AgoraRTCUtilEvents.emit("LocalVideoStatistics", localVideoStats);
@@ -402,7 +404,11 @@ var AgoraRTCUtils = (function () {
               
               // do we want to reduce outgoing fps if lots of remote RV? Ensure outgoing FPS good by limiting RVs also
             
+/*
+            If all Rr vol > 10 then local CPU uissue
+            switchVideoStreamTypeAt switch to lower quality before dropping 
 
+*/
               // emit user
               AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userStatsMap[uid]);
 
