@@ -207,7 +207,7 @@ var AgoraRTCUtils = (function () {
   }
 
   function voiceActivityDetection() {
-    if (!_vad_audioTrack)
+    if (!_vad_audioTrack || !_vad_audioTrack._enabled)
       return;
 
     var audioLevel = getInputLevel(_vad_audioTrack);
