@@ -109,6 +109,13 @@ var AgoraRTCUtils = (function () {
     if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && _brHighObserved > ResultCountToStepUp && _currentProfile < _profiles.length - 1) {
       changeProfile(_currentProfile + 1); // increase profile
     }
+
+    var localVideoStats={
+      profile : profile.id,
+      sendBitratekbps : sendBitratekbps,
+      sendFrameRate : videoStats.sendFrameRate
+    };
+    AgoraRTCUtilEvents.emit("LocalVideoStatistics", localVideoStats);
   }
 
   function changeProfile(profileInd) {
@@ -328,6 +335,10 @@ var AgoraRTCUtils = (function () {
                   renderRateMean: 0,
                   renderRateStdDeviation: 0,
                   renderRateStdDeviationPerc: 0,
+                  receiveResolutionWidth: 0,
+                  receiveResolutionHeight: 0,
+                  receiveBitrate: 0,
+
                   renderRates: []
                 };
               }
@@ -353,11 +364,15 @@ var AgoraRTCUtils = (function () {
               });
 
               const remoteTracksStats = { video: client.getRemoteVideoStats()[uid], audio: client.getRemoteAudioStats()[uid] };
-              var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
-              var totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0)
+              //var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
+              //var totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0)
 
-              _userStatsMap[uid].renderFrameRate=parseInt(renderFrameRate, 10);
-              _userStatsMap[uid].totalDuration=parseInt(totalDuration, 10);
+              _userStatsMap[uid].renderFrameRate=Number(remoteTracksStats.video.renderFrameRate);//.toFixed(0);
+              _userStatsMap[uid].receiveResolutionWidth=Number(remoteTracksStats.video.receiveResolutionWidth).toFixed(0);
+              _userStatsMap[uid].receiveResolutionHeight=Number(remoteTracksStats.video.receiveResolutionHeight).toFixed(0);
+              _userStatsMap[uid].receiveBitrate=Number(remoteTracksStats.video.receiveBitrate/1000).toFixed(0);
+              
+              _userStatsMap[uid].totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0);
 
               if ( _userStatsMap[uid].renderFrameRate > 0 ) {
                 calculateRenderRateVolatility(_userStatsMap[uid]);

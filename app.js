@@ -238,20 +238,33 @@ class AgoraMultiChanelApp {
    
     if (this.enableRemoteCallStatsMonitor === "true") {
       AgoraRTCUtils.startRemoteCallStatsMonitor(500); // ms interval
-    }
-    AgoraRTCUtilEvents.on("RemoteVideoStatistics",agoraApp.processRemoteVideoStatistics);
-
+      AgoraRTCUtilEvents.on("RemoteVideoStatistics",agoraApp.processRemoteVideoStatistics);
+    }    
   }
-
-
-   processRemoteVideoStatistics(userStats) {
+  
+  processLocalVideoStatistics(userStats) {
+    var stats = " Outbound ";
+    var stats2 = " Profile:" + userStats.profile + " Bitrate:" + userStats.sendBitratekbps + " Framerate:" + userStats.sendFrameRate;    
+    document.getElementById("renderFrameRate").innerHTML = stats + "<br/>" + stats2;
+  }
+  
+  processRemoteVideoStatistics(userStats) {
 
     var stats_display=document.getElementById(userStats.uid +"_stats_display");    
     if (stats_display) {      
     //  if (document.getElementById("stats_container").classList.contains("hidden")) {
     //    stats_display.innerHTML = "";
     //  } else {
-        stats_display.innerHTML = "<span class='stats_display_inner'> Nack Rate: "+userStats.nackRate +" <br/> Render FPS: "+userStats.renderRateMean.toFixed(0)  +" <br/> Render Vol: "+userStats.renderRateStdDeviation.toFixed(2)+" <br/> Render Vol Perc: "+userStats.renderRateStdDeviationPerc.toFixed(0)+" <br/> Duration: "+userStats.totalDuration+" </span> ";
+
+
+        stats_display.innerHTML = "<span class='stats_display_inner'> "+         
+          " Res: "+          userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight +" <br/> "+
+          " Bitrate: "+          userStats.receiveBitrate +" <br/> "+
+          " Render FPS: "+          userStats.renderRateMean.toFixed(0)  +" <br/> "+
+//          " Render Vol: "+          userStats.renderRateStdDeviation.toFixed(2)+" <br/> "+
+          " Render Vol%: "+        userStats.renderRateStdDeviationPerc.toFixed(0)+" <br/> " +
+          " Nack Rate: "+          userStats.nackRate +" <br/> "+
+          " Duration: "+          userStats.totalDuration+" </span> ";
     //  }
 
     }
@@ -996,6 +1009,8 @@ class AgoraMultiChanelApp {
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+      AgoraRTCUtilEvents.on("LocalVideoStatistics",agoraApp.processLocalVideoStatistics);
+
     }
     
     
@@ -1100,6 +1115,8 @@ class AgoraMultiChanelApp {
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+      AgoraRTCUtilEvents.on("LocalVideoStatistics",agoraApp.processLocalVideoStatistics);
+
     }
 
     console.log("### PUBLISHED VIDEO Low Res changed " + this.lowVideoHeightCurrent + "p ###");
