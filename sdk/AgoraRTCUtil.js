@@ -248,16 +248,13 @@ var AgoraRTCUtils = (function () {
   // fireevent when all collected
 
 
-  var _monitorRemoteCallStatsInterval;
-  var _userLastStats={};
   var MaxRenderRateSamples=16; // 4 seconds
- 
-  var _rstats={
-    lastStatsRead : null,
-    lastNack : null,
-    lastPacketsRecvd: null,
+  var _monitorRemoteCallStatsInterval;
+  var _userStatsMap={};
+  
 
-  };
+ 
+
 
 
   function standardDeviation(arr) {
@@ -275,7 +272,7 @@ var AgoraRTCUtils = (function () {
   }
 
  
-  function calculateRenderRateVolatility( statsMap){
+  function calculateRenderRateVolatility(statsMap){
 
     var arr= statsMap.renderRates;
 
@@ -294,10 +291,9 @@ var AgoraRTCUtils = (function () {
        vol+= Math.abs(arr[j]- statsMap.renderRateMean);
     }
     statsMap.renderRateStdDeviation=vol/arr.length;
+    statsMap.renderRateStdDeviationPerc=(statsMap.renderRateStdDeviation/statsMap.renderRateMean)*100
    
   }
-
-
 
   async function monitorRemoteCallStats() {
 
@@ -319,14 +315,17 @@ var AgoraRTCUtils = (function () {
             if (rc.pc && rc.pc.pc) {
 
               // check each remote user has last stats map
-              if (!_userLastStats[uid]){
-                _userLastStats[uid]={
+              if (!_userStatsMap[uid]){
+                _userStatsMap[uid]={
                   uid : uid,
                   lastStatsRead : 0,
                   lastNack : 0,
                   nackRate : 0,
                   lastPacketsRecvd: 0,
                   renderFrameRate: 0,
+                  renderRateMean: 0,
+                  renderRateStdDeviation: 0,
+                  renderRateStdDeviationPerc: 0,
                   renderRates: []
                 };
               }
@@ -338,14 +337,14 @@ var AgoraRTCUtils = (function () {
                     var now = Date.now();
                     var nack = report["nackCount"];
                     var packetsReceived = report["packetsReceived"];
-                    var nackChange = (nack -  _userLastStats[uid].lastNack);
-                    var packetChange = (packetsReceived -  _userLastStats[uid].lastPacketsRecvd);
-                    var timeDiff = now -  _userLastStats[uid].lastStatsRead;
+                    var nackChange = (nack -  _userStatsMap[uid].lastNack);
+                    var packetChange = (packetsReceived -  _userStatsMap[uid].lastPacketsRecvd);
+                    var timeDiff = now -  _userStatsMap[uid].lastStatsRead;
                     var nackRate = Math.floor((nackChange / packetChange) * (timeDiff / 10));
-                    _userLastStats[uid].lastStatsRead = now;
-                    _userLastStats[uid].lastNack = nack;
-                    _userLastStats[uid].nackRate = nackRate;
-                    _userLastStats[uid].lastPacketsRecvd = packetsReceived;
+                    _userStatsMap[uid].lastStatsRead = now;
+                    _userStatsMap[uid].lastNack = nack;
+                    _userStatsMap[uid].nackRate = nackRate;
+                    _userStatsMap[uid].lastPacketsRecvd = packetsReceived;
                    // console.log(uid+" nackRate "+nackRate);
                    }
                 })
@@ -355,15 +354,37 @@ var AgoraRTCUtils = (function () {
               var renderFrameRate=Number(remoteTracksStats.video.renderFrameRate).toFixed(0)
               var totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0)
 
-              _userLastStats[uid].renderFrameRate=parseInt(renderFrameRate, 10);
-              if ( _userLastStats[uid].renderFrameRate > 0 ) {
-                calculateRenderRateVolatility(_userLastStats[uid]);
+              _userStatsMap[uid].renderFrameRate=parseInt(renderFrameRate, 10);
+              _userStatsMap[uid].totalDuration=parseInt(totalDuration, 10);
+
+              if ( _userStatsMap[uid].renderFrameRate > 0 ) {
+                calculateRenderRateVolatility(_userStatsMap[uid]);
               }
 
-              _userLastStats[uid].totalDuration=parseInt(totalDuration, 10);
+              // calculate group stats \\ 
+              
+              // avg nackRate
+              // avg rrVol
+              // min/max/avg nackRate, rrVol
+
+              // outliers 
+
+              // does nackRate always increase when rrVol does?
+              
+              // does rrVol increase when nackRate does?
+
+              // does rrVol increase if remote uplink packet loss present?
+
+              // does nackRate increase if remote has upload packet loss?
+
+              // do we want to unsubsribe completely in the case of just a few streamas
+
+              // if increased nackRate is due to my connection it will be seen for all remotes
+              // 
+            
 
               // emit user
-              AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userLastStats[uid]);
+              AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userStatsMap[uid]);
 
             }
           }

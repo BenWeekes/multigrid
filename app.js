@@ -251,7 +251,7 @@ class AgoraMultiChanelApp {
     //  if (document.getElementById("stats_container").classList.contains("hidden")) {
     //    stats_display.innerHTML = "";
     //  } else {
-        stats_display.innerHTML = "<span class='stats_display_inner'> Nack Rate: "+userStats.nackRate +" <br/> Render FPS: "+userStats.renderRateMean.toFixed(0) +" <br/> Render Vol: "+userStats.renderRateStdDeviation.toFixed(2)+" <br/> Duration: "+userStats.totalDuration+" </span> ";
+        stats_display.innerHTML = "<span class='stats_display_inner'> Nack Rate: "+userStats.nackRate +" <br/> Render FPS: "+userStats.renderRateMean.toFixed(0)  +" <br/> Render Vol: "+userStats.renderRateStdDeviation.toFixed(2)+" <br/> Render Vol Perc: "+userStats.renderRateStdDeviationPerc.toFixed(0)+" <br/> Duration: "+userStats.totalDuration+" </span> ";
     //  }
 
     }
