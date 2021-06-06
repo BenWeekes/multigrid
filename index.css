@@ -24,6 +24,18 @@
   color: #ddd;
   }
 
+  .fixed_stat{
+    display: inline-block;
+    width: 90px;
+    text-align: left;
+  }
+
+  .fixed_stat_short{
+    display: inline-block;
+    text-align: left;
+    width: 20px;
+  }
+
   .stats_display_inner{
     background-color: rgb(77, 57, 4);
     padding: 2px;
