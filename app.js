@@ -1084,6 +1084,7 @@ class AgoraMultiChanelApp {
 
     this.localTracks.videoTrack.play("local-player");
     document.getElementById("local-player").classList.remove("hidden");
+    await this.clients[this.myPublishClient].setClientRole("host");
     await this.clients[this.myPublishClient].publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
@@ -1188,6 +1189,7 @@ class AgoraMultiChanelApp {
     }
 
     this.localTracks.videoTrack.play("local-player");
+    await this.clients[this.myPublishClient].setClientRole("host");
     await this.clients[this.myPublishClient].publish(this.localTracks.videoTrack);
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
@@ -1211,20 +1213,21 @@ class AgoraMultiChanelApp {
     this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
       microphoneId: microphoneId,
     });
+    await this.clients[this.myPublishClient].setClientRole("host");
     await this.clients[publishToIndex].publish(this.localTracks.audioTrack);
     AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
     console.log("### PUBLISHED AUDIO TO " + publishToIndex + "! ###");
   }
 
   // Returns the index of the first client object with an open channel.
-  getFirstOpenChannel() {
+  async getFirstOpenChannel() {
 
     if (this.myPublishClient > -1) {
       return this.myPublishClient;
     }
 
     this.myPublishClient=this.getFirstOpenChannelInner();
-    this.clients[this.myPublishClient].setClientRole("host");
+    await this.clients[this.myPublishClient].setClientRole("host");
     return this.myPublishClient;
   }
 
@@ -2073,6 +2076,7 @@ let volumeAnimation;
 
 async function showMediaDeviceTest() {
 
+  await agoraApp.init();
   await agoraApp.loadDevices();
 
   agoraApp.localTracks.videoTrack.play("pre-local-player");
@@ -2106,7 +2110,7 @@ async function showMediaDeviceTest() {
   $("#media-device-test").on("hidden.bs.modal", async function (e) {
     cancelAnimationFrame(volumeAnimation);
     showLoadingSpinner();
-    await agoraApp.init();
+
 
     var currentCam = cams.find(cam => cam.label === $(".cam-input").val());
     var currentMic = mics.find(mic => mic.label === $(".mic-input").val());
@@ -2139,7 +2143,9 @@ async function showMediaDeviceChange() {
 
 async function connect() {
   await agoraApp.init();
-  await agoraApp.startCamMic();
+  // allow time to find users in each channel
+  // this is a hack and a production multi channel 
+  setTimeout( async function () {  await agoraApp.startCamMic() }, 4000);
 }
 
 window.addEventListener('resize', resizeGrid);
