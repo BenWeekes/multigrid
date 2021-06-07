@@ -994,9 +994,6 @@ class AgoraMultiChanelApp {
   }
 
   async startCamMic(cameraId, micId) {
-    if (isChromeIOS()) {
-      return; // chrome on iOS doesn't support getUserMedia
-    }
 
     this.getFirstOpenChannel();
     this.cameraId = cameraId;
@@ -2165,7 +2162,7 @@ window.addEventListener('resize', resizeGrid);
 
 var showDeviceSelection = getParameterByName("showDeviceSelection") || "true";
 
-if (showDeviceSelection === "true" && !isChromeIOS()) {
+if (showDeviceSelection === "true") {
   showMediaDeviceTest();
 } else {
   connect();
