@@ -55,7 +55,7 @@ var AgoraRTCUtils = (function () {
     { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 150,  moveDownThreshold: 120, moveUpThreshold: 40, bitrateMax: 500 }, 
     { id: "360p_low", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000 },
     { id: "360p_11", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000 },
-   // { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
+    { id: "720p", width: 1280, height: 720, frameRate: 24, bitrateMin: 600, moveDownThreshold: 650, moveUpThreshold: 1200, bitrateMax: 1800 },
     //  { id: "1080p", width: 1920, height: 1080, frameRate: 24, bitrateMin: 600, bitrateMinDesired: 1200, bitrateMax: 3600 },
   ];
 
@@ -385,7 +385,7 @@ var AgoraRTCUtils = (function () {
                 calculateRenderRateVolatility(_userStatsMap[uid]);
               }
 
-              // emit user
+              // emit user level stats
               AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userStatsMap[uid]);
 
               _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
@@ -393,50 +393,6 @@ var AgoraRTCUtils = (function () {
               _clientStatsMap.UserCount=_clientStatsMap.UserCount + 1;
 
               _clientStatsMap.SumRxAggRes= _clientStatsMap.SumRxAggRes+(remoteTracksStats.video.receiveResolutionWidth*remoteTracksStats.video.receiveResolutionHeight)
-              // calculate combined stats \\ 
-              
-              // avg nackRate
-
-              // avg rrVol
-
-              // min/max/avg nackRate, rrVol
-
-              // outliers 
-
-              // does nackRate always increase when rrVol does?
-              
-              // does rrVol increase when nackRate does?
-
-              // does rrVol increase if remote uplink packet loss present?
-
-              // does nackRate increase if remote has upload packet loss?
-
-              // do we want to unsubsribe completely in the case of just a few streamas
-
-              // if increased nackRate is due to my connection it will be seen for all remotes
-              
-              // do we want to reduce outgoing fps if lots of remote RV? Ensure outgoing FPS good by limiting RVs also
-            
-/*
-            If all Rr vol > 10 then local CPU uissue
-
-            network limits bitrate (TxBr and RxBr)
-            cpu/gpu limits area of video to encode or decode (TxArea, RxArea)
-
-            switching between high/low/no streams changes RxBr and RxArea 
-            switching between profile/no camera changes  TxBr and TxArea
-
-            All 
-
-            It is possible to get individual high RxRVol if remote fps is volatile due to CPU issues
-            but if all clients ensure they produce constant fps by reducing the encoding profile or switching off cam if necessary then that is less likely
-            When there is a local CPU issue then all RxRVol will be > 10 and RxArea should be reduced
-            When there is local downlink issue all RxNR will be > 5 and RxBr
-
-            AvgRxRVol * AvgRxNR will determine what the Total RxBr and RxArea should do (increase/decrease/hold)
-
-*/
-
 
             }
           }
@@ -485,6 +441,56 @@ var AgoraRTCUtils = (function () {
 
 
     AgoraRTCUtilEvents.emit("ClientVideoStatistics",_clientStatsMap);
+
+
+    // Here we can advise whether remote streams should be reduced in quality or turned off
+    // It should be up to the calling application to decide how to achive this?
+
+    // Implement and test 
+
+                  // calculate combined stats \\ 
+              
+              // avg nackRate
+
+              // avg rrVol
+
+              // min/max/avg nackRate, rrVol
+
+              // outliers 
+
+              // does nackRate always increase when rrVol does?
+              
+              // does rrVol increase when nackRate does?
+
+              // does rrVol increase if remote uplink packet loss present?
+
+              // does nackRate increase if remote has upload packet loss?
+
+              // do we want to unsubsribe completely in the case of just a few streamas
+
+              // if increased nackRate is due to my connection it will be seen for all remotes
+              
+              // do we want to reduce outgoing fps if lots of remote RV? Ensure outgoing FPS good by limiting RVs also
+            
+/*
+            If all Rr vol > 10 then local CPU uissue
+
+            network limits bitrate throughput (TxBr and RxBr)
+            cpu/gpu limits area of video to encode or decode (TxArea, RxArea)
+
+            switching between high/low/no streams changes RxBr and RxArea 
+            switching between profile/no camera changes  TxBr and TxArea
+
+
+            It is possible to get individual high RxRVol if remote fps is volatile due to CPU issues
+            but if all clients ensure they produce constant fps by reducing the encoding profile or switching off cam if necessary then that is less likely
+            When there is a local CPU issue then all RxRVol will be > 10 and RxArea should be reduced
+            When there is local downlink issue all RxNR will be > 5 and RxBr
+
+            AvgRxRVol * AvgRxNR will determine what the Total RxBr and RxArea should do (increase/decrease/hold)
+
+*/
+
   }
 
 
