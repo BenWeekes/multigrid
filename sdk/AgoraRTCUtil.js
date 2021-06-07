@@ -61,7 +61,11 @@ var AgoraRTCUtils = (function () {
 
   // private methods
   function isIOS() {
-    return (/iPhone|iPad|iPod/i.test(navigator.userAgent))
+    return (/iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }
+
+  function isMobile() {
+    return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
   }
 
   function getProfileIndex(profile) {
@@ -449,20 +453,7 @@ var AgoraRTCUtils = (function () {
 
 
     // Here we can advise whether remote streams should be reduced in quality or turned off
-    // It should be up to the calling application to decide how to achive this?
-
-    // Implement and test 
-
-                  // calculate combined stats \\ 
-              
-              // avg nackRate
-
-              // avg rrVol
-
-              // min/max/avg nackRate, rrVol
-
-              // outliers 
-
+    // It should be up to the calling application to decide how to achive this because it may have specific priority of which video to keep 
               // does nackRate always increase when rrVol does?
               
               // does rrVol increase when nackRate does?
@@ -523,6 +514,9 @@ var AgoraRTCUtils = (function () {
     },
     isIOS: function () {
       return isIOS();
+    },
+    isMobile: function () {
+      return isMobile();
     },
     setRTCClients: function (clientArray, numClients) {
       _rtc_clients = clientArray;

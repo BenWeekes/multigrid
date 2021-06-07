@@ -253,7 +253,7 @@ class AgoraMultiChanelApp {
   
   processAllClientVideoStatistics(clientStats) {
 
-    if (agoraApp.isMobile()) {
+    if (agoraApp.is_Mobile()) {
       return agoraApp.processAllClientVideoStatisticsMobile(clientStats);
     }
 
@@ -311,11 +311,22 @@ class AgoraMultiChanelApp {
         
     document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2;
   }
+
   fixStat(inp,short){
     if (short) {
       return  " <span class='fixed_stat_short'>" + (inp) + "</span>  ";   
     }
     return  " <span class='fixed_stat'>" + (inp) + "</span>  ";   
+  }
+
+  is_Mobile() {
+    try {
+      if (this.isMobile === "true") {
+        return true;
+      }
+    } catch (e) { }
+  
+    return AgoraRTCUtils.isMobile();
   }
 
   processRemoteVideoStatistics(userStats) {
@@ -1657,7 +1668,6 @@ class AgoraMultiChanelApp {
 
     }
   }
-
 
   updateUILayout() {
 
