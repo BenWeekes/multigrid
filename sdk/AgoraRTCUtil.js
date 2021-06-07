@@ -363,7 +363,10 @@ var AgoraRTCUtils = (function () {
                     var nackChange = (nack -  _userStatsMap[uid].lastNack);
                     var packetChange = (packetsReceived -  _userStatsMap[uid].lastPacketsRecvd);
                     var timeDiff = now -  _userStatsMap[uid].lastStatsRead;
-                    var nackRate = Math.floor((nackChange / packetChange) * (timeDiff / 10));
+                    var nackRate = 0;
+                    if (packetChange>0 && nackChange>0 ) {
+                      nackRate = Math.floor((nackChange / packetChange) * (timeDiff / 10));
+                    }
                     _userStatsMap[uid].lastStatsRead = now;
                     _userStatsMap[uid].lastNack = nack;
                     _userStatsMap[uid].nackRate = nackRate;
@@ -389,7 +392,9 @@ var AgoraRTCUtils = (function () {
               AgoraRTCUtilEvents.emit("RemoteVideoStatistics", _userStatsMap[uid]);
 
               _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
-              _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
+              if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
+                _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
+              }
               _clientStatsMap.UserCount=_clientStatsMap.UserCount + 1;
 
               _clientStatsMap.SumRxAggRes= _clientStatsMap.SumRxAggRes+(remoteTracksStats.video.receiveResolutionWidth*remoteTracksStats.video.receiveResolutionHeight)

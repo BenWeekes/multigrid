@@ -263,16 +263,21 @@ class AgoraMultiChanelApp {
 
     "Receive Stats - Users: " + clientStats.UserCount + 
     //" RxAggregate:" + (agg*(16/9)).toFixed(0) + "x" +(agg*(9/16)).toFixed(0) +
-    " AggRes:" + agoraApp.fixStat((agg/720).toFixed(0) + "x" +"720") +
-    "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0),true) + 
+    " AggRes:" + agoraApp.fixStat((agg/720).toFixed(0) + "x" +"720");
+
+    if ( clientStats.UserCount>0) {
+      stats1=stats1 + "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0),true) + 
     "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0),true) +
     "Bitrate (kbps):"+agoraApp.fixStat((clientStats.RecvBitrate/1000).toFixed(0)) ;
+    }
 
-     var stats2 = 
+     var stats2 = "";
 
-     "Transmit Stats - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0),true) +
-     "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" +clientStats.TxSendResolutionHeight) +
-     "Bitrate (kbps):" +agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0)) ;
+     if (clientStats.TxSendResolutionWidth) {
+      stats2="Transmit Stats - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0),true) +
+      "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" +clientStats.TxSendResolutionHeight) +
+      "Bitrate (kbps):" +agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0)) ;
+     }
         
     document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2;
 
