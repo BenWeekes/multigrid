@@ -64,6 +64,8 @@ class AgoraMultiChanelApp {
     this.numRenderExceedToDecrease = getParameterByNameAsInt("numRenderExceedToDecrease") || -6;
     this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 1;
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 6 * 1000;
+    // number of subscriptions before moving to low stream
+    this.switchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 2 : 9);
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
@@ -144,9 +146,7 @@ class AgoraMultiChanelApp {
       this.defaultVideoStreamType = this.HighVideoStreamType;
     }
 
-    // number of subscriptions before moving to low stream
 
-    this.SwitchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 2 : 9);
 
     // drop the low quality stream as more users join to ensure the aggregate resolution keeps low
     // not used - caused blink
@@ -638,6 +638,7 @@ class AgoraMultiChanelApp {
         //client.setStreamFallbackOption(user.uid, 1); // Automatically subscribe to the low-quality video stream under poor network.
         client.setStreamFallbackOption(user.uid, 0); //disable fall back
         client.setRemoteVideoStreamType(user.uid, that.defaultVideoStreamType);
+        console.log(" setRemoteVideoStreamType "+user.uid+" "+ that.defaultVideoStreamType);
         // handleScreenshareSub
         that.handleScreenshareSub(uid_string);
 
@@ -886,6 +887,7 @@ class AgoraMultiChanelApp {
             }
             if (this.videoPublishers[this.mainVideoId]) {
               this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
+              console.log(" setRemoteVideoStreamType 2 "+this.mainVideoId+" "+ this.defaultVideoStreamType);
             }
           }
         }
@@ -899,6 +901,7 @@ class AgoraMultiChanelApp {
         this.mainVideoId = uid_string;
         if (this.videoPublishers[this.mainVideoId]) {
           this.videoPublishers[uid_string].setRemoteVideoStreamType(this.userMap[uid_string].uid, this.HighVideoStreamType);
+          console.log(" setRemoteVideoStreamType 3 "+uid_string+" "+ this.HighVideoStreamType);
         }
       }
     } else {
@@ -914,6 +917,7 @@ class AgoraMultiChanelApp {
         }
         if (this.videoPublishers[this.mainVideoId]) {
           this.videoPublishers[this.mainVideoId].setRemoteVideoStreamType(this.userMap[this.mainVideoId].uid, this.defaultVideoStreamType);
+          console.log(" setRemoteVideoStreamType 4 "+this.mainVideoId+" "+ this.defaultVideoStreamType);
         }
         this.mainVideoId = null;
       }
@@ -1375,10 +1379,10 @@ class AgoraMultiChanelApp {
 
   doSwitchRxVideoStreamTypeAt() {
     var subs = this.getMapSize(this.videoSubscriptions);
-    if (subs > this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType == this.HighVideoStreamType) {
+    if (subs > this.switchVideoStreamTypeAt && this.defaultVideoStreamType == this.HighVideoStreamType) {
       this.defaultVideoStreamType = this.LowVideoStreamType;
       this.changeVideoStreamType(this.defaultVideoStreamType);
-    } else if (subs < this.SwitchVideoStreamTypeAt && this.defaultVideoStreamType != this.HighVideoStreamType) {
+    } else if (subs < this.switchVideoStreamTypeAt && this.defaultVideoStreamType != this.HighVideoStreamType) {
       this.defaultVideoStreamType = this.HighVideoStreamType;
       this.changeVideoStreamType(this.defaultVideoStreamType);
     }
@@ -1390,6 +1394,7 @@ class AgoraMultiChanelApp {
       var user = that.userMap[key];
       var client = that.videoPublishers[key];
       client.setRemoteVideoStreamType(user.uid, streamType);
+      console.log(" setRemoteVideoStreamType 5 "+user.uid+" "+ streamType);
     });
 
   }
