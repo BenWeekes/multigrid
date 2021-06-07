@@ -253,8 +253,8 @@ class AgoraMultiChanelApp {
   
   processAllClientVideoStatistics(clientStats) {
 
-    if (this.isMobile()) {
-      return this.processAllClientVideoStatisticsMobile(clientStats);
+    if (agoraApp.isMobile()) {
+      return agoraApp.processAllClientVideoStatisticsMobile(clientStats);
     }
 
     var stats1 = "";
