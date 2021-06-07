@@ -1826,7 +1826,7 @@ class AgoraMultiChanelApp {
 
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
-    var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 1));
+    var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 2));
     var grid_available_width = width - toolbar_width - (grid_padding * cols);
 
     if (video_subs == 1 && !this.gridLayout && !this.shareContentOnDisplay) { // 1 other person to display larger
@@ -1874,21 +1874,22 @@ class AgoraMultiChanelApp {
     var grid_actual_width = document.getElementById("grid").offsetWidth;
     var grid_actual_height = document.getElementById("grid").offsetHeight;
     
-    if (1==3 && this.landscape && isMobile() && rows > 1 &&  !this.shareContentOnDisplay) {
+    /*
+    if (this.landscape && isMobile() && rows > 1 &&  !this.shareContentOnDisplay) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
       document.getElementById("media_controls").style.marginTop = ((height / 2) - 100) + 'px';
     }
-    else if (1==3 && this.landscape && isMobile() &&  !this.shareContentOnDisplay) {
+    else if (this.landscape && isMobile() &&  !this.shareContentOnDisplay) {
       document.getElementById("grid").style.marginTop = (height - grid_actual_height - toolbar_height_and_focus_height) / 2 + 'px';
       document.getElementById("grid").style.marginLeft = '0px';
       document.getElementById("media_controls").style.marginTop = '0px';
     }
-    else {
+    else {*/
       document.getElementById("grid").style.marginTop = '0px';
       document.getElementById("grid").style.marginLeft = ((width - grid_actual_width) / 2) - (cell_margin + 1) + 'px';
       document.getElementById("media_controls").style.marginTop = '0px';
-    }
+    //}
 
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
