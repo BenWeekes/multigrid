@@ -51,6 +51,16 @@
     font-size: 14px;
   }
 
+
+  .stats_display_local {
+    color:#ae47de;
+    margin-left: 8px;
+    margin-top: 8px;
+    position: absolute;
+    z-index: 100;
+    font-size: 14px;
+  }
+
   .mic_talking {
   background-color: lime-green;
   }
@@ -79,6 +89,10 @@
   ffbackground-color: #111;
   width:100% !important;
   height:100% !important;
+  background-image: url("./img/novideo.png") ;
+  background-repeat: no-repeat;
+  background-size: auto 50%;
+  background-position: center 50%;
   }
 
   .remote_video {
