@@ -253,7 +253,10 @@ class AgoraMultiChanelApp {
   
   processAllClientVideoStatistics(clientStats) {
 
-    var title = " Outbound ";
+    if (this.isMobile()) {
+      return this.processAllClientVideoStatisticsMobile(clientStats);
+    }
+
     var stats1 = "";
     
     //var agg= Math.sqrt(clientStats.SumRxAggRes);
@@ -280,19 +283,34 @@ class AgoraMultiChanelApp {
      }
         
     document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2;
-
-    /*
-    var stats_local=document.getElementById("stats_local");    
-    if (stats_local) {      
-      //stats_local.innerHTML = "<span class='stats_display_inner'> "+         
-      stats_local.innerHTML = clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight +" <br/> ";
-
-      //"Bitrate: "+ clientStats.TxSendBitratekbps +" <br/> "+
-      //"Fps: "+ clientStats.TxSendFrameRate  +" </span>";
-    }*/
-
   }
+  
 
+  processAllClientVideoStatisticsMobile(clientStats) {
+
+    var agg= clientStats.SumRxAggRes;
+    var stats1 =
+
+    "Rx - U: " + clientStats.UserCount + 
+    //" RxAggregate:" + (agg*(16/9)).toFixed(0) + "x" +(agg*(9/16)).toFixed(0) +
+    " AggRes:" + agoraApp.fixStat((agg/720).toFixed(0) + "x" +"720");
+
+    if ( clientStats.UserCount>0) {
+      stats1=stats1 + "RVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0),true) + 
+    "NRAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0),true) +
+    "Br (k):"+agoraApp.fixStat((clientStats.RecvBitrate/1000).toFixed(0)) ;
+    }
+
+     var stats2 = "";
+
+     if (clientStats.TxSendResolutionWidth) {
+      stats2="Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0),true) +
+      "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" +clientStats.TxSendResolutionHeight) +
+      "Br (k):" +agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0)) ;
+     }
+        
+    document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2;
+  }
   fixStat(inp,short){
     if (short) {
       return  " <span class='fixed_stat_short'>" + (inp) + "</span>  ";   
