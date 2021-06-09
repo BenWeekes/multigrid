@@ -22,9 +22,6 @@
     gap: 8px !important;
   }
 
-
-
-
   .old_main_body_mobile_landscape {
     grid-template-columns: repeat(3, 1fr) !important;
   }

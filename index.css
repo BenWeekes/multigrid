@@ -42,6 +42,10 @@
     opacity: 0.9;
   }
 
+  .stats_display_inner_low{
+    color:#e4320f !important;
+  }
+
   .stats_display {
     color:#ffbf00;
     margin-left: 8px;
