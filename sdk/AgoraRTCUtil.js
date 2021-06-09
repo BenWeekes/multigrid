@@ -320,7 +320,7 @@ var AgoraRTCUtils = (function () {
     if (arr.length>=MaxRenderRateSamples){ // don't report vol on limited set
       statsMap.renderRateStdDeviation=vol/arr.length;
       statsMap.renderRateStdDeviationPerc=(statsMap.renderRateStdDeviation/statsMap.renderRateMean)*100
-      console.log("rrvol "+statsMap.renderRateStdDeviationPerc+" "+arr); 
+     // console.log("rrvol "+statsMap.renderRateStdDeviationPerc+" "+arr); 
     }
    
   }
@@ -467,10 +467,12 @@ var AgoraRTCUtils = (function () {
     // don't report vvol on one user as gateway interferes on its own in 2 person call
     if (_clientStatsMap.UserCount>1) {
     _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.UserCount;
+    _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.UserCount;
     } else {
       _clientStatsMap.AvgRxRVol=-1;
+      _clientStatsMap.AvgRxNR=-1;
     }
-    _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.UserCount;
+    
 
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
