@@ -317,8 +317,11 @@ var AgoraRTCUtils = (function () {
     for(j=0;j<arr.length;j+=1){
        vol+= Math.abs(arr[j]- statsMap.renderRateMean);
     }
-    statsMap.renderRateStdDeviation=vol/arr.length;
-    statsMap.renderRateStdDeviationPerc=(statsMap.renderRateStdDeviation/statsMap.renderRateMean)*100
+    if (arr.length>=MaxRenderRateSamples){ // don't report vol on limited set
+      statsMap.renderRateStdDeviation=vol/arr.length;
+      statsMap.renderRateStdDeviationPerc=(statsMap.renderRateStdDeviation/statsMap.renderRateMean)*100
+      console.log("rrvol "+statsMap.renderRateStdDeviationPerc+" "+arr); 
+    }
    
   }
 
@@ -407,6 +410,9 @@ var AgoraRTCUtils = (function () {
               const remoteTracksStats = { video: client.getRemoteVideoStats()[uid], audio: client.getRemoteAudioStats()[uid] };
 
               _userStatsMap[uid].renderFrameRate=Number(remoteTracksStats.video.renderFrameRate);
+              if (_userStatsMap[uid].receiveResolutionWidth!=Number(remoteTracksStats.video.receiveResolutionWidth).toFixed(0)){
+                _userStatsMap[uid].renderRates=[]; // clear out array when res changes
+              }
               _userStatsMap[uid].receiveResolutionWidth=Number(remoteTracksStats.video.receiveResolutionWidth).toFixed(0);
               _userStatsMap[uid].receiveResolutionHeight=Number(remoteTracksStats.video.receiveResolutionHeight).toFixed(0);
               _userStatsMap[uid].receiveBitrate=Number(remoteTracksStats.video.receiveBitrate/1000).toFixed(0);              
@@ -458,7 +464,12 @@ var AgoraRTCUtils = (function () {
     }
     // calculate aggregate user stats and aggregate channel (client) stats
 
+    // don't report vvol on one user as gateway interferes on its own in 2 person call
+    if (_clientStatsMap.UserCount>1) {
     _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.UserCount;
+    } else {
+      _clientStatsMap.AvgRxRVol=-1;
+    }
     _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.UserCount;
 
     /// determine remote status, start and duration
