@@ -124,7 +124,7 @@ var AgoraRTCUtils = (function () {
       changeProfile(_currentProfile - 1); // reduce profile
     } else if (_remoteUserCount>0 &&  profile.maxRemoteUsers < _remoteUserCount) {
       changeProfile(_currentProfile - 1); // reduce profile
-    }  else if (_tempMaxProfile && _currentProfile>_tempMaxProfile) {
+    }  else if (_tempMaxProfile!=null && _currentProfile>_tempMaxProfile) {
       changeProfile(_tempMaxProfile); // reduce profile 
     } else if (!_tempMaxProfile &&  profileUp && profileUp.maxRemoteUsers >= _remoteUserCount ) { // after about 5 seconds of very good and can handle that many users
       if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && _brHighObserved > ResultCountToStepUp && _currentProfile < _profiles.length - 1) {
@@ -431,7 +431,7 @@ var AgoraRTCUtils = (function () {
 
               // emit user level stats
               AgoraRTCUtilEvents.emit("RemoteUserVideoStatistics", _userStatsMap[uid]);
-              if ( _userStatsMap[uid].packetChange>0) // when people drop they remain for a while
+              if ( _userStatsMap[uid].packetChange>0 &&  _userStatsMap[uid].totalDuration>5) // when people drop they remain for a while
               {
                 _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
                 if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {

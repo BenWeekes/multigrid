@@ -677,6 +677,14 @@ class AgoraMultiChanelApp {
 
     }
 
+    if (this.shareContentOnDisplay ) {
+      if (this.clientStats.UserCount<7) {
+        AgoraRTCUtils.setTempMaxProfile("180p");
+      }
+       else {
+        AgoraRTCUtils.setTempMaxProfile("90p");
+       }
+    }
 
 
     /*
@@ -2091,8 +2099,8 @@ class AgoraMultiChanelApp {
       cells[i].classList.add("hidden");
     }
 
-    var grid_width = (cell_width * cols) + ((cols) * cell_margin);
-    var grid_height = (cell_height * rows) + ((rows) * cell_margin);
+    var grid_width = (cell_width * cols) + ((cols) * cell_margin)+3;
+    var grid_height = (cell_height * rows) + ((rows) * cell_margin)+3;
     if (grid_width > width) {
       grid_width = width;
     }
