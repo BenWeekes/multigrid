@@ -371,6 +371,20 @@ class AgoraMultiChanelApp {
           stats_display.classList.remove(stats_display_inner_low);
           }
         }
+/*
+        var stats_display_small_font="stats_display_small_font";
+        if (!agoraApp.gridLayout || agoraApp.shareContentOnDisplay) {
+          if (!stats_display.classList.contains(stats_display_small_font)) {
+            stats_display.classList.add(stats_display_small_font);
+          }
+        } else {
+          if (stats_display.classList.contains(stats_display_small_font)) {
+          stats_display.classList.remove(stats_display_small_font);
+          }
+        }
+*/
+
+
         stats_display.innerHTML = "<span class='stats_display_inner'> "+         
           " Res: "+          userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight +" <br/> "+
           " Bitrate: "+          userStats.receiveBitrate +" <br/> "+

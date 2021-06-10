@@ -13,6 +13,9 @@
   }
 
 
+
+
+
   .main_body_mobile_landscape{
     gap: 2px !important;
   }
@@ -61,7 +64,7 @@
   }
 
   .headerOpen {
-    height: 140px !important;
+    height: 100px !important;
   }
 
   .headerOpenPlay {

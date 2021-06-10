@@ -372,6 +372,7 @@ var AgoraRTCUtils = (function () {
                   lastStatsRead : 0,
                   lastNack : 0,
                   nackRate : 0,
+                  packetChange: 0,
                   lastPacketsRecvd: 0,
                   renderFrameRate: 0,
                   renderRateMean: 0,
@@ -402,6 +403,8 @@ var AgoraRTCUtils = (function () {
                     _userStatsMap[uid].lastNack = nack;
                     _userStatsMap[uid].nackRate = nackRate;
                     _userStatsMap[uid].lastPacketsRecvd = packetsReceived;
+                    _userStatsMap[uid].packetChange = packetChange;
+                    
                    // console.log(uid+" nackRate "+nackRate);
                    }
                 })
@@ -415,8 +418,12 @@ var AgoraRTCUtils = (function () {
               }
               _userStatsMap[uid].receiveResolutionWidth=Number(remoteTracksStats.video.receiveResolutionWidth).toFixed(0);
               _userStatsMap[uid].receiveResolutionHeight=Number(remoteTracksStats.video.receiveResolutionHeight).toFixed(0);
-              _userStatsMap[uid].receiveBitrate=Number(remoteTracksStats.video.receiveBitrate/1000).toFixed(0);              
-              _userStatsMap[uid].totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0);
+              _userStatsMap[uid].receiveBitrate=Number(remoteTracksStats.video.receiveBitrate/1000).toFixed(0);        
+              if ( _userStatsMap[uid].packetChange>0) {      
+                _userStatsMap[uid].totalDuration=Number(remoteTracksStats.video.totalDuration).toFixed(0);
+              } else {
+                _userStatsMap[uid].totalDuration=-1;
+              }
 
               if ( _userStatsMap[uid].renderFrameRate > 0 ) {
                 calculateRenderRateVolatility(_userStatsMap[uid]);
@@ -424,15 +431,15 @@ var AgoraRTCUtils = (function () {
 
               // emit user level stats
               AgoraRTCUtilEvents.emit("RemoteUserVideoStatistics", _userStatsMap[uid]);
-
-              _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
-              if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
-                _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
-              }
-              _clientStatsMap.UserCount=_clientStatsMap.UserCount + 1;
-
-              _clientStatsMap.SumRxAggRes= _clientStatsMap.SumRxAggRes+(remoteTracksStats.video.receiveResolutionWidth*remoteTracksStats.video.receiveResolutionHeight)
-
+              if ( _userStatsMap[uid].packetChange>0) // when people drop they remain for a while
+              {
+                _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
+                if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
+                  _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
+                }
+                _clientStatsMap.UserCount=_clientStatsMap.UserCount + 1;
+                _clientStatsMap.SumRxAggRes= _clientStatsMap.SumRxAggRes+(remoteTracksStats.video.receiveResolutionWidth*remoteTracksStats.video.receiveResolutionHeight)
+                }
             }
           }
         }
