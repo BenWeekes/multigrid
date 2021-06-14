@@ -42,6 +42,7 @@ var AgoraRTCUtils = (function () {
   var _brHighObserved = 0;
   var _remoteUserCount=-1; 
   var _tempMaxProfile=null;
+  var _switchForFPSAndBR=false;
 
   var _outboundVideoStats={
     profile : "",
@@ -91,21 +92,21 @@ var AgoraRTCUtils = (function () {
     var sendBitratekbps = Math.floor(videoStats.sendBitrate / 1000);
 
     // check encoding FPS not too low
-    if (videoStats.sendFrameRate && videoStats.sendFrameRate > 0 && videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100)) {
+    if (_switchForFPSAndBR && videoStats.sendFrameRate && videoStats.sendFrameRate > 0 && videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100)) {
       _fpsLowObserved++;
     } else {
       _fpsLowObserved = 0;
     }
 
     // check outbound bitrate not too low for this resolution
-    if (videoStats.sendResolutionWidth > 0 && sendBitratekbps < profile.moveDownThreshold && sendBitratekbps > MinVideoKbps) {
+    if (_switchForFPSAndBR && videoStats.sendResolutionWidth > 0 && sendBitratekbps < profile.moveDownThreshold && sendBitratekbps > MinVideoKbps) {
       _brLowObserved++;
     } else {
       _brLowObserved = 0;
     }
 
     // see if performing well enough to increase profile
-    if (videoStats.sendResolutionWidth > 0 && (videoStats.sendResolutionWidth == profile.width || videoStats.sendResolutionWidth == profile.height) && sendBitratekbps > profile.moveUpThreshold) {
+    if (_switchForFPSAndBR && videoStats.sendResolutionWidth > 0 && (videoStats.sendResolutionWidth == profile.width || videoStats.sendResolutionWidth == profile.height) && sendBitratekbps > profile.moveUpThreshold) {
       _brHighObserved++;
     } else {
       _brHighObserved = 0;
@@ -127,7 +128,7 @@ var AgoraRTCUtils = (function () {
     }  else if (_tempMaxProfile!=null && _currentProfile>_tempMaxProfile) {
       changeProfile(_tempMaxProfile); // reduce profile 
     } else if (!_tempMaxProfile &&  profileUp && profileUp.maxRemoteUsers >= _remoteUserCount ) { // after about 5 seconds of very good and can handle that many users
-      if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && _brHighObserved > ResultCountToStepUp && _currentProfile < _profiles.length - 1) {
+      if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && (_brHighObserved > ResultCountToStepUp || !_switchForFPSAndBR) && _currentProfile < _profiles.length - 1) {
         changeProfile(_currentProfile + 1); // increase profile
       }
     }
@@ -152,8 +153,9 @@ var AgoraRTCUtils = (function () {
     _brHighObserved = 0;
     _fpsLowObserved = 0;
     var profile = _profiles[profileInd];
-    console.log("Auto Adjust Changing Profile to " + profile.id);
+    
     if (_publishClient && _publishClient._highStream && _publishClient._highStream.videoTrack) {
+      console.log("Auto Adjust Changing Profile to " + profile.id);
       _publishClient._highStream.videoTrack.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
     }
   }
@@ -483,6 +485,7 @@ var AgoraRTCUtils = (function () {
 
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
+    
     if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 12 ) {
       // critical or poor
 
@@ -494,13 +497,13 @@ var AgoraRTCUtils = (function () {
       }
 
       if (_clientStatsMap.AvgRxRVol > 20 ||  _clientStatsMap.AvgRxNR > 30 ) {
-        _clientStatsTrackMap.RemoteStatusExtra=RemoteStatusCritical;
+        _clientStatsMap.RemoteStatusExtra=RemoteStatusCritical;
       } else {
-        _clientStatsTrackMap.RemoteStatusExtra=RemoteStatusPoor;
+        _clientStatsMap.RemoteStatusExtra=RemoteStatusPoor;
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > 8 ||  _clientStatsMap.AvgRxNR > 5 ) {
+    else if (_clientStatsMap.AvgRxRVol > 7 ||  _clientStatsMap.AvgRxNR > 4 ) {
       // critical 
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
@@ -525,6 +528,7 @@ var AgoraRTCUtils = (function () {
 
     _clientStatsMap.RemoteStatusDuration=Math.floor(_clientStatsTrackMap.RemoteStatusDuration/1000);
     _clientStatsMap.RemoteStatus= _clientStatsTrackMap.RemoteStatus;
+    
     //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 
     _remoteUserCount=_clientStatsMap.UserCount;
@@ -612,8 +616,9 @@ strategy
 
 
   return { // public interfaces
-    startAutoAdjustResolution: function (client, initialProfile) {
+    startAutoAdjustResolution: function (client, initialProfile, switchForFPSAndBR) {
       _publishClient = client;
+      _switchForFPSAndBR = switchForFPSAndBR;
       _currentProfile = getProfileIndex(initialProfile);
       if (_currentProfile < 0)
         throw 'Auto Adjust Profile Not Found';

@@ -194,6 +194,11 @@ class AgoraMultiChanelApp {
     this.screenClient;
 
     // Bandwidth Control
+    this.bwLastDecreaseTime=0;
+    this.bwLastDecreaseCount=0;
+    this.bwLastIncreaseTime=0;
+    this.bwLastIncreaseCount=0;
+
     this.lowStreamResolutionSwitchWait = 10 * 1000;
     this.lowStreamResolutionSwitch = 0;
 
@@ -281,33 +286,47 @@ class AgoraMultiChanelApp {
     //var agg= Math.sqrt(clientStats.SumRxAggRes);
     var agg= clientStats.SumRxAggRes;
 
-    var stats1 =
-
-    "Receive Stats - Users: " + clientStats.UserCount + 
-    //" RxAggregate:" + (agg*(16/9)).toFixed(0) + "x" +(agg*(9/16)).toFixed(0) +
+    var stats1 = "Receive Stats - Users: " + clientStats.UserCount + 
     " AggRes:" + agoraApp.fixStat((agg/720).toFixed(0) + "x" +"720");
 
     if ( clientStats.UserCount>0) {
       stats1=stats1 + "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0),true) + 
-  //    " fdd " + AgoraRTCUtils.RemoteStatusCritical +
     "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0),true) +
-    "Status:" + clientStats.RemoteStatus +
+    "Status:" + agoraApp.getRemoteStatusDisplay(clientStats) +
     " Duration:" + clientStats.RemoteStatusDuration +
     " Bitrate (kbps):"+agoraApp.fixStat((clientStats.RecvBitrate/1000).toFixed(0)) ;
     }
 
      var stats2 = "";
-
      if (clientStats.TxSendResolutionWidth) {
       stats2="Transmit Stats - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0),true) +
       "Profile "+clientStats.TxProfile+" "+
       "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" +clientStats.TxSendResolutionHeight) +
       "Bitrate (kbps):" +agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0)) ;
      }
-        
-    document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2;
+
+    var stats3 =  " Subs: Audio " + agoraApp.getMapSize(agoraApp.audioSubscriptions) + "sub/" + agoraApp.audioPublishersByPriority.length + "pub/" + agoraApp.maxAudioSubscriptions + "max | Video " + agoraApp.getMapSize(agoraApp.videoSubscriptions) + "sub/" + agoraApp.videoPublishersByPriority.length + "pub (" + agoraApp.allowedVideoSubs + "allow/" +  agoraApp.getMaxVideoTiles()  + "max)";
+    document.getElementById("renderFrameRate").innerHTML =  stats1+ "<br/>" + stats2+ "  " + stats3;
   }
   
+  getRemoteStatusDisplay(clientStats){
+
+     if (clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood) {
+       return "Good";
+     } else if (clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusFair) {
+       return "Fair";
+     } else if (clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusPoor) {
+
+       if (clientStats.RemoteStatusExtra==AgoraRTCUtils.RemoteStatusCritical) {
+        return "Crit";
+       } else {
+        return "Poor";
+       }
+     }
+
+     return "NA";
+
+  }
 
   displayClientVideoStatisticsMobile(clientStats) {
 
@@ -321,7 +340,7 @@ class AgoraMultiChanelApp {
     if ( clientStats.UserCount>0) {
       stats1=stats1 + "RVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0),true) + 
     "NRAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0),true) +
-    "St:" + clientStats.RemoteStatus 
+    "St:" + agoraApp.getRemoteStatusDisplay(clientStats) +
     "Dur:" + clientStats.RemoteStatusDuration +
     "Br (k):"+agoraApp.fixStat((clientStats.RecvBitrate/1000).toFixed(0)) ;
     }
@@ -384,9 +403,15 @@ class AgoraMultiChanelApp {
         }
 */
 
+        
+        var streamType=agoraApp.videoSubscriptions[userStats.uid].streamType;
+        var sd="high";
+        if (streamType==1) {
+          sd="low";
+        }
 
         stats_display.innerHTML = "<span class='stats_display_inner'> "+         
-          " Res: "+          userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight +" <br/> "+
+          " Res: "+          userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " ("+sd+") "+"<br/> "+
           " Bitrate: "+          userStats.receiveBitrate +" <br/> "+
           " Render FPS: "+          userStats.renderRateMean.toFixed(0)  +" <br/> "+
           " Render Vol%: "+        userStats.renderRateStdDeviationPerc.toFixed(0)+" <br/> " +
@@ -512,17 +537,19 @@ class AgoraMultiChanelApp {
     }
   }
 
-  changeAllVideoStreamTypes(streamType,force) {
+  changeAllVideoStreamTypes(streamType,force,batch) {
     var that = this;
     var count=0;
     Object.keys(this.videoSubscriptions).forEach( function (key) {
       var user = that.userMap[key];
       var client = that.videoPublishers[key];
-      if (that.videoSubscriptions[key].streamType!=streamType || force) {
+      if ((that.videoSubscriptions[key].streamType!=streamType || force) && (batch==0 || batch > count) ) {
         client.setRemoteVideoStreamType(user.uid, streamType);
-
         that.videoSubscriptions[key].streamType=streamType;
         count++;
+        //if (batch>0 && count==batch) {
+        //  return batch
+       // }
       }
     });
     return count;
@@ -654,6 +681,10 @@ class AgoraMultiChanelApp {
     if (tdiff>=0 && tdiff<3){
       return; // wait for 3 seconds in new state
     }
+
+    if (tdiff>=0 && tdiff<6 && this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood ){
+      return; // wait for 6 seconds if good
+    }
     this.remoteStatusDurationCache=this.clientStats.RemoteStatusDuration;
 
     console.log(" manageRampUpAndDown "+this.remoteStatusDurationCache+" "+this.clientStats.RemoteStatus+" "+this.shareContentOnDisplay)
@@ -663,20 +694,80 @@ class AgoraMultiChanelApp {
     {
       // can check if critical         
       // calling low on SS no issue
-     var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType);        
-     console.log(" count DOWN "+count);
+      // batch size 
+
+
+
+      var batch=Math.ceil(this.clientStats.UserCount/5); // 20% drop 
+      // if we have increased recently then decrease slowly
+
+      if (this.clientStats.RemoteStatusExtra==AgoraRTCUtils.RemoteStatusCritical) {
+       batch=Math.ceil(this.clientStats.UserCount/3); // 33% drop 
+      }
+      if (this.bwLastDecreaseTime-this.bwLastIncreaseTime < 20000) { // flip flop
+        batch=this.bwLastIncreaseCount;
+      }
+
+      var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,batch);        
+      console.log(" count DOWN batch="+batch+" count="+count+" RemoteStatusExtra "+this.clientStats.RemoteStatusExtra);
       
-  
+        // reduce VIDEO allowed subs
+      if (count==0) {
+        if (this.allowedVideoSubs - this.allowedVideoSubsDecreaseBy >= this.minVideoAllowedSubs) {
+          this.allowedVideoSubs = this.allowedVideoSubs - this.allowedVideoSubsDecreaseBy;
+        } else if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
+          this.allowedVideoSubs--;
+        }
+        // reduce AUDIO allowed subs
+        if (this.allowedAudioSubs > this.minAudioAllowedSubs) {
+          this.allowedAudioSubs--;
+        }
+      }
+
+      if (count>0){
+        this.bwLastDecreaseTime=Date.now();
+        this.bwLastDecreaseCount=count;
+      }
+
     } else if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood)// && !this.shareContentOnDisplay)
     {
-      var count=this.changeAllVideoStreamTypes(this.HighVideoStreamType);   
-      console.log(" count UP "+count);      
-      // do we have all possible subs? 
 
-      // are they all top quality - batches
+      // BEWARE FLIP FLOPS
+      // RATES UP AND DOWN
+
+
+      var batch=Math.ceil(this.clientStats.UserCount/8); // 12.5% increase
+      if (this.bwLastDecreaseTime-this.bwLastIncreaseTime < 30000) { // flip flop
+        batch=1;
+      }
+
+      var count=this.changeAllVideoStreamTypes(this.HighVideoStreamType, false, batch);            
+      console.log(" count UP batch="+batch+" count="+count); 
+
+
+      // increase VIDEO allow subs
+      if (count==0) {
+          if (this.allowedVideoSubs <= (this.getMaxVideoTiles() - this.allowedVideoSubsIncreaseBy) && this.allowedVideoSubs <= (this.getMapSize(this.videoPublishers) - this.allowedVideoSubsIncreaseBy) && this.allowedVideoSubs < (this.getMapSize(this.videoSubscriptions) + this.allowedVideoSubsIncreaseBy)) {
+            this.allowedVideoSubs = this.allowedVideoSubs + this.allowedVideoSubsIncreaseBy;
+          } else if (this.allowedVideoSubs <= (this.getMaxVideoTiles() - 1) && this.allowedVideoSubs <= (this.getMapSize(this.videoPublishers) - 1) && this.allowedVideoSubs < (this.getMapSize(this.videoSubscriptions) + 1)) {
+            this.allowedVideoSubs = this.allowedVideoSubs + 1;
+          }
+          // increase AUDIO allow subs
+          if (this.allowedAudioSubs < this.maxAudioSubscriptions && this.allowedAudioSubs < (this.getMapSize(this.audioSubscriptions) + 1)) {
+            this.allowedAudioSubs = this.getMapSize(this.audioSubscriptions) + 1;
+          }
+     }
+
+     if (count>0) { 
+      this.bwLastIncreaseCount=count;
+      this.bwLastIncreaseTime=Date.now();
+    }
 
     }
 
+
+
+    // reduce encoding resolutions in share mode
     if (this.shareContentOnDisplay ) {
       if (this.clientStats.UserCount<7) {
         AgoraRTCUtils.setTempMaxProfile("180p");
@@ -687,15 +778,6 @@ class AgoraMultiChanelApp {
     }
 
 
-    /*
-    if status is bad then reduce quality 
-    if no quality left to reduce then drop number streams
-    take an action every X seconds
-
-
-    if fair then improve quality
-    if good then add in more streams
-    */
   }
 
 
@@ -1066,8 +1148,7 @@ class AgoraMultiChanelApp {
  setShareContentDisplay(enable) {
   this.shareContentOnDisplay = enable;
   if (enable) {
-   // this.changeAllVideoStreamTypes(this.LowVideoStreamType);  
-   AgoraRTCUtils.setTempMaxProfile("180p");
+    AgoraRTCUtils.setTempMaxProfile("180p");
   } else {
     AgoraRTCUtils.setTempMaxProfile(null);
   }
@@ -1362,7 +1443,7 @@ class AgoraMultiChanelApp {
     await this.clients[this.myPublishClient].publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
-      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11", AgoraRTCUtils.isIOS());
     }
     
     
@@ -1467,7 +1548,7 @@ class AgoraMultiChanelApp {
     await this.clients[this.myPublishClient].publish(this.localTracks.videoTrack);
     
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() &&  this.enableHDAdjustiOS === "true")) {
-      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11");
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11", AgoraRTCUtils.isIOS());
       AgoraRTCUtilEvents.on("LocalVideoStatistics",agoraApp.processLocalVideoStatistics);
 
     }
