@@ -150,7 +150,7 @@ class AgoraMultiChanelApp {
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
 
-    this.defaultVideoStreamType = this.LowVideoStreamType;
+    this.defaultVideoStreamType = this.HighVideoStreamType; //this.LowVideoStreamType;
     //if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
     //  this.defaultVideoStreamType = this.HighVideoStreamType;
    // }
