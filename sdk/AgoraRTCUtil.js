@@ -40,7 +40,8 @@ var AgoraRTCUtils = (function () {
   var _brLowObserved = 0;
   var _maxProfileDueToLowFPS = 1000;
   var _brHighObserved = 0;
-  var _remoteUserCount=-1; 
+  var _remoteVideoPublisherCount=-1; 
+
   var _tempMaxProfile=null;
   var _switchForFPSAndBR=false;
 
@@ -123,11 +124,11 @@ var AgoraRTCUtils = (function () {
     else if (_fpsLowObserved > ResultCountToStepDown) {
       _maxProfileDueToLowFPS = _currentProfile - 1; // do not return here
       changeProfile(_currentProfile - 1); // reduce profile
-    } else if (_remoteUserCount>0 &&  profile.maxRemoteUsers < _remoteUserCount) {
+    } else if (_remoteVideoPublisherCount>0 &&  profile.maxRemoteUsers < _remoteVideoPublisherCount) {
       changeProfile(_currentProfile - 1); // reduce profile
     }  else if (_tempMaxProfile!=null && _currentProfile>_tempMaxProfile) {
       changeProfile(_tempMaxProfile); // reduce profile 
-    } else if (!_tempMaxProfile &&  profileUp && profileUp.maxRemoteUsers >= _remoteUserCount ) { // after about 5 seconds of very good and can handle that many users
+    } else if (!_tempMaxProfile &&  profileUp && profileUp.maxRemoteUsers >= _remoteVideoPublisherCount ) { // after about 5 seconds of very good and can handle that many users
       if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && (_brHighObserved > ResultCountToStepUp || !_switchForFPSAndBR) && _currentProfile < _profiles.length - 1) {
         changeProfile(_currentProfile + 1); // increase profile
       }
@@ -294,7 +295,7 @@ var AgoraRTCUtils = (function () {
   const RemoteStatusCritical=3;
 
  var _clientStatsTrackMap={
-    RemoteStatus: 0,
+    RemoteStatus: -1,
     RemoteStatusStart: 0,
     RemoteStatusDuration: 0,
   };
@@ -333,7 +334,7 @@ var AgoraRTCUtils = (function () {
     // look for a volatile render rate 
     // emit results at end of rU list 
     _clientStatsMap={
-      UserCount : 0,
+      RemoteSubCount : 0,
       RecvBitrate : 0,
       SendBitrate : 0,
       MaxOutgoingAvailableBandwidth : 0,
@@ -343,6 +344,7 @@ var AgoraRTCUtils = (function () {
       SumRxAggRes: 0,
       AvgRxRVol: 0,
       AvgRxNR: 0,
+      MinRemoteDuration : -1,
       RemoteStatusDuration: 0,
       RemoteStatus: 0,
       RemoteStatusExtra: 0,
@@ -433,15 +435,21 @@ var AgoraRTCUtils = (function () {
 
               // emit user level stats
               AgoraRTCUtilEvents.emit("RemoteUserVideoStatistics", _userStatsMap[uid]);
+
               if ( _userStatsMap[uid].packetChange>0 &&  _userStatsMap[uid].totalDuration>5) // when people drop they remain for a while
               {
                 _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
                 if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
                   _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
                 }
-                _clientStatsMap.UserCount=_clientStatsMap.UserCount + 1;
+                _clientStatsMap.RemoteSubCount=_clientStatsMap.RemoteSubCount + 1;
                 _clientStatsMap.SumRxAggRes= _clientStatsMap.SumRxAggRes+(remoteTracksStats.video.receiveResolutionWidth*remoteTracksStats.video.receiveResolutionHeight)
-                }
+              } 
+
+              if (_userStatsMap[uid].totalDuration>-1 && (_clientStatsMap.MinRemoteDuration<0 || _userStatsMap[uid].totalDuration<_clientStatsMap.MinRemoteDuration)){
+                _clientStatsMap.MinRemoteDuration=_userStatsMap[uid].totalDuration;
+              }              
+
             }
           }
         }
@@ -474,9 +482,9 @@ var AgoraRTCUtils = (function () {
     // calculate aggregate user stats and aggregate channel (client) stats
 
     // don't report vvol on one user as gateway interferes on its own in 2 person call
-    if (_clientStatsMap.UserCount>1) {
-    _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.UserCount;
-    _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.UserCount;
+    if (_clientStatsMap.RemoteSubCount>1) {
+    _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.RemoteSubCount;
+    _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.RemoteSubCount;
     } else {
       _clientStatsMap.AvgRxRVol=-1;
       _clientStatsMap.AvgRxNR=-1;
@@ -531,7 +539,6 @@ var AgoraRTCUtils = (function () {
     
     //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 
-    _remoteUserCount=_clientStatsMap.UserCount;
     AgoraRTCUtilEvents.emit("ClientVideoStatistics",_clientStatsMap);
 
 
@@ -642,7 +649,10 @@ strategy
       else {
         _tempMaxProfile=null;
       }
-    },    
+    }, 
+    setRemoteVideoPublisherCount: function (remoteVideoPublisherCount_) {
+      _remoteVideoPublisherCount=remoteVideoPublisherCount_;
+    },      
     isIOS: function () {
       return isIOS();
     },
