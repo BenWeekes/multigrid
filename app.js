@@ -594,8 +594,8 @@ class AgoraMultiChanelApp {
   }
 
   changeVideoStreamType(uid_string, streamType) {
-    var user = that.userMap[uid_string];
-    var client = that.videoPublishers[uid_string];
+    var user = this.userMap[uid_string];
+    var client = this.videoPublishers[uid_string];
     if (this.videoSubscriptions[uid_string].streamType!=streamType) {
       client.setRemoteVideoStreamType(user.uid, streamType);
       this.videoSubscriptions[uid_string].streamType=streamType;
@@ -906,8 +906,7 @@ class AgoraMultiChanelApp {
         var client = that.audioPublishers[key];
         var prom = await client.unsubscribe(user, that.AUDIO);
         delete that.audioSubscriptions[key];
-        this.audioSubscriptionsCount=this.getMapSize(this.audioSubscriptions);
-        // console.warn(" removeAudioSubsIfNotInMap  " + key+ " allowedAudioSubs " + that.allowedAudioSubs);
+        that.audioSubscriptionsCount=that.getMapSize(that.audioSubscriptions);
       }
     });
   }
@@ -926,7 +925,7 @@ class AgoraMultiChanelApp {
           user.audioTrack.play();
         }).catch(e => {
           delete that.audioSubscriptions[uid_string];
-          this.audioSubscriptionsCount=this.getMapSize(this.audioSubscriptions);
+          that.audioSubscriptionsCount=that.getMapSize(that.audioSubscriptions);
           console.error(e);
         });
     }
@@ -943,7 +942,7 @@ class AgoraMultiChanelApp {
           var client = that.videoPublishers[key];
           var prom = await client.unsubscribe(user, that.VIDEO);
           delete that.videoSubscriptions[key];
-          that.videoSubscriptionsCount=this.getMapSize(that.videoSubscriptions);
+          that.videoSubscriptionsCount=that.getMapSize(that.videoSubscriptions);
         }
       }
     });
@@ -984,7 +983,7 @@ class AgoraMultiChanelApp {
 
       }).catch(e => {
         delete that.videoSubscriptions[uid_string];
-        this.videoSubscriptionsCount=this.getMapSize(this.videoSubscriptions);
+        that.videoSubscriptionsCount=that.getMapSize(that.videoSubscriptions);
         console.error(e);
       });
     }
@@ -1075,8 +1074,6 @@ class AgoraMultiChanelApp {
       
       // click to expand and subscribe to high quality
       var that = this;
-      var client = that.videoPublishers[uid_string];
-
       playerDomDiv.onclick = function () {
 
         if (isMobile() && that.landscape) {
