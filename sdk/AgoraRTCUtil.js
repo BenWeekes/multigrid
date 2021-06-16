@@ -55,7 +55,7 @@ var AgoraRTCUtils = (function () {
 
 
   var _profiles = [
-    { id: "90p", width: 160, height: 90, frameRate: 24, bitrateMin: 100,  moveDownThreshold: 40, moveUpThreshold: 100, bitrateMax: 200, maxRemoteUsers: 100 }, 
+  //  { id: "90p", width: 160, height: 90, frameRate: 24, bitrateMin: 100,  moveDownThreshold: 40, moveUpThreshold: 100, bitrateMax: 200, maxRemoteUsers: 100 }, 
     { id: "180p", width: 320, height: 180, frameRate: 24, bitrateMin: 150,  moveDownThreshold: 80, moveUpThreshold: 120, bitrateMax: 500, maxRemoteUsers: 16 }, 
     { id: "360p_low", width: 640, height: 360, frameRate: 24, bitrateMin: 120, moveDownThreshold: 120, moveUpThreshold: 600, bitrateMax: 1000, maxRemoteUsers: 4 },
     { id: "360p_11", width: 640, height: 360, frameRate: 24, bitrateMin: 400, moveDownThreshold: 250, moveUpThreshold: 650, bitrateMax: 1000, maxRemoteUsers: 4 },

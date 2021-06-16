@@ -423,6 +423,10 @@ class AgoraMultiChanelApp {
 */
 
         
+        var sobj=agoraApp.videoSubscriptions[userStats.uid];
+        if (!sobj) {
+          console.log(" no userStats.uid "+userStats.uid)
+        }
         var streamType=agoraApp.videoSubscriptions[userStats.uid].streamType;
         var sd="high";
         if (streamType==1) {
@@ -778,8 +782,8 @@ class AgoraMultiChanelApp {
       }
 
       // increase VIDEO allow subs
-      if (!noRamp && count==0) {
-        var batch=Math.ceil(this.clientStats.RemoteSubCount/8); // 12.5% increase
+      if (!noRamp && count==0 && !(this.shareContentOnDisplay && this.clientStats.RemoteSubCount>7 )) {
+        var batch=Math.ceil(this.clientStats.RemoteSubCount/4); // 25% increase
         if (slowRamp) { // flip flop
           batch=1;
         }
@@ -797,13 +801,19 @@ class AgoraMultiChanelApp {
 
     // reduce encoding resolutions in share mode
     if (this.shareContentOnDisplay ) {
-      if (this.clientStats.RemoteSubCount<7) {
         AgoraRTCUtils.setTempMaxProfile("180p");
-      }
-       else {
-        AgoraRTCUtils.setTempMaxProfile("90p");
-       }
+      if (this.clientStats.RemoteSubCount > 7) 
+        {
+          // subscribe to low stream
+         this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,0);   
+        }
     }
+    else if (this.clientStats.RemoteSubCount > 16) 
+    {
+      // subscribe to low stream
+      this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,0);   
+    }
+
 
 
   }
