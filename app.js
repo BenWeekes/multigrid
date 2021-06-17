@@ -585,7 +585,7 @@ class AgoraMultiChanelApp {
         var key=this.orderedVideoSubs[v];
         var user = that.userMap[key];
         var client = that.videoPublishers[key];
-        console.log( " changeAllVideoStreamTypes "+key+" "+that.videoSubscriptions[key]);
+       // console.log( " changeAllVideoStreamTypes "+key+" "+that.videoSubscriptions[key]);
 
         if (that.videoSubscriptions[key] && (that.videoSubscriptions[key].streamType!=streamType || force) && that.mainVideoId !== key && (batch==0 || batch > count) ) {
           client.setRemoteVideoStreamType(user.uid, streamType);
@@ -640,16 +640,16 @@ class AgoraMultiChanelApp {
 
     // State Machine
     /*
-    The outgoing res will be controlled by number of remote publishers in AgoraRTCUtils startAutoAdjustResolution
-      * this can be an issue if high stream is reduced too much but active speaker / random selection requires a user to send high stream
-      * compromise could be to limit high reduction and use the low stream where supported
+      The outgoing (encoding) resolution will be controlled by number of remote publishers in AgoraRTCUtils startAutoAdjustResolution
+      * this can be an issue if high stream is reduced too much as active speaker / random selection requires a user to send high stream
+      * the compromise is be to limit high resolution reduction and use the low stream (where supported) when more than 16 users
 
     If content is being shared in the room (watchparty or screenshare) then this is set in AgoraRTCUtils and startAutoAdjustResolution 
     high stream outgoing res. This is best because some browsers and devices don't support dual stream
     
 
-    General operation is to show as many remote videos as possible starting from 4 on mobile and 16 on desk/laptop
-    If quality of cpu/network is BAD then reduce load
+    The basic operation is to show as many remote videos as possible starting from 4 on mobile and 16 on desk/laptop
+    If quality of cpu/network is BAD then reduce the quality and then number of streams
 
       - showing low stream
         this is only useful where < 16 publishers otherwise it will already be equivelent to low stream
@@ -672,22 +672,10 @@ class AgoraMultiChanelApp {
         if quality is not high then start increasing quality
 
 
-
-    video publishers: all publishers available 
-    video subscribers: all subs at either high or low quality 
-    this.videoSubscriptions = {}; // maps to time to get minRemoteStreamLife and gets count often which is not efficient 
-      should be array to get count quickly 
-      and a map of uid to quality
-
-
     */
     if (!this.clientStats){
       return;
     }
-    // status and duration
-    //clientStats.RemoteStatus;
-    //clientStats.RemoteStatusDuration;
-    // this.allowedVideoSubs 
 
 
     if (this.clientStats.RemoteStatus!=this.remoteStatusCache){
@@ -701,34 +689,30 @@ class AgoraMultiChanelApp {
     }
     
 
-    var tdiff=this.clientStats.RemoteStatusDuration-this.remoteStatusDurationCache;
-    if (tdiff>=0 && tdiff<3){
-      return; // wait for 3 seconds in new state
+    var currentStatusDuration=this.clientStats.RemoteStatusDuration-this.remoteStatusDurationCache;
+    if (currentStatusDuration>=0 && currentStatusDuration<3){
+      return; // wait for 3 seconds in new state before acting 
     }
-
-    if (tdiff>=0 && tdiff<3 && this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood ){
-      return; // wait for 3 seconds if good
-    }
+    // resets duration cache
     this.remoteStatusDurationCache=this.clientStats.RemoteStatusDuration;
 
-    console.log(" manageRampUpAndDown RemoteStatus "+this.clientStats.RemoteStatus+"  shareContentOnDisplay "+this.shareContentOnDisplay+" tdiff="+tdiff+"  MinRemoteDuration "+ this.clientStats.MinRemoteDuration+" RTCUtilsInitialised "+this.RTCUtilsInitialised )
+    console.log("manageRampUpAndDown RemoteStatus "+this.clientStats.RemoteStatus+"  shareContentOnDisplay "+this.shareContentOnDisplay+" currentStatusDuration="+currentStatusDuration+"  MinRemoteDuration "+ this.clientStats.MinRemoteDuration+" RTCUtilsInitialised "+this.RTCUtilsInitialised )
 
-    // if bad/critical and not done anything for 5s then 
     if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusPoor)
     {
-      // can check if critical         
-      // calling low on SS no issue
+
       // batch size 
       this.bwLastDecreaseTime=Date.now();
       var batch=Math.ceil(this.clientStats.RemoteSubCount/5); // 20% drop 
-      // if we have increased recently then decrease slowly
 
       if (this.clientStats.RemoteStatusExtra==AgoraRTCUtils.RemoteStatusCritical) {
-       batch=Math.ceil(this.clientStats.RemoteSubCount/3); // 33% drop 
+       batch=Math.ceil(this.clientStats.RemoteSubCount/3); // larger 33% if critical
       }
 
-      if (this.bwLastDecreaseTime-this.bwLastIncreaseTime < 15000) { // flip flop
+      // if we have increased recently then decrease slowly
+      if (this.bwLastDecreaseTime-this.bwLastIncreaseTime < 15000 && this.bwLastIncreaseCount>0) { // within 15 seconds since climb
         batch=this.bwLastIncreaseCount;
+        this.bwLastIncreaseCount=0;
       }
 
       var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,batch);        
@@ -746,26 +730,22 @@ class AgoraMultiChanelApp {
           this.allowedAudioSubs--;
         }
       }
-
-
       this.bwLastDecreaseCount=count;
 
     } else if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood && this.RTCUtilsInitialised &&  this.clientStats.MinRemoteDuration > 3 )// && !this.shareContentOnDisplay)
-    { // RTCUtilsInitialised is checked to ensure we don't ramp up until the camera is enabled.
-
-      // BEWARE FLIP FLOPS
-      // RATES UP AND DOWN
-
+    { 
+      // RTCUtilsInitialised is checked to ensure we don't ramp up until the camera is enabled.
       // show more remote subs before going high quality
+
       this.bwLastIncreaseTime=Date.now();
       var slowRamp=false;
       var noRamp=false;
       var count=0;
 
-      if (this.bwLastIncreaseTime-this.bwLastDecreaseTime < 6000) { // flip flop
+      if (this.bwLastIncreaseTime-this.bwLastDecreaseTime < 6000) { // any problems in last 6 seconds
         noRamp=true;
       }
-      else if (this.bwLastIncreaseTime-this.bwLastDecreaseTime < 20000) { // flip flop
+      else if (this.bwLastIncreaseTime-this.bwLastDecreaseTime < 20000) { // if any problems in last 20 seconds?
         slowRamp=true;
       }
 
@@ -802,13 +782,13 @@ class AgoraMultiChanelApp {
     // reduce encoding resolutions in share mode
     if (this.shareContentOnDisplay ) {
         AgoraRTCUtils.setTempMaxProfile("180p");
-      if (this.clientStats.RemoteSubCount > 7) 
+      if (this.clientStats.RemoteSubCount > 7)  // max tiles below content area
         {
           // subscribe to low stream
          this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,0);   
         }
     }
-    else if (this.clientStats.RemoteSubCount > 16) 
+    else if (this.clientStats.RemoteSubCount > 16) // max 180p for keeping under 720p
     {
       // subscribe to low stream
       this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,0);   
