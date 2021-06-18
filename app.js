@@ -774,9 +774,7 @@ class AgoraMultiChanelApp {
      }
 
       this.bwLastIncreaseCount=count;
-
     }
-
 
 
     // reduce encoding resolutions in share mode
@@ -793,8 +791,6 @@ class AgoraMultiChanelApp {
       // subscribe to low stream
       this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,0);   
     }
-
-
 
   }
 
@@ -1982,7 +1978,7 @@ class AgoraMultiChanelApp {
 
   updateUILayout() {
 
-    this.setMobileOneTime();
+    this.setMobileOneTime(); 
     this.removeAgoraInnerVideoStyling();
 
     var height = window.innerHeight;
@@ -1994,27 +1990,23 @@ class AgoraMultiChanelApp {
     }
 
     // shownPersonToPerson is 2 person face time style call
-    // TODO move this to checking after subs
-   // var video_subs = this.getMapSize(this.videoSubscriptions); 
-   var video_subs = this.usersConnected.length; 
-    if (video_subs == 1 && this.gridLayout && !this.shareContentOnDisplay) {
+
+   var connected_users = this.usersConnected.length; 
+    if (connected_users == 1 && this.gridLayout && !this.shareContentOnDisplay) {
       this.shownPersonToPerson = true;
       this.toggleLayout(true);
-    } else if (video_subs != 1 && this.shownPersonToPerson && !this.gridLayout && !this.shareContentOnDisplay) {
+    } else if (connected_users != 1 && this.shownPersonToPerson && !this.gridLayout && !this.shareContentOnDisplay) {
       this.shownPersonToPerson = false;
       this.toggleLayout();
     }
 
 
-    var cell_width = this.CellWidthBase;
+    var cell_width = this.CellWidthBase; // 160 and smallest possible size 
     var cell_height = this.CellHeightBase;
     var cell_margin = 4;
     var grid_padding = 6;
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
     var toolbar_height_and_focus_height = toolbar_height;
-
-
-
 
     var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
     var cellCount = cells.length;
@@ -2025,7 +2017,7 @@ class AgoraMultiChanelApp {
     var cols = this.getGridColCount(cellCount);
     var rows = Math.ceil(cellCount / cols);
 
-    // less square on mobile
+    // desktop grid is square but mobile is rectangular
     if (isMobile() && cols > 2) {
       if (this.landscape) {
         if (cellCount < 16) {
@@ -2054,7 +2046,6 @@ class AgoraMultiChanelApp {
     //  follow speaker/content mode
     if (!this.gridLayout) { //
       // keep single row
-
       // portrait mobile can handle up to 3 rows of 2
       if (isMobile()) {
         if (!this.landscape) { // portrait
@@ -2071,9 +2062,8 @@ class AgoraMultiChanelApp {
         }
       }
         
-     
       cols = Math.ceil(cellCount / rows);
-      if (video_subs == 1 && !this.shareContentOnDisplay) {  // handle two people - me and one other
+      if (connected_users == 1 && !this.shareContentOnDisplay) {  // handle two people - me and one other
         var focus_height = height - toolbar_height - grid_padding * 3;
         var focus_width = width - (grid_padding * 2);
         document.getElementById("focus-video").style.height = focus_height + 'px';
@@ -2102,48 +2092,6 @@ class AgoraMultiChanelApp {
     document.getElementById("agoravideoplayer").style.height = document.getElementById("focus-video").style.height;
     document.getElementById("agoravideoplayer").style.width = document.getElementById("focus-video").style.width;
 
-    var toolbar_width = 0;
-
-    // mobile special layouts
-    /*
-    if (isMobile()) {
-      
-      //TODOX for mobile in landscape put back to grid mode (if not share content or shownPersonToPerson)
-      if (!this.gridLayout && this.landscape && !this.shareContentOnDisplay && video_subs != 1) {
-        this.toggleLayout();
-      }
-
-      if (this.landscape && rows > 1) {
-        this.mobileUIUpdatedLandscape = true;
-        this.mobileUIUpdatedPortrait = false;
-        toolbar_width = 120;
-        var that = this;
-        var els = document.getElementsByClassName("default_icon");
-        Array.prototype.forEach.call(els, function (el) {
-          if (!el.classList.contains("hidden"))
-            el.classList.add("default_icon_mobile_landscape");
-        });
-        document.getElementById("main_body").classList.add("main_body_mobile_landscape");
-        document.getElementById("media_controls").classList.add("media_controls_mobile_landscape");
-        document.getElementById("settings_controls").classList.add("hidden");
-        document.getElementById("stats_container").classList.add("hidden")
-        document.getElementById("toolbar").classList.remove("headerOpen");
-        // document.getElementById("stats_container").classList.add("hidden");
-
-      } else {
-        this.mobileUIUpdatedLandscape = false;
-        this.mobileUIUpdatedPortrait = true;
-        var els = document.getElementsByClassName("default_icon");
-        Array.prototype.forEach.call(els, function (el) {
-          el.classList.remove("default_icon_mobile_landscape");
-        });
-        document.getElementById("main_body").classList.remove("main_body_mobile_landscape");
-        document.getElementById("media_controls").classList.remove("media_controls_mobile_landscape");
-        document.getElementById("settings_controls").classList.remove("hidden");
-        // document.getElementById("stats_container").classList.remove("hidden");
-      }
-    }*/
-
     // mobile grid gaps
     if (isMobile()) {
       var mel= document.getElementById("main_body");
@@ -2164,13 +2112,12 @@ class AgoraMultiChanelApp {
       }
     }
 
-
     document.getElementById("grid").style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
     var grid_available_height = height - toolbar_height_and_focus_height - (grid_padding * (rows + 2));
-    var grid_available_width = width - toolbar_width - (grid_padding * cols);
+    var grid_available_width = width - (grid_padding * cols);
 
-    if (video_subs == 1 && !this.gridLayout && !this.shareContentOnDisplay) { // 1 other person to display larger
+    if (connected_users == 1 && !this.gridLayout && !this.shareContentOnDisplay) { // 1 other person to display larger
       document.getElementById("grid").classList.add("grid_over");
       grid_available_height = 90;
     } else {
@@ -2214,28 +2161,32 @@ class AgoraMultiChanelApp {
 
     var grid_actual_width = document.getElementById("grid").offsetWidth;
     var grid_actual_height = document.getElementById("grid").offsetHeight;
-    
-    /*
-    if (this.landscape && isMobile() && rows > 1 &&  !this.shareContentOnDisplay) {
-      document.getElementById("grid").style.marginTop = (height - grid_actual_height) / 2 + 'px';
-      document.getElementById("grid").style.marginLeft = '0px';
-      document.getElementById("media_controls").style.marginTop = ((height / 2) - 100) + 'px';
+
+    document.getElementById("grid").style.marginTop = '0px';
+    var ml= ((width - grid_actual_width) / 2);// - (cell_margin + 1) ;
+    if (ml<0) {
+      ml=0;
+
     }
-    else if (this.landscape && isMobile() &&  !this.shareContentOnDisplay) {
-      document.getElementById("grid").style.marginTop = (height - grid_actual_height - toolbar_height_and_focus_height) / 2 + 'px';
-      document.getElementById("grid").style.marginLeft = '0px';
-      document.getElementById("media_controls").style.marginTop = '0px';
-    }
-    else {*/
-      document.getElementById("grid").style.marginTop = '0px';
-      document.getElementById("grid").style.marginLeft = ((width - grid_actual_width) / 2) - (cell_margin + 1) + 'px';
-      document.getElementById("media_controls").style.marginTop = '0px';
-    //}
+    document.getElementById("grid").style.marginLeft = ml + 'px';
+    document.getElementById("media_controls").style.marginTop = '0px';
 
     document.getElementById("local-player").style.width = cell_width + 'px';
     document.getElementById("local-player").style.height = cell_height + 'px';
 
-    if (document.getElementById(this.vadUid) && this.gridLayout) {
+    /*
+    center the local-player when alone 
+    local-player-width = cell_width (1127)
+    grid_width = cell_width + cell_margin +3; (1134)
+    margin_left = ((width - grid_width) / 2) - (cell_margin + 1) ;
+
+
+
+
+    */
+
+    // add orange box around speaker 
+    if (this.vadUid && document.getElementById(this.vadUid) && this.gridLayout) {
       document.getElementById(this.vadUid).classList.add("remote_video_active");
       if (document.getElementById(this.vadUid).children[0]) {
         document.getElementById(this.vadUid).children[0].style.backgroundColor = "";
