@@ -149,14 +149,21 @@ var AgoraRTCUtils = (function () {
     if (profileInd < 0 || profileInd >= _profiles.length) {
       return;
     }
+
+
+
     _currentProfile = profileInd;
+    var profile = _profiles[profileInd];
+
+    _fpsLowObserved = 0;
+    console.log("Auto Adjust Changing Profile to " + profile.id+" _brLowObserved="+_brLowObserved+" _brHighObserved="+_brHighObserved+" _fpsLowObserved="+_fpsLowObserved); 
+
     _brLowObserved = 0;
     _brHighObserved = 0;
     _fpsLowObserved = 0;
-    var profile = _profiles[profileInd];
+
     
     if (_publishClient && _publishClient._highStream && _publishClient._highStream.videoTrack) {
-      console.log("Auto Adjust Changing Profile to " + profile.id);
       _publishClient._highStream.videoTrack.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
     }
   }
@@ -299,8 +306,6 @@ var AgoraRTCUtils = (function () {
     RemoteStatusStart: 0,
     RemoteStatusDuration: 0,
   };
-
-
  
   function calculateRenderRateVolatility(statsMap){
 
@@ -358,9 +363,10 @@ var AgoraRTCUtils = (function () {
 
     for (var i = 0; i < _rtc_num_clients; i++) {
       var client = _rtc_clients[i];
-      if (!client._users.length) {
-        continue;
-      }
+
+     // if (!client._users.length) {
+     //   continue;
+     // }
 
       if (client._remoteStream) {
         for (var u = 0; u < client._users.length; u++) {
@@ -482,14 +488,14 @@ var AgoraRTCUtils = (function () {
     // calculate aggregate user stats and aggregate channel (client) stats
 
     // don't report vvol on one user as gateway interferes on its own in 2 person call
-    if (_clientStatsMap.RemoteSubCount>1) {
+    //if (_clientStatsMap.RemoteSubCount>1) {
     _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.RemoteSubCount;
     _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.RemoteSubCount;
-    } else {
-      console.log(" _clientStatsMap.RemoteSubCount "+ _clientStatsMap.RemoteSubCount)
-      _clientStatsMap.AvgRxRVol=-1;
-      _clientStatsMap.AvgRxNR=-1;
-    }
+   // } else {
+   //   console.log(" _clientStatsMap.RemoteSubCount "+ _clientStatsMap.RemoteSubCount)
+   //   _clientStatsMap.AvgRxRVol=-1;
+   //   _clientStatsMap.AvgRxNR=-1;
+   // }
     
 
     /// determine remote status, start and duration

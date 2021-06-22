@@ -65,7 +65,7 @@ class AgoraMultiChanelApp {
     this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 1;
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 6 * 1000;
     // number of subscriptions before moving to low stream
-    this.switchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 2 : 9);
+    this.switchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 1 : 4);
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
@@ -149,8 +149,7 @@ class AgoraMultiChanelApp {
 
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
-
-    this.defaultVideoStreamType = this.LowVideoStreamType; //this.HighVideoStreamType; //this.LowVideoStreamType;
+    this.defaultVideoStreamType = this.HighVideoStreamType; //this.LowVideoStreamType;
     //if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
     //  this.defaultVideoStreamType = this.HighVideoStreamType;
    // }
@@ -562,6 +561,16 @@ class AgoraMultiChanelApp {
     return this.maxVideoTiles;
   }
 
+
+  doSwitchRxVideoStreamTypeAt2() {
+    var subs = this.videoSubscriptionsCount;
+    if (subs > this.switchVideoStreamTypeAt && this.defaultVideoStreamType == this.HighVideoStreamType) {
+      this.defaultVideoStreamType = this.LowVideoStreamType;
+    } else if (subs < this.switchVideoStreamTypeAt && this.defaultVideoStreamType != this.HighVideoStreamType) {
+      this.defaultVideoStreamType = this.HighVideoStreamType;
+    }
+  }
+
   /*
 
   doSwitchRxVideoStreamTypeAt() {
@@ -632,7 +641,7 @@ class AgoraMultiChanelApp {
       //this.doSwitchRxVideoStreamTypeAt();
     }
     //this.changeLowStreamResolutionIfNeeded(); // not reliable or cross browser
-
+    this.doSwitchRxVideoStreamTypeAt2();
     this.manageGrid();
   }
  
