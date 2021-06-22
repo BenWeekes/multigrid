@@ -737,7 +737,7 @@ class AgoraMultiChanelApp {
         this.bwLastDecreaseCount=count;
       }
       
-      console.log("Move Down: batch="+batch+" moveLow="+count+" reduceSubs="+reduceVideoSubsBy);
+      console.log("Move Down: batch="+batch+" moveLow="+count+" reduceSubs="+reduceVideoSubsBy+"  videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount);
 
     } else if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood && this.RTCUtilsInitialised &&  this.clientStats.MinRemoteDuration > 3 )// && !this.shareContentOnDisplay)
     { 
@@ -782,7 +782,7 @@ class AgoraMultiChanelApp {
       console.log("Move Up: batch="+batch+" moveHigh="+count+" reduceSubs=0 videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount);
 
      } else {
-      console.log("Move Up: batch=0 moveHigh=0 increaseSubs="+count+" RemoteSubCount="+this.clientStats.RemoteSubCount);
+      console.log("Move Up: batch=0 moveHigh=0 increaseSubs="+count+" RemoteSubCount="+this.clientStats.RemoteSubCount)+"  videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount;
      }
 
      
