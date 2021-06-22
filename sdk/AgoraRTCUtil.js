@@ -486,6 +486,7 @@ var AgoraRTCUtils = (function () {
     _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.RemoteSubCount;
     _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.RemoteSubCount;
     } else {
+      console.log(" _clientStatsMap.RemoteSubCount "+ _clientStatsMap.RemoteSubCount)
       _clientStatsMap.AvgRxRVol=-1;
       _clientStatsMap.AvgRxNR=-1;
     }

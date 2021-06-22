@@ -696,7 +696,7 @@ class AgoraMultiChanelApp {
     // resets duration cache
     this.remoteStatusDurationCache=this.clientStats.RemoteStatusDuration;
 
-    console.log("manageRampUpAndDown RemoteStatus "+this.clientStats.RemoteStatus+"  shareContentOnDisplay "+this.shareContentOnDisplay+" currentStatusDuration="+currentStatusDuration+"  MinRemoteDuration "+ this.clientStats.MinRemoteDuration+" RTCUtilsInitialised "+this.RTCUtilsInitialised )
+    console.log("manageRampUpAndDown RemoteStatus "+this.clientStats.RemoteStatus+"."+this.clientStats.RemoteStatusExtra+" shareContentOnDisplay "+this.shareContentOnDisplay+" currentStatusDuration="+currentStatusDuration+"  MinRemoteDuration "+ this.clientStats.MinRemoteDuration+" RTCUtilsInitialised "+this.RTCUtilsInitialised )
 
     if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusPoor)
     {
@@ -704,7 +704,6 @@ class AgoraMultiChanelApp {
       // batch size 
       this.bwLastDecreaseTime=Date.now();
       var batch=Math.ceil(this.clientStats.RemoteSubCount/5); // 20% drop 
-
       if (this.clientStats.RemoteStatusExtra==AgoraRTCUtils.RemoteStatusCritical) {
        batch=Math.ceil(this.clientStats.RemoteSubCount/3); // larger 33% if critical
       }
@@ -715,25 +714,35 @@ class AgoraMultiChanelApp {
         this.bwLastIncreaseCount=0;
       }
 
-      var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,batch);        
-      console.log(" count DOWN batch="+batch+" count="+count+" RemoteStatusExtra "+this.clientStats.RemoteStatusExtra);
+      var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,batch);    
+      var reduceVideoSubsBy=0;
+      console.log(" count DOWN batch="+batch+" count="+count );
+
       
         // reduce VIDEO allowed subs
       if (count==0) {
         if (this.allowedVideoSubs - this.allowedVideoSubsDecreaseBy >= this.minVideoAllowedSubs) {
           this.allowedVideoSubs = this.allowedVideoSubs - this.allowedVideoSubsDecreaseBy;
+          reduceVideoSubsBy=this.allowedVideoSubsDecreaseBy;
         } else if (this.allowedVideoSubs > this.minVideoAllowedSubs) {
           this.allowedVideoSubs--;
+          reduceVideoSubsBy=1;
         }
         // reduce AUDIO allowed subs
         if (this.allowedAudioSubs > this.minAudioAllowedSubs) {
           this.allowedAudioSubs--;
         }
+        this.bwLastDecreaseCount=reduceVideoSubsBy;
+      } else {
+        this.bwLastDecreaseCount=count;
       }
-      this.bwLastDecreaseCount=count;
+      
+      console.log("Move Down: batch="+batch+" moveLow="+count+" reduceSubs="+reduceVideoSubsBy);
 
     } else if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood && this.RTCUtilsInitialised &&  this.clientStats.MinRemoteDuration > 3 )// && !this.shareContentOnDisplay)
     { 
+
+      
       // RTCUtilsInitialised is checked to ensure we don't ramp up until the camera is enabled.
       // show more remote subs before going high quality
 
@@ -749,6 +758,7 @@ class AgoraMultiChanelApp {
         slowRamp=true;
       }
 
+      // first video add subs if some missing
       if (!noRamp && !slowRamp && this.allowedVideoSubs <= (this.getMaxVideoTiles() - this.allowedVideoSubsIncreaseBy) && this.allowedVideoSubs <= (this.videoPublishersCount - this.allowedVideoSubsIncreaseBy) && this.allowedVideoSubs < (this.videoSubscriptionsCount + this.allowedVideoSubsIncreaseBy)) {
         this.allowedVideoSubs = this.allowedVideoSubs + this.allowedVideoSubsIncreaseBy;
         count= this.allowedVideoSubsIncreaseBy;
@@ -761,18 +771,21 @@ class AgoraMultiChanelApp {
         count++;
       }
 
-      // increase VIDEO allow subs
+      // increase video quality
       if (!noRamp && count==0 && !(this.shareContentOnDisplay && this.clientStats.RemoteSubCount>7 )) {
         var batch=Math.ceil(this.clientStats.RemoteSubCount/4); // 25% increase
         if (slowRamp) { // flip flop
           batch=1;
         }
         var count=this.changeAllVideoStreamTypes(this.HighVideoStreamType, false, batch);            
-        console.log(" count UP batch="+batch+" count="+count); 
+
+      console.log("Move Up: batch="+batch+" moveHigh="+count+" reduceSubs=0 videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount);
+
      } else {
-        console.log(" count UP subs count="+count); 
+      console.log("Move Up: batch=0 moveHigh=0 increaseSubs="+count+" RemoteSubCount="+this.clientStats.RemoteSubCount);
      }
 
+     
       this.bwLastIncreaseCount=count;
     }
 
@@ -2163,7 +2176,7 @@ class AgoraMultiChanelApp {
     var grid_actual_height = document.getElementById("grid").offsetHeight;
 
     document.getElementById("grid").style.marginTop = '0px';
-    var ml= ((width - grid_actual_width) / 2);// - (cell_margin + 1) ;
+    var ml= ((width - grid_actual_width) / 2);// - (   + 1) ;
     if (ml<0) {
       ml=0;
 
