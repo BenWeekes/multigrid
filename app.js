@@ -150,7 +150,7 @@ class AgoraMultiChanelApp {
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
 
-    this.defaultVideoStreamType = this.HighVideoStreamType; //this.LowVideoStreamType;
+    this.defaultVideoStreamType = this.LowVideoStreamType; //this.HighVideoStreamType; //this.LowVideoStreamType;
     //if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
     //  this.defaultVideoStreamType = this.HighVideoStreamType;
    // }
@@ -716,8 +716,6 @@ class AgoraMultiChanelApp {
 
       var count=this.changeAllVideoStreamTypes(this.LowVideoStreamType,false,batch);    
       var reduceVideoSubsBy=0;
-      console.log(" count DOWN batch="+batch+" count="+count );
-
       
         // reduce VIDEO allowed subs
       if (count==0) {
@@ -742,7 +740,6 @@ class AgoraMultiChanelApp {
     } else if (this.clientStats.RemoteStatus==AgoraRTCUtils.RemoteStatusGood && this.RTCUtilsInitialised &&  this.clientStats.MinRemoteDuration > 3 )// && !this.shareContentOnDisplay)
     { 
 
-      
       // RTCUtilsInitialised is checked to ensure we don't ramp up until the camera is enabled.
       // show more remote subs before going high quality
 
@@ -782,7 +779,7 @@ class AgoraMultiChanelApp {
       console.log("Move Up: batch="+batch+" moveHigh="+count+" reduceSubs=0 videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount);
 
      } else {
-      console.log("Move Up: batch=0 moveHigh=0 increaseSubs="+count+" RemoteSubCount="+this.clientStats.RemoteSubCount)+"  videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount;
+      console.log("Move Up: batch=0 moveHigh=0 increaseSubs="+count+" videoSubCount="+this.videoSubscriptionsCount+" RemoteSubCount="+this.clientStats.RemoteSubCount;
      }
 
      
