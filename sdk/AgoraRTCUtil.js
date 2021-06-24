@@ -44,6 +44,24 @@ var AgoraRTCUtils = (function () {
 
   var _tempMaxProfile=null;
   var _switchForFPSAndBR=false;
+  var _forceHighResForSpeaker=false;
+  // if I am looking at remote user in content area and his resolution is below 360p_11
+  // send request to increase resolution if possible to 360p_11
+  // we dont want everyone in the room to have to keep requesting when it is standard speaker mode
+  // its possible though that even when speaking all remotes have you small
+
+  // we dont want to keep toggling
+
+  // option 1: increase res when talking: no good because everyone might be in grid mode
+  /*
+            if receiver is follow speaker and speaker is not >=360p then send him message telling him to stay high until speaking stops
+            if receiver is manual viewer and remote not >=360p tell him to stay high while pings sent.
+
+
+  */ 
+  // option 2: send the current large person notification to that person every 3 seconds or if following speaker - until not speaking
+  //           This person will drop back down if no request is received 
+
 
   var _outboundVideoStats={
     profile : "",
@@ -128,7 +146,7 @@ var AgoraRTCUtils = (function () {
       changeProfile(_currentProfile - 1); // reduce profile
     }  else if (_tempMaxProfile!=null && _currentProfile>_tempMaxProfile) {
       changeProfile(_tempMaxProfile); // reduce profile 
-    } else if (!_tempMaxProfile &&  profileUp && profileUp.maxRemoteUsers >= _remoteVideoPublisherCount ) { // after about 5 seconds of very good and can handle that many users
+    } else if (!_tempMaxProfile &&  profileUp && (profileUp.maxRemoteUsers >= _remoteVideoPublisherCount || _forceHighResForSpeaker) ) { // after about 5 seconds of very good and can handle that many users
       if (_fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS && (_brHighObserved > ResultCountToStepUp || !_switchForFPSAndBR) && _currentProfile < _profiles.length - 1) {
         changeProfile(_currentProfile + 1); // increase profile
       }
