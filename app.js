@@ -42,6 +42,7 @@ class AgoraMultiChanelApp {
     this.WATCH = "WATCH";
     this.WATCHYT = "WATCHYT";
     this.STOP_SCREENSHARE="STOP_SCREENSHARE";
+    this.INCREASE_RESOLUTION="INCREASE_RESOLUTION";
 
     this.VIDEO = "video";
     this.AUDIO = "audio";
@@ -152,6 +153,7 @@ class AgoraMultiChanelApp {
     this.LowVideoStreamType = 1;
     this.HighVideoStreamType = 0;
     this.defaultVideoStreamType = this.HighVideoStreamType;
+    this.bwLastIncreaseResolutionRequest = 0 ;
     
     // this.LowVideoStreamType;
     // if (this.mobileShowHighQualityAtStart === "true" || !isMobile()) {
@@ -802,24 +804,24 @@ class AgoraMultiChanelApp {
      
       this.bwLastIncreaseCount=count;
 
-      // if status is good and we have someone in main window and not sent message to him for a while 
-      // send a request to increase 
-      if (this.mainVideoId && this.bwLastIncreaseTime-this.bwLastMainWindowIdIncreaseTime > 3000) { // send every 3 seconds
-        
+      // if status is good and we have someone in main window at low res and not sent message to him for a while 
+      // send a request to increase every 3s
+      // he will stay higher res for 6s
+      if (this.mainVideoId && this.bwLastIncreaseTime-this.bwLastMainWindowIdIncreaseTime > 3000) { // send every 3 seconds    
         if (this.videoSubscriptions[this.mainVideoId].streamType==this.LowVideoStreamType){
           // move to high
           this.changeVideoStreamType(this.mainVideoId,this.HighVideoStreamType);
         } else {
           // if height> > 360 then send him a PM
           if (this.userRemoteStatsMap[this.mainVideoId] && this.userRemoteStatsMap[this.mainVideoId].receiveResolutionHeight<360) {
-            this.peerMessage("PEERO",this.mainVideoId);
+            if (Date.now()-this.bwLastIncreaseResolutionRequest>3000) {
+              this.bwLastIncreaseResolutionRequest=Date.now();
+              this.peerMessage(this.INCREASE_RESOLUTION,this.mainVideoId);
+            }
           }
-          
         }
-
         this.bwLastMainWindowIdIncreaseTime=this.bwLastIncreaseTime;
       }
-
     }
 
 
@@ -1331,13 +1333,14 @@ class AgoraMultiChanelApp {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
     });
 
+    this.rtmClient.on('MessageFromPeer', ({ text }, senderId) => {
+      this.handleRTM(senderId, text);
+    });
+
     this.rtmClient.login({ token: null, uid: this.rtmUid }).then(() => {
       this.rtmChannel = this.rtmClient.createChannel(this.rtmChannelName);
       this.rtmChannel.join().then(() => {
         this.rtmChannel.on('ChannelMessage', ({ text }, senderId) => {
-          this.handleRTM(senderId, text);
-        });
-        this.rtmChannel.on('MessageFromPeer', ({ text }, senderId) => {
           this.handleRTM(senderId, text);
         });
       }).catch(error => {
@@ -1384,6 +1387,9 @@ class AgoraMultiChanelApp {
       agoraWatchParty.handleRTM(text);
     } else if (text.startsWith(this.STOP_SCREENSHARE)) {
         this.stopScreensharePublishLocal();
+    } else if (text.startsWith(this.INCREASE_RESOLUTION)) {
+      AgoraRTCUtils.increaseResolution();
+      console.log(text);
     }
     
   }
