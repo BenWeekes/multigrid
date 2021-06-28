@@ -131,7 +131,7 @@ var AgoraRTCUtils = (function () {
     }
 
     // log details
-    //console.log("AutoAdjustAlgo profile:"+_currentProfile+", width:"+videoStats.sendResolutionWidth+", height:"+videoStats.sendResolutionHeight+", fps:" + videoStats.sendFrameRate + ", br_kbps:" + sendBitratekbps + ", bad_fps:" + _fpsLowObserved + ", bad_br:" + _brLowObserved + ", good_br:" + _brHighObserved+" ios="+isIOS());
+    console.log("AutoAdjustAlgo profile:"+_currentProfile+", width:"+videoStats.sendResolutionWidth+", height:"+videoStats.sendResolutionHeight+", fps:" + videoStats.sendFrameRate + ", br_kbps:" + sendBitratekbps + ", bad_fps:" + _fpsLowObserved + ", bad_br:" + _brLowObserved + ", good_br:" + _brHighObserved+" ios="+isIOS());
     // +", sendPacketsLost:"+videoStats.sendPacketsLost does not work on Safari
 
     // after 5 seconds of low bandwidth out
@@ -466,6 +466,12 @@ var AgoraRTCUtils = (function () {
               if ( _userStatsMap[uid].packetChange>0 &&  _userStatsMap[uid].totalDuration>5) // when people drop they remain for a while
               {
                 _clientStatsMap.SumRxRVol=_clientStatsMap.SumRxRVol+_userStatsMap[uid].renderRateStdDeviationPerc;
+
+                if (_userStatsMap[uid].renderRateStdDeviationPerc>5) {
+                  console.log(uid+" "+_userStatsMap[uid].renderRates.length+" "+_userStatsMap[uid].renderRateStdDeviationPerc);
+                  console.log(_userStatsMap[uid].renderRates);
+                }
+                
                 if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
                   _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
                 }
@@ -522,7 +528,7 @@ var AgoraRTCUtils = (function () {
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
     
-    if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 12 ) {
+    if (_clientStatsMap.AvgRxRVol > 22 ||  _clientStatsMap.AvgRxNR > 12 ) {
       // critical or poor
 
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
@@ -532,14 +538,14 @@ var AgoraRTCUtils = (function () {
         _clientStatsTrackMap.RemoteStatusDuration=Date.now()-_clientStatsTrackMap.RemoteStatusStart;        
       }
 
-      if (_clientStatsMap.AvgRxRVol > 20 ||  _clientStatsMap.AvgRxNR > 30 ) {
+      if (_clientStatsMap.AvgRxRVol > 30 ||  _clientStatsMap.AvgRxNR > 30 ) {
         _clientStatsMap.RemoteStatusExtra=RemoteStatusCritical;
       } else {
         _clientStatsMap.RemoteStatusExtra=RemoteStatusPoor;
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > 7 ||  _clientStatsMap.AvgRxNR > 4 ) {
+    else if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 4 ) {
       // critical 
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
