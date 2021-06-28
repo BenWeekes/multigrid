@@ -351,7 +351,7 @@ class AgoraMultiChanelApp {
         "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         "Br(k):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
-    console.log(" "+stats1+" "+stats2+" "+stats3);
+    //console.log(" "+stats1+" "+stats2+" "+stats3);
     document.getElementById("renderFrameRate").innerHTML = stats1 + "<br/>" + stats2 + stats3;
   }
 
