@@ -378,7 +378,8 @@ var AgoraRTCUtils = (function () {
       TxSendBitratekbps :0,
       TxBrLowObserved: 0,
       TxFpsLowObserved: 0,
-      TxSendFrameRate : 0
+      TxSendFrameRate : 0,
+      LastUpdated : 0
     };
 
 
@@ -570,6 +571,8 @@ var AgoraRTCUtils = (function () {
 
     _clientStatsMap.RemoteStatusDuration=Math.floor(_clientStatsTrackMap.RemoteStatusDuration/1000);
     _clientStatsMap.RemoteStatus= _clientStatsTrackMap.RemoteStatus;
+    _clientStatsMap.LastUpdated= Date.now();
+    
     
     //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 

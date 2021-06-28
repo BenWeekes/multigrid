@@ -345,6 +345,10 @@ class AgoraMultiChanelApp {
 
 
     var stats2 = " Audio " + agoraApp.audioSubscriptionsCount + "/" + agoraApp.audioPublishersByPriority.length + "/" + agoraApp.maxAudioSubscriptions + "max | Video " + agoraApp.videoSubscriptionsCount + "/" + agoraApp.videoPublishersByPriority.length + "/" + agoraApp.allowedVideoSubs + "/" + agoraApp.getMaxVideoTiles();
+    var elapse= Math.ceil( Date.now()- clientStats.LastUpdated)/1000;
+
+    stats2=stats2+" "+elapse;
+    
     var stats3 = "";
     if (clientStats.TxSendResolutionWidth) {
       stats3 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
