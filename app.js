@@ -81,8 +81,6 @@ class AgoraMultiChanelApp {
     this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "false";
     this.forceRemoteUserStats = getParameterByName("forceRemoteUserStats") || "false";
 
-
-
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
@@ -345,13 +343,15 @@ class AgoraMultiChanelApp {
         " Br(k):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
     }
 
-    var stats3 = "";
+
     var stats2 = " Audio " + agoraApp.audioSubscriptionsCount + "/" + agoraApp.audioPublishersByPriority.length + "/" + agoraApp.maxAudioSubscriptions + "max | Video " + agoraApp.videoSubscriptionsCount + "/" + agoraApp.videoPublishersByPriority.length + "/" + agoraApp.allowedVideoSubs + "/" + agoraApp.getMaxVideoTiles();
+    var stats3 = "";
     if (clientStats.TxSendResolutionWidth) {
-      stats2 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
+      stats3 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
         "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         "Br(k):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
+    console.log(" "+stats1+" "+stats2+" "+stats3);
     document.getElementById("renderFrameRate").innerHTML = stats1 + "<br/>" + stats2 + stats3;
   }
 

@@ -528,7 +528,7 @@ var AgoraRTCUtils = (function () {
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
     
-    if (_clientStatsMap.AvgRxRVol > 22 ||  _clientStatsMap.AvgRxNR > 12 ) {
+    if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 12 ) {
       // critical or poor
 
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
@@ -538,14 +538,14 @@ var AgoraRTCUtils = (function () {
         _clientStatsTrackMap.RemoteStatusDuration=Date.now()-_clientStatsTrackMap.RemoteStatusStart;        
       }
 
-      if (_clientStatsMap.AvgRxRVol > 30 ||  _clientStatsMap.AvgRxNR > 30 ) {
+      if (_clientStatsMap.AvgRxRVol > 20 ||  _clientStatsMap.AvgRxNR > 30 ) {
         _clientStatsMap.RemoteStatusExtra=RemoteStatusCritical;
       } else {
         _clientStatsMap.RemoteStatusExtra=RemoteStatusPoor;
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 4 ) {
+    else if (_clientStatsMap.AvgRxRVol > 4 ||  _clientStatsMap.AvgRxNR > 4 ) {
       // critical 
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
