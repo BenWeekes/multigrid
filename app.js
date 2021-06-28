@@ -573,7 +573,7 @@ class AgoraMultiChanelApp {
       var user = that.userMap[key];
       var client = that.videoPublishers[key];
 
-      if (that.videoSubscriptions[key] && (that.videoSubscriptions[key].streamType != streamType || force) && (that.mainVideoId !== key || streamType == this.HighVideoStreamType) && (batch == 0 || batch > count)) {
+      if (that.videoSubscriptions[key] && (that.videoSubscriptions[key].streamType != streamType || force) && (that.mainVideoId !== key || streamType == that.HighVideoStreamType || that.videoSubscriptionsCount<=1) && (batch == 0 || batch > count)) {
         client.setRemoteVideoStreamType(user.uid, streamType);
         that.videoSubscriptions[key].streamType = streamType;
         count++;
