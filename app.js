@@ -323,6 +323,7 @@ class AgoraMultiChanelApp {
     if (clientStats.TxSendResolutionWidth) {
       stats3 = "Transmit Stats - Fps:" + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
         "Profile:" + clientStats.TxProfile +
+        " fpsVol:"+ agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
         " Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         " Bitrate(kbps):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
@@ -352,6 +353,7 @@ class AgoraMultiChanelApp {
     var stats3 = "";
     if (clientStats.TxSendResolutionWidth) {
       stats3 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
+        " fpsVol:"+agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
         "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         "Br(k):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
