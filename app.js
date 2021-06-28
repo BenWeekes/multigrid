@@ -683,7 +683,8 @@ class AgoraMultiChanelApp {
     // resets duration cache
     this.remoteStatusDurationCache = this.clientStats.RemoteStatusDuration;
 
-    console.log("manageRampUpAndDown RemoteStatus " + this.clientStats.RemoteStatus + "." + this.clientStats.RemoteStatusExtra + " shareContentOnDisplay " + this.shareContentOnDisplay + " currentStatusDuration=" + currentStatusDuration + "  MinRemoteDuration " + this.clientStats.MinRemoteDuration + " RTCUtilsInitialised " + this.RTCUtilsInitialised)
+    var elapse= Math.ceil(( Date.now()- this.clientStats.LastUpdated)/1000);
+    console.log("manageRampUpAndDown RemoteStatus " + this.clientStats.RemoteStatus + "." + this.clientStats.RemoteStatusExtra + " shareContentOnDisplay " + this.shareContentOnDisplay + " currentStatusDuration=" + currentStatusDuration + "  MinRemoteDuration " + this.clientStats.MinRemoteDuration + " RTCUtilsInitialised " + this.RTCUtilsInitialised+" elapse="+elapse)
 
     if (this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusPoor) {
       // batch size 
