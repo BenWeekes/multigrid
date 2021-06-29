@@ -63,7 +63,7 @@ class AgoraMultiChanelApp {
     this.numRenderExceedToIncrease = getParameterByNameAsInt("numRenderExceedToIncrease") || 2;
     this.allowedVideoSubsIncreaseBy = getParameterByNameAsInt("allowedVideoSubsIncreaseBy") || ((this.isMobile === "true" || isMobile()) ? 2 : 3);
     this.numRenderExceedToDecrease = getParameterByNameAsInt("numRenderExceedToDecrease") || -6;
-    this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy") || 1;
+    this.allowedVideoSubsDecreaseBy = getParameterByNameAsInt("allowedVideoSubsDecreaseBy")  || ((this.isMobile === "true" || isMobile()) ? 2 : 3);
     this.minRemoteStreamLife = getParameterByNameAsInt("minRemoteStreamLife") || 6 * 1000;
     // number of subscriptions before moving to low stream
     this.switchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 1 : 6);
@@ -707,6 +707,10 @@ class AgoraMultiChanelApp {
 
       // reduce VIDEO allowed subs
       if (count == 0) {
+        if (batch>this.allowedVideoSubsDecreaseBy) {
+          batch=this.allowedVideoSubsDecreaseBy;
+        }
+
         if (this.allowedVideoSubs - batch >= this.minVideoAllowedSubs) {
           this.allowedVideoSubs = this.allowedVideoSubs - batch;
           reduceVideoSubsBy = batch;
