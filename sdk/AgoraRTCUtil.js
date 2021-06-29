@@ -594,7 +594,7 @@ var AgoraRTCUtils = (function () {
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > (4*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 ) {
+    else if (_clientStatsMap.AvgRxRVol > (6*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 5 ) {
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
         _clientStatsTrackMap.RemoteStatusStart=Date.now();        
