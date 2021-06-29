@@ -57,7 +57,7 @@ class AgoraMultiChanelApp {
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
     this.initialAudioAllowedSubs = getParameterByNameAsInt("initialAudioAllowedSubs") || 3;
-    this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || ((this.isMobile === "true" || isMobile()) ? 4 : 16);
+    this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || ((this.isMobile === "true" || isMobile()) ? 1 : 16);
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
     this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
     this.numRenderExceedToIncrease = getParameterByNameAsInt("numRenderExceedToIncrease") || 2;
@@ -323,7 +323,7 @@ class AgoraMultiChanelApp {
     if (clientStats.TxSendResolutionWidth) {
       stats3 = "Transmit Stats - Fps:" + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
         "Profile:" + clientStats.TxProfile +
-        " fpsVol:"+ agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
+        //" fpsVol:"+ agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
         " Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         " Bitrate(kbps):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
@@ -960,6 +960,11 @@ class AgoraMultiChanelApp {
           var prom = await client.unsubscribe(user, that.VIDEO);
           delete that.videoSubscriptions[key];
           that.videoSubscriptionsCount = that.getMapSize(that.videoSubscriptions);
+          // remove user stats
+          var stats_display = document.getElementById(key + "_stats_display");
+          if (stats_display) {
+            stats_display.innerHTML = "" ;
+          }
         }
       }
     });

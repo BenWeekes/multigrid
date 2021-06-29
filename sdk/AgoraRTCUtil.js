@@ -30,6 +30,7 @@ var AgoraRTCUtils = (function () {
   var AdjustFrequency = 500; // ms between checks
   var ResultCountToStepUp = 6; // number of consecutive positive results before step up occurrs
   var ResultCountToStepDown = 10; // number of consecutive negative results before step down occurrs
+  var ResultCountToStepDownFPS = 8; // number of consecutive negative results before step down occurrs
   var MinFPSPercent = 90; // below this percentage FPS will a trigger step down
   var MinVideoKbps = 100; // below this and the video is likely off or static 
   var MaxFPSSamples=8; // 4 seconds
@@ -119,12 +120,9 @@ var AgoraRTCUtils = (function () {
     }
     if (_fpsRates.length>=MaxFPSSamples){ // don't report vol on limited set
       var dev=vol/_fpsRates.length;
-     // console.log(_fpsRates);
       return (dev/fpsMean)*100;
     }
-
     return 0
-   
   }
 
   function autoAdjustResolution() {
@@ -138,13 +136,13 @@ var AgoraRTCUtils = (function () {
     }
     var sendBitratekbps = Math.floor(videoStats.sendBitrate / 1000);
 
-    if (videoStats.sendFrameRate && videoStats.sendFrameRate > 0 ) {
+    if (_switchForFPSAndBR && videoStats.sendFrameRate && videoStats.sendFrameRate > 0 ) {
       _fpsVol=calculateOutboundFPSVolatility(videoStats.sendFrameRate);
       //console.log(" calculateOutboundFPSVolatility "+fpsVol);
     }
 
     // check encoding FPS not too low
-    if (_switchForFPSAndBR && videoStats.sendFrameRate && videoStats.sendFrameRate > 0 && videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100)) {
+    if (_switchForFPSAndBR && videoStats.sendFrameRate && videoStats.sendFrameRate > 0 && (videoStats.sendFrameRate < (profile.frameRate * MinFPSPercent / 100) || _fpsVol>6.0 )) {
       _fpsLowObserved++;
     } else {
       _fpsLowObserved = 0;
@@ -172,7 +170,7 @@ var AgoraRTCUtils = (function () {
     if (_brLowObserved > ResultCountToStepDown) {
       changeProfile(_currentProfile - 1); // reduce profile
     }
-    else if (_fpsLowObserved > ResultCountToStepDown) {
+    else if (_fpsLowObserved > ResultCountToStepDownFPS) {
       _maxProfileDueToLowFPS = _currentProfile - 1; // do not return here
       changeProfile(_currentProfile - 1); // reduce profile
     } else if ((Date.now()-_increaseResolutionAt<6000) && _fpsLowObserved == 0 && _brLowObserved == 0 && _currentProfile < _maxProfileDueToLowFPS ) { // somebody requested large
@@ -199,7 +197,6 @@ var AgoraRTCUtils = (function () {
       sendFrameRate : videoStats.sendFrameRate
     };
 
-    //AgoraRTCUtilEvents.emit("LocalVideoStatistics", _outboundVideoStats);
   }
 
   function changeProfile(profileInd) {
@@ -349,11 +346,11 @@ var AgoraRTCUtils = (function () {
 
   var MaxRenderRateSamples=16; // 4 seconds
   
-  
   var _monitorRemoteCallStatsInterval;
   var _userStatsMap={};
   var _clientStatsMap={};
-  
+  var _nackException=false;
+
   const RemoteStatusGood=0;
   const RemoteStatusFair=1;
   const RemoteStatusPoor=2;
@@ -566,9 +563,18 @@ var AgoraRTCUtils = (function () {
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
     
-    if (_clientStatsMap.AvgRxRVol > 12 ||  _clientStatsMap.AvgRxNR > 12 ) {
+    // render rate vol can be expected after recent high AvgRxNR
+    // if nack rate goes high (critical)
+    // then we can be more leanient about RRVol until RRVol has come back down
+    if (_clientStatsMap.AvgRxRVol<6) {
+      _nackException=false;
+    }
+    var rrMultiplier=1;
+    if (_nackException) {
+      rrMultiplier=2;
+    }
+    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ) {
       // critical or poor
-
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusPoor;
         _clientStatsTrackMap.RemoteStatusStart=Date.now();        
@@ -576,15 +582,19 @@ var AgoraRTCUtils = (function () {
         _clientStatsTrackMap.RemoteStatusDuration=Date.now()-_clientStatsTrackMap.RemoteStatusStart;        
       }
 
-      if (_clientStatsMap.AvgRxRVol > 20 ||  _clientStatsMap.AvgRxNR > 30 ) {
+      if (_clientStatsMap.AvgRxRVol > (20*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 30 ) {
+
+        if ( _clientStatsMap.AvgRxNR > 30 ) {
+          _nackException=true;
+        }
+        
         _clientStatsMap.RemoteStatusExtra=RemoteStatusCritical;
       } else {
         _clientStatsMap.RemoteStatusExtra=RemoteStatusPoor;
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > 4 ||  _clientStatsMap.AvgRxNR > 4 ) {
-      // critical 
+    else if (_clientStatsMap.AvgRxRVol > (4*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 ) {
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
         _clientStatsTrackMap.RemoteStatusStart=Date.now();        
