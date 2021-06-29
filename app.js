@@ -399,14 +399,15 @@ class AgoraMultiChanelApp {
     agoraApp.userRemoteStatsMap[userStats.uid] = userStats;
 
     var stats_display = document.getElementById(userStats.uid + "_stats_display");
+    var sobj = agoraApp.videoSubscriptions[userStats.uid];
     if (stats_display) {
-      if (document.getElementById("stats_container").classList.contains("hidden") && agoraApp.forceRemoteUserStats === "false") {
+      if (!sobj || (document.getElementById("stats_container").classList.contains("hidden") && agoraApp.forceRemoteUserStats === "false")) {
         stats_display.innerHTML = "";
       } else {
         var stats_display_inner_low = "stats_display_inner_low"; // s
 
         var sd = "na";
-        var sobj = agoraApp.videoSubscriptions[userStats.uid];
+
         if (!sobj) {
           console.log(" no userStats.uid " + userStats.uid)
         }
