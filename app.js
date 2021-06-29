@@ -80,6 +80,7 @@ class AgoraMultiChanelApp {
     this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "true";
     this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "false";
     this.forceRemoteUserStats = getParameterByName("forceRemoteUserStats") || "false";
+    this.showMinStats = getParameterByName("showMinStats") || "false";
 
     this.superOptimise = getParameterByName("superOptimise") || "false";
     this.mobileShowHighQualityAtStart = getParameterByName("mobileShowHighQualityAtStart") || "true";
@@ -332,33 +333,46 @@ class AgoraMultiChanelApp {
   }
 
   displayClientVideoStatisticsMobile(clientStats) {
-    var agg = clientStats.SumRxAggRes;
-    var stats1 =
-      "Rx - U: " + clientStats.RemoteSubCount +
-      " AggRes:" + agoraApp.fixStat((agg / 720).toFixed(0) + "x" + "720");
 
-    if (clientStats.RemoteSubCount > 0) {
-      stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
-        "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)) +
-        " Dur(s):" + clientStats.RemoteStatusDuration +
-        " Br(k):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
+    if (agoraApp.showMinStats==="true") {
+      var stats="";
+      if (clientStats.RemoteSubCount > 0) {
+       stats= agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
+      "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true));
+      } else {
+
+      }
+      document.getElementById("renderFrameRate").innerHTML = stats;
+
+    } else {
+        var agg = clientStats.SumRxAggRes;
+        var stats1 =
+          "Rx - U: " + clientStats.RemoteSubCount +
+          " AggRes:" + agoraApp.fixStat((agg / 720).toFixed(0) + "x" + "720");
+
+        if (clientStats.RemoteSubCount > 0) {
+          stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
+            "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)) +
+            " Dur(s):" + clientStats.RemoteStatusDuration +
+            " Br(k):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
+        }
+
+
+        var stats2 = " Audio " + agoraApp.audioSubscriptionsCount + "/" + agoraApp.audioPublishersByPriority.length + "/" + agoraApp.maxAudioSubscriptions + "max | Video " + agoraApp.videoSubscriptionsCount + "/" + agoraApp.videoPublishersByPriority.length + "/" + agoraApp.allowedVideoSubs + "/" + agoraApp.getMaxVideoTiles();
+        var elapse= Math.ceil(( Date.now()- clientStats.LastUpdated)/1000);
+
+        stats2=stats2+" "+elapse;
+        
+        var stats3 = "";
+        if (clientStats.TxSendResolutionWidth) {
+          stats3 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
+            " fpsVol:"+agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
+            "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
+            "Br(k):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
+        }
+        //console.log(" "+stats1+" "+stats2+" "+stats3);
+        document.getElementById("renderFrameRate").innerHTML = stats1 + "<br/>" + stats2 + stats3;
     }
-
-
-    var stats2 = " Audio " + agoraApp.audioSubscriptionsCount + "/" + agoraApp.audioPublishersByPriority.length + "/" + agoraApp.maxAudioSubscriptions + "max | Video " + agoraApp.videoSubscriptionsCount + "/" + agoraApp.videoPublishersByPriority.length + "/" + agoraApp.allowedVideoSubs + "/" + agoraApp.getMaxVideoTiles();
-    var elapse= Math.ceil(( Date.now()- clientStats.LastUpdated)/1000);
-
-    stats2=stats2+" "+elapse;
-    
-    var stats3 = "";
-    if (clientStats.TxSendResolutionWidth) {
-      stats3 = "Tx - Fps: " + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
-        " fpsVol:"+agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
-        "Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
-        "Br(k):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
-    }
-    //console.log(" "+stats1+" "+stats2+" "+stats3);
-    document.getElementById("renderFrameRate").innerHTML = stats1 + "<br/>" + stats2 + stats3;
   }
 
   getRemoteStatusDisplay(clientStats, display) {
