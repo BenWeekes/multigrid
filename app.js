@@ -179,8 +179,7 @@ class AgoraMultiChanelApp {
     this.highVideoFPS = this.maxFPS; //isMobile() ? 15 : this.maxFPS;
     this.highVideoBitrateMin = 400;
     this.highVideoBitrateMax = 1000;
-    this.FPSThresholdToIncreaseSubs = 0.9;
-    this.FPSThresholdToReduceSubs = 0.5;
+
 
     // RTM
     this.rtmClient;
@@ -279,10 +278,10 @@ class AgoraMultiChanelApp {
 
   }
 
-  async initRTCUtils() {
+  async initRTCUtils(profile) {
 
     if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true")) {
-      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], "360p_11", AgoraRTCUtils.isIOS());
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
     }
 
     AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
@@ -1503,14 +1502,32 @@ class AgoraMultiChanelApp {
 
   async publishAudioVideoToChannel() {
 
+    var profile="360p_11";
+
+    var vwidth=this.highVideoWidth;
+    var vheight=this.highVideoHeight;
+    var vfps=this.highVideoFPS;
+    var vbrmin =this.highVideoBitrateMin;
+    var vbrmax= this.highVideoBitrateMax;
+
+    if ( this.videoPublishersCount>4) {
+      var vwidth=360;
+      var vheight=180;
+      var vfps=24;
+      var vbrmin=150;
+      var vbrmax=500;
+      profile="180p";
+    }
+
+
     // create together for single allow
     if (!this.localTracks.audioTrack) {
       if (this.cameraId && this.micId) {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-          { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width: this.highVideoWidth, height: this.highVideoHeight, frameRate: this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax } });
+          { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
       } else {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-          {}, { encoderConfig: { width: this.highVideoWidth, height: this.highVideoHeight, frameRate: this.highVideoFPS, bitrateMin: this.highVideoBitrateMin, bitrateMax: this.highVideoBitrateMax } });
+          {}, {  encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
       }
     }
 
