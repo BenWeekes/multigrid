@@ -40,7 +40,7 @@ var AgoraRTCUtils = (function () {
   var _currentProfile = 0;
   var _fpsLowObserved = 0;
   var _brLowObserved = 0;
-  var _fpsVol=0;
+  var _fpsVol=-1;
   var _maxProfileDueToLowFPS = 1000;
   var _brHighObserved = 0;
   var _remoteVideoPublisherCount=-1; 
@@ -179,6 +179,7 @@ var AgoraRTCUtils = (function () {
         changeProfile(desiredProfile); // increase if possible
       }  
     } else if (_remoteVideoPublisherCount>0 &&  profile.maxRemoteUsers < _remoteVideoPublisherCount) {
+      // jump all the way
       changeProfile(_currentProfile - 1); // reduce profile          
     }  else if (_tempMaxProfile!=null && _currentProfile>_tempMaxProfile) {
       changeProfile(_tempMaxProfile); // reduce profile 
@@ -543,6 +544,8 @@ var AgoraRTCUtils = (function () {
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;
           _clientStatsMap.TxSendResolutionWidth=outgoingStats.sendResolutionWidth;
           _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;
+        } else {
+          _fpsVol=-1;
         }
 
       }
@@ -594,7 +597,7 @@ var AgoraRTCUtils = (function () {
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > (6*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 ) {
+    else if (_clientStatsMap.AvgRxRVol > (6*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 || _fpsVol>6.0) {
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
         _clientStatsTrackMap.RemoteStatusStart=Date.now();        
