@@ -576,7 +576,7 @@ var AgoraRTCUtils = (function () {
     if (_nackException) {
       rrMultiplier=2;
     }
-    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ) {
+    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ||  _fpsVol>10.0 ) {
       // critical or poor
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusPoor;
@@ -597,7 +597,7 @@ var AgoraRTCUtils = (function () {
       }
     }  
 
-    else if (_clientStatsMap.AvgRxRVol > (6*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 || _fpsVol>6.0) {
+    else if (_clientStatsMap.AvgRxRVol > (6*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 4 || _fpsVol>3.0) {
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusFair ) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusFair;
         _clientStatsTrackMap.RemoteStatusStart=Date.now();        
