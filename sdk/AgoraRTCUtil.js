@@ -576,7 +576,7 @@ var AgoraRTCUtils = (function () {
     if (_nackException) {
       rrMultiplier=2;
     }
-    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ||  _fpsVol>10.0 ) {
+    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ||  _fpsVol>12.0 ) {
       // critical or poor
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusPoor;
