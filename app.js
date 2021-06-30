@@ -89,6 +89,7 @@ class AgoraMultiChanelApp {
     this.enableHDAdjustiOS = getParameterByName("enableHDAdjustiOS") || "true";
 
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
+    this.matchPriorityOrderToAudio  = getParameterByName("matchPriorityOrderToAudio") || "false";
 
     this.vcodec = getParameterByName("vcodec") || "vp8";
 
@@ -498,18 +499,24 @@ class AgoraMultiChanelApp {
           // new publishers go on the end of the list in terms of page priority 
           // audio priority will influence video priority but remote users may not be publishing any audio
 
-          var index = this.audioPublishersByPriority.indexOf(uid_string);
-          if (index > -1) {
-            this.videoPublishersByPriority.splice(index, 0, uid_string);
-          } else {
-            // rather than push on the end
-            // insert them after audio count so they are not first to go
-            if (this.videoPublishersByPriority.length > this.audioPublishersByPriority.length) {
-              this.videoPublishersByPriority.splice(this.audioPublishersByPriority.length, 0, uid_string);
+          if (this.matchPriorityOrderToAudio==="true") {
+            var index = this.audioPublishersByPriority.indexOf(uid_string);
+            if (index > -1) {
+              this.videoPublishersByPriority.splice(index, 0, uid_string);
             } else {
-              this.videoPublishersByPriority.push(uid_string);
+              // rather than push on the end
+              // insert them after audio count so they are not first to go
+              if (this.videoPublishersByPriority.length > this.audioPublishersByPriority.length) {
+                this.videoPublishersByPriority.splice(this.audioPublishersByPriority.length, 0, uid_string);
+              } else {
+                this.videoPublishersByPriority.push(uid_string);
+              }
             }
+          } else {
+            this.videoPublishersByPriority.push(uid_string);
           }
+
+          
 
           this.videoSubscriptionsCount = this.getMapSize(this.videoSubscriptions);
           this.videoPublishersCount = this.getMapSize(this.videoPublishers);
@@ -890,7 +897,7 @@ class AgoraMultiChanelApp {
     var lorderedVideoSubs = []; //  build  subs ordered list (array) for reducing quality as needed
     for (var v = 0; v < numVideoSubs; v++) {
       // add any subs not present 
-      await this.addVideoSubIfNotExisting(this.videoPublishersByPriority[v]);
+      this.addVideoSubIfNotExisting(this.videoPublishersByPriority[v]);
       // remove any slots present which should not be  
       expectedVideoSubs[this.videoPublishersByPriority[v]] = this.videoPublishersByPriority[v];
       lorderedVideoSubs.push(this.videoPublishersByPriority[v]);
