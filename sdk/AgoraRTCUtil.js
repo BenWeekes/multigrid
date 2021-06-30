@@ -136,7 +136,7 @@ var AgoraRTCUtils = (function () {
     }
     var sendBitratekbps = Math.floor(videoStats.sendBitrate / 1000);
 
-    if (_switchForFPSAndBR && videoStats.sendFrameRate && videoStats.sendFrameRate > 0 ) {
+    if (videoStats.sendFrameRate && videoStats.sendFrameRate > 0 ) {
       _fpsVol=calculateOutboundFPSVolatility(videoStats.sendFrameRate);
       //console.log(" calculateOutboundFPSVolatility "+fpsVol);
     }
@@ -544,8 +544,6 @@ var AgoraRTCUtils = (function () {
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;
           _clientStatsMap.TxSendResolutionWidth=outgoingStats.sendResolutionWidth;
           _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;
-        } else {
-          _fpsVol=-1;
         }
 
       }
@@ -562,6 +560,9 @@ var AgoraRTCUtils = (function () {
    //   _clientStatsMap.AvgRxNR=-1;
    // }
     
+   if ( !_clientStatsMap.TxSendResolutionWidth ) {
+     _fpsVol=-2;
+   }
 
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
