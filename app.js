@@ -1551,7 +1551,7 @@ class AgoraMultiChanelApp {
     document.getElementById("cam_off").classList.remove("hidden");
 
     if (!this.RTCUtilsInitialised) {
-      this.initRTCUtils();
+      this.initRTCUtils(profile);
 
       // we will use the last channel name and UID to join RTM for send/receive VAD messages
       this.rtmChannelName = this.baseChannelName;
