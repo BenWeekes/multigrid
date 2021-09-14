@@ -52,6 +52,7 @@ class AgoraMultiChanelApp {
     // Page Parameters
     this.appId = getParameterByName("appid") || "20b7c51ff4c644ab80cf5a4e646b0537";
     this.baseChannelName = getParameterByName("channelBase") || "SA-MULTITEST";
+    this.maxClients = getParameterByNameAsInt("maxClients") || 4;
     this.maxUsersPerChannel = getParameterByNameAsInt("maxUsersPerChannel") || 16;
     this.isMobile = getParameterByName("isMobile") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
@@ -100,7 +101,7 @@ class AgoraMultiChanelApp {
     this.token = null;
 
     // Each agora client connects to one Agora channel
-    this.maxClients = 4;
+    this.maxClients = 1;
     this.numVideoTiles = 0;
 
     this.videoSubscriptions = {}; // maps to startTime and streamType and gets count often which is not efficient 
