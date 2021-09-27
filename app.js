@@ -63,6 +63,9 @@ class AgoraMultiChanelApp {
     this.initialVideoAllowedSubs = getParameterByNameAsInt("initialVideoAllowedSubs") || ((this.isMobile === "true" || isMobile()) ? 1 : 16);
     this.minAudioAllowedSubs = getParameterByNameAsInt("minAudioAllowedSubs") || 3;
     this.intervalManageSubscriptions = getParameterByNameAsInt("intervalManageSubscriptions") || 150;
+
+    this.maxCallLengthSeconds = getParameterByNameAsInt("maxCallLengthSeconds") || (60*60);
+    
     this.numRenderExceedToIncrease = getParameterByNameAsInt("numRenderExceedToIncrease") || 2;
     this.allowedVideoSubsIncreaseBy = getParameterByNameAsInt("allowedVideoSubsIncreaseBy") || ((this.isMobile === "true" || isMobile()) ? 2 : 3);
     this.numRenderExceedToDecrease = getParameterByNameAsInt("numRenderExceedToDecrease") || -6;
@@ -271,6 +274,13 @@ class AgoraMultiChanelApp {
 
     AgoraRTCUtils.setRTCClients(this.clients, this.numClients);
     AgoraRTCUtils.startInboundVolumeMonitor(150); // ms interval
+
+    // hangup after 1 hour
+    setTimeout(() => {
+      this.leaveChannels();
+      alert("Call Ended");
+      },this.maxCallLengthSeconds*1000);
+
 
     if (this.enableRemoteCallStatsMonitor === "true") {
       AgoraRTCUtils.startRemoteCallStatsMonitor(500); // ms interval
@@ -1407,10 +1417,16 @@ class AgoraMultiChanelApp {
       this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
         this.token, null);
     }
-
-
     this.numChannels = i;
   }
+
+  // Publishing Local Streams
+  async leaveChannels() {
+    for (var i=0; i < this.numClients; i++) {
+      await this.clients[i].leave();
+    }
+  }
+
 
   async loadDevices() {
     // create local tracks
