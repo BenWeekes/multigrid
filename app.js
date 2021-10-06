@@ -53,6 +53,7 @@ class AgoraMultiChanelApp {
     this.appId = getParameterByName("appid") || "";
     this.maxClients = getParameterByNameAsInt("maxClients") || getParameterByNameAsInt("maxChannels") || 4;
     this.baseChannelName = getParameterByName("channelBase") ||  getParameterByName("channelNamePrefix") || "SA-MULTITEST";
+    this.channel = getParameterByName("channel")
     this.maxUsersPerChannel = getParameterByNameAsInt("maxUsersPerChannel") || getParameterByNameAsInt("maxHostsPerChannel") || 16;
 
     this.isMobile = getParameterByName("isMobile") || "false";
@@ -256,6 +257,10 @@ class AgoraMultiChanelApp {
     if (!this.appId) {
       alert("No appid");
       return;
+    }
+
+    if (this.channel) {
+      this.maxClients=1;
     }
   }
 
@@ -1408,16 +1413,23 @@ class AgoraMultiChanelApp {
 
   // Publishing Local Streams
   async joinChannels() {
-    let tempChannelName = "";
-    let i = 0;
-    // Join one channel for each client object.
-    for (i; i < this.numClients; i++) {
-      tempChannelName = this.baseChannelName + i.toString();
-      await this.clients[i].setClientRole("audience");
-      this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
-        this.token, null);
+    if (this.channel) {
+        await this.clients[0].setClientRole("audience");
+        this.myUid[0] = await this.clients[0].join(this.appId, this.channel,
+          this.token, null);
+      this.numChannels = 1;
+    } else {    
+      let tempChannelName = "";
+      let i = 0;
+      // Join one channel for each client object.
+      for (i; i < this.numClients; i++) {
+        tempChannelName = this.baseChannelName + i.toString();
+        await this.clients[i].setClientRole("audience");
+        this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
+          this.token, null);
+      }
+      this.numChannels = i;
     }
-    this.numChannels = i;
   }
 
   // Publishing Local Streams
@@ -1496,6 +1508,9 @@ class AgoraMultiChanelApp {
     this.screenClient = AgoraRTC.createClient(this.clientConfig);
     var availableClient = this.getFirstOpenChannelInner();
     let tempChannelName = this.baseChannelName + availableClient.toString();
+    if (this.channel){
+      tempChannelName=this.channel;
+    }
     var ssuid = this.currScreenshareUID + 1;
     if (ssuid >= this.maxScreenshareUID) {
       ssuid = this.minScreenshareUID;
