@@ -52,8 +52,9 @@ class AgoraMultiChanelApp {
     // Page Parameters
     this.appId = getParameterByName("appid") || "";
     this.maxClients = getParameterByNameAsInt("maxClients") || getParameterByNameAsInt("maxChannels") || 4;
-    this.baseChannelName = getParameterByName("channelBase") || getParameterByName("channelNamePrefix") || "SA-MULTITEST";
-    this.channel = getParameterByName("channel")
+    this.baseChannelName = getParameterByName("channelBase") ||  getParameterByName("channelNamePrefix") || "SA-MULTITEST";
+    this.channel = getParameterByName("channel");
+    this.userid = getParameterByNameAsInt("userid");
     this.maxUsersPerChannel = getParameterByNameAsInt("maxUsersPerChannel") || getParameterByNameAsInt("maxHostsPerChannel") || 16;
 
     this.isMobile = getParameterByName("isMobile") || "false";
@@ -1397,9 +1398,15 @@ class AgoraMultiChanelApp {
   // Publishing Local Streams
   async joinChannels() {
     if (this.channel) {
+<<<<<<< HEAD
       await this.clients[0].setClientRole("audience");
       this.myUid[0] = await this.clients[0].join(this.appId, this.channel,
         this.token, null);
+=======
+        await this.clients[0].setClientRole("audience");
+        this.myUid[0] = await this.clients[0].join(this.appId, this.channel,
+          this.token, this.userid);
+>>>>>>> e51c624e62718171038c059124b3488be27c60cd
       this.numChannels = 1;
     } else {
       let tempChannelName = "";
