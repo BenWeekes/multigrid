@@ -521,8 +521,8 @@ var AgoraRTCUtils = (function () {
                   _clientStatsMap.SumRxNR=_clientStatsMap.SumRxNR+_userStatsMap[uid].nackRate;
                 }
 
-                if (_userStatsMap[uid].avgDecodeTime>0 && !isNaN(_userStatsMap[uid].avgDecodeTime)) {
-                  _clientStatsMap.SumRxDecodeTime=_clientStatsMap.SumRxDecodeTime+_userStatsMap[uid].avgDecodeTime;
+                if (_userStatsMap[uid].decodeTime>0 && !isNaN(_userStatsMap[uid].decodeTime)) {
+                  _clientStatsMap.SumRxDecodeTime=_clientStatsMap.SumRxDecodeTime+_userStatsMap[uid].decodeTime;
                 }
                 
                 _clientStatsMap.RemoteSubCount=_clientStatsMap.RemoteSubCount + 1;
@@ -553,7 +553,6 @@ var AgoraRTCUtils = (function () {
 
 
         if (client._highStream) {
-
           var hrc=client._highStream;
           if (hrc.pc && hrc.pc.pc) {
             await hrc.pc.pc.getStats(null).then(async stats => {

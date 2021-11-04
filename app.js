@@ -457,7 +457,7 @@ class AgoraMultiChanelApp {
           " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
           " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
           " Nack Rate: " + userStats.nackRate + " <br/> " +
-          " Decode Time: " + userStats.decodeTime.toFixed(8) + " <br/> " +          
+          " Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> " +          
           " Duration: " + userStats.totalDuration + " </span> ";
       }
     }
