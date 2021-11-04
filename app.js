@@ -77,6 +77,8 @@ class AgoraMultiChanelApp {
     this.switchVideoStreamTypeAt = getParameterByNameAsInt("switchVideoStreamTypeAt") || ((this.isMobile === "true" || isMobile()) ? 1 : 6);
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
+    this.cpuAlgoTest = getParameterByName("cpuAlgoTest") || "false";
+
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
@@ -281,7 +283,7 @@ class AgoraMultiChanelApp {
 
   async initRTCUtils(profile) {
 
-    if (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true")) {
+    if (this.cpuAlgoTest==="false" && (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true"))) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
     }
 
@@ -314,7 +316,8 @@ class AgoraMultiChanelApp {
 
     if (clientStats.RemoteSubCount > 0) {
       stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
-        "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)) +
+        "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true) +
+        "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), false)) +
         " Duration(s):" + clientStats.RemoteStatusDuration +
         " Bitrate(kbps):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
     }
@@ -339,7 +342,8 @@ class AgoraMultiChanelApp {
       var stats = "";
       if (clientStats.RemoteSubCount > 0) {
         stats = agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
-          "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true));
+          "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)+
+          "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), true));
       } else {
 
       }
@@ -353,7 +357,8 @@ class AgoraMultiChanelApp {
 
       if (clientStats.RemoteSubCount > 0) {
         stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
-          "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)) +
+          "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true)+
+          "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), true)) +
           " Dur(s):" + clientStats.RemoteStatusDuration +
           " Br(k):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
       }
@@ -446,14 +451,13 @@ class AgoraMultiChanelApp {
           }
         }
 
-
-
         stats_display.innerHTML = "<span class='stats_display_inner'> " +
           " Res: " + userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " (" + sd + ") " + "<br/> " +
           " Bitrate: " + userStats.receiveBitrate + " <br/> " +
           " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
           " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
           " Nack Rate: " + userStats.nackRate + " <br/> " +
+          " Decode Time: " + userStats.decodeTime.toFixed(8) + " <br/> " +          
           " Duration: " + userStats.totalDuration + " </span> ";
       }
     }
@@ -711,6 +715,11 @@ class AgoraMultiChanelApp {
     console.log("manageRampUpAndDown RemoteStatus " + this.clientStats.RemoteStatus + "." + this.clientStats.RemoteStatusExtra + " shareContentOnDisplay " + this.shareContentOnDisplay + " currentStatusDuration=" + currentStatusDuration + "  MinRemoteDuration " + this.clientStats.MinRemoteDuration + " RTCUtilsInitialised " + this.RTCUtilsInitialised + " elapse=" + elapse)
 
     if (this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusPoor) {
+     
+      if (this.cpuAlgoTest==="true") {
+        return;  //////// disable ramp downs to push CPU for testing
+      }
+
       // batch size 
       this.bwLastDecreaseTime = Date.now();
       var batch = Math.ceil(this.clientStats.RemoteSubCount / 5); // 20% drop 
@@ -751,7 +760,7 @@ class AgoraMultiChanelApp {
         this.bwLastDecreaseCount = count;
       }
       console.log("Move Down: batch=" + batch + " moveLow=" + count + " reduceSubs=" + reduceVideoSubsBy + "  videoSubCount=" + this.videoSubscriptionsCount + " RemoteSubCount=" + this.clientStats.RemoteSubCount);
-    } else if (this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusGood && this.RTCUtilsInitialised && this.clientStats.MinRemoteDuration > 3)// && !this.shareContentOnDisplay)
+    } else if ((this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusGood || this.cpuAlgoTest==="true") && this.RTCUtilsInitialised && this.clientStats.MinRemoteDuration > 3)// && !this.shareContentOnDisplay)
     {
 
       // RTCUtilsInitialised is checked to ensure we don't ramp up until the camera is enabled.
@@ -822,7 +831,9 @@ class AgoraMultiChanelApp {
       }
     }
 
-
+    if (this.cpuAlgoTest==="true") {
+      return;  //////// disable ramp downs to push CPU for testing
+    }
     // reduce encoding resolutions in share mode
     if (this.shareContentOnDisplay) {
       AgoraRTCUtils.setTempMaxProfile("180p");
@@ -1434,7 +1445,7 @@ class AgoraMultiChanelApp {
     var vbrmin = this.highVideoBitrateMin;
     var vbrmax = this.highVideoBitrateMax;
 
-    if (this.videoPublishersCount > 4) {
+    if (this.videoPublishersCount > 4 && this.cpuAlgoTest==="false") {
       var vwidth = 360;
       var vheight = 180;
       var vfps = 24;
@@ -1544,7 +1555,7 @@ class AgoraMultiChanelApp {
       var vbrmin = this.highVideoBitrateMin;
       var vbrmax = this.highVideoBitrateMax;
 
-      if (this.videoPublishersCount > 4) {
+      if (this.videoPublishersCount > 4 && this.cpuAlgoTest==="false" ) {
         var vwidth = 360;
         var vheight = 180;
         var vfps = 24;
