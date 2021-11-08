@@ -296,16 +296,12 @@ class AgoraMultiChanelApp {
   processAllClientVideoStatistics(clientStats) {
 
     agoraApp.clientStats = clientStats;
-    agoraApp.displayClientVideoStatisticsCPU(clientStats);
- 
-    if (agoraApp.cpuAlgoTest==="true") {
-      agoraApp.displayClientVideoStatisticsCPU(clientStats);
-    }
-    else if (agoraApp.is_Mobile()) {
+  
+    if (agoraApp.is_Mobile()) {
       agoraApp.displayClientVideoStatisticsMobile(clientStats);
     } else {
-      //agoraApp.displayClientVideoStatisticsCPU(clientStats);
-      agoraApp.displayClientVideoStatistics(clientStats);
+      agoraApp.displayClientVideoStatisticsCPU(clientStats);
+      //agoraApp.displayClientVideoStatistics(clientStats);
     }
 
   }
