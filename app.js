@@ -296,10 +296,16 @@ class AgoraMultiChanelApp {
   processAllClientVideoStatistics(clientStats) {
 
     agoraApp.clientStats = clientStats;
-
-    if (agoraApp.is_Mobile()) {
+    agoraApp.displayClientVideoStatisticsMobile(clientStats);
+    if (true)
+      return;
+    if (agoraApp.cpuAlgoTest==="true") {
+      agoraApp.displayClientVideoStatisticsCPU(clientStats);
+    }
+    else if (agoraApp.is_Mobile()) {
       agoraApp.displayClientVideoStatisticsMobile(clientStats);
     } else {
+      //agoraApp.displayClientVideoStatisticsCPU(clientStats);
       agoraApp.displayClientVideoStatistics(clientStats);
     }
 
@@ -317,7 +323,7 @@ class AgoraMultiChanelApp {
     if (clientStats.RemoteSubCount > 0) {
       stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
         "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true) +
-        "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), false)) +
+        "DecTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), false)) +
         " Duration(s):" + clientStats.RemoteStatusDuration +
         " Bitrate(kbps):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
     }
@@ -328,13 +334,36 @@ class AgoraMultiChanelApp {
     if (clientStats.TxSendResolutionWidth) {
       stats3 = "Transmit Stats - Fps:" + agoraApp.fixStat(clientStats.TxSendFrameRate?.toFixed(0), true) +
         "Profile:" + clientStats.TxProfile +
-        //" fpsVol:"+ agoraApp.fixStat(clientStats.TxFpsVol.toFixed(2))+
+       " EncTime:"+ agoraApp.fixStat(clientStats.EncodeTime.toFixed(2))+
         " Res:" + agoraApp.fixStat(clientStats.TxSendResolutionWidth + "x" + clientStats.TxSendResolutionHeight) +
         " Bitrate(kbps):" + agoraApp.fixStat(clientStats.TxSendBitratekbps?.toFixed(0));
     }
 
     document.getElementById("renderFrameRate").innerHTML = stats1 + "<br/>" + stats2 + " " + stats3;
   }
+
+  displayClientVideoStatisticsCPU(clientStats) {
+    if (clientStats.RemoteSubCount > 0) {
+      var stats =
+      agoraApp.fixStatCPUo( " Rx Br (kbps):" + agoraApp.fixStatCPU((clientStats.RecvBitrate / 1000).toFixed(0)))+  
+      agoraApp.fixStatCPUo( " Nack Rate Avg (%):" + agoraApp.fixStatCPU(clientStats.AvgRxNR.toFixed(0)))+
+      agoraApp.fixStatCPUo(  "Decode Time Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
+      agoraApp.fixStatCPUo( " Encode Time (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
+      agoraApp.fixStatCPUo(  "Render Vol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
+        document.getElementById("renderFrameRate").innerHTML = stats;
+    }
+  }
+
+  fixStatCPUo(inp) {
+    return " <span class='cpu_statso'>" + (inp) + "</span>  ";
+  }
+
+
+  fixStatCPU(inp) {
+    return " <span class='cpu_stats'>" + (inp) + "</span>  ";
+  }
+
+  
 
   displayClientVideoStatisticsMobile(clientStats) {
 

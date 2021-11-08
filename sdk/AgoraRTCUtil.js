@@ -417,7 +417,10 @@ var AgoraRTCUtils = (function () {
       TxBrLowObserved: 0,
       TxFpsLowObserved: 0,
       TxSendFrameRate : 0,
-      LastUpdated : 0
+      LastUpdated : 0,
+      LastEncodeTime : 0, 
+      LastFramesEncoded : 0, 
+      EncodeTime : 0
     };
 
 
@@ -478,10 +481,10 @@ var AgoraRTCUtils = (function () {
                     _userStatsMap[uid].lastPacketsRecvd = packetsReceived;
                     _userStatsMap[uid].packetChange = packetChange;
                     _userStatsMap[uid].decodeTime = decodeTime;
-                   // if (framesDecodedChange>100) {
-                   //   _userStatsMap[uid].lastDecodeTime=totalDecodeTime;
-                   //   _userStatsMap[uid].lastFramesDecoded=framesDecoded;
-                   // }
+                    if (framesDecodedChange>100) {
+                      _userStatsMap[uid].lastDecodeTime=totalDecodeTime;
+                      _userStatsMap[uid].lastFramesDecoded=framesDecoded;
+                    }
                    }
                 })
               });
@@ -553,22 +556,26 @@ var AgoraRTCUtils = (function () {
 
 
         if (client._highStream) {
+
           var hrc=client._highStream;
           if (hrc.pc && hrc.pc.pc) {
             await hrc.pc.pc.getStats(null).then(async stats => {
               await stats.forEach(report => {
-                //console.log(report.type);
                 if (report.type === "outbound-rtp" && report.kind === "video") {
-
-                  // totalEncodeTime
-                  // framesEncoded
-                  var now = Date.now();
-                  var nack = report["nackCount"];
-                  var packetsReceived = report["packetsReceived"];
+                  var totalEncodeTime = report["totalEncodeTime"];
+                  var framesEncoded = report["framesEncoded"];
+                  var totalEncodeTimeChange = 1000*(totalEncodeTime - _clientStatsMap.LastEncodeTime);
+                  var framesEncodedChange =  (framesEncoded -  _clientStatsMap.LastFramesEncoded);
+                  _clientStatsMap.EncodeTime = (totalEncodeTimeChange/framesEncodedChange);
+                  if (framesEncodedChange>100) {
+                    _clientStatsMap.LastEncodeTime=totalEncodeTime;
+                    _clientStatsMap.LastFramesEncoded=framesEncoded;
+                     }
                   }
               })
             });
           }
+
           var outgoingStats = client.getLocalVideoStats();
           _clientStatsMap.TxSendBitratekbps=Math.floor(outgoingStats.sendBitrate / 1000);
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;

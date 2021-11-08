@@ -25,6 +25,19 @@
   color: #ddd;
   }
 
+  .cpu_stats{
+    color: #81bfe4 !important;
+  }
+
+  .cpu_statso{
+    width: 230px !important;
+    font-size: 18px;
+    display: inline-block;
+    color: #bfbfbf;
+  }
+
+  
+
   .fixed_stat{
     display: inline-block;
     width: 70px;
@@ -135,11 +148,14 @@
 
   .agora_stats {
   width: 100% !important;
-  height: 48px;
+  pheight: 34px;
+  height: 32px;
   font-size: 14px;
   padding: 2px;
+  margin-top: 8px !important;
   margin: 2px;
-  background-color: #b8b8b8;
+  background-color: #5b5b5b;
+  bbackground-color: #b8b8b8;
   color: black;
   display: inline-block;
   text-align: center;
