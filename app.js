@@ -2142,6 +2142,10 @@ function isMobile() {
   if ((getParameterByName("isMobile") || "false") === "true") {
     return true;
   }
+
+  if ((getParameterByName("isMobile") || "") === "false") {
+    return false;
+  } 
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 }
 
