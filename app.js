@@ -296,7 +296,7 @@ class AgoraMultiChanelApp {
   processAllClientVideoStatistics(clientStats) {
 
     agoraApp.clientStats = clientStats;
-    agoraApp.displayClientVideoStatisticsMobile(clientStats);
+    agoraApp.displayClientVideoStatisticsCPU(clientStats);
     if (true)
       return;
     if (agoraApp.cpuAlgoTest==="true") {
