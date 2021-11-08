@@ -297,7 +297,7 @@ class AgoraMultiChanelApp {
 
     agoraApp.clientStats = clientStats;
   
-    if (agoraApp.is_Mobile()) {
+    if (agoraApp.isMobile==="true") {
       agoraApp.displayClientVideoStatisticsMobile(clientStats);
     } else {
       agoraApp.displayClientVideoStatisticsCPU(clientStats);
@@ -486,7 +486,7 @@ class AgoraMultiChanelApp {
         }
 
 
-          if (agoraApp.isMobile()) {
+          if (agoraApp.isMobile === "true") {
 
             stats_display.innerHTML = "<span class='stats_display_inner'> " +
             " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
