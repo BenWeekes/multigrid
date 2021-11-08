@@ -437,18 +437,7 @@ class AgoraMultiChanelApp {
     return " <span class='fixed_stat'>" + (inp) + "</span>  ";
   }
 
-  is_Mobile() {
-    try {
-      if (this.isMobile === "true") {
-        return true;
-      }
-    } catch (e) { }
-
-    return AgoraRTCUtils.isMobile();
-  }
-
   processRemoteUserVideoStatistics(userStats) {
-
 
     agoraApp.userRemoteStatsMap[userStats.uid] = userStats;
 
@@ -486,7 +475,7 @@ class AgoraMultiChanelApp {
         }
 
 
-          if (agoraApp.isMobile === "true") {
+          if (isMobile()) {
 
             stats_display.innerHTML = "<span class='stats_display_inner'> " +
             " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
