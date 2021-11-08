@@ -1851,8 +1851,14 @@ class AgoraMultiChanelApp {
         }
         else if (cellCount < 24) {
           rows = 3;
-        } else {
+        }
+        else if (cellCount < 36) {
           rows = 4;
+        }
+        else if (cellCount < 49) {
+          rows = 5;
+        } else {
+          rows = 6;
         }
         cols = Math.ceil(cellCount / rows);
       } else {
@@ -1862,8 +1868,14 @@ class AgoraMultiChanelApp {
         else if (cellCount < 24) {
           cols = 3;
         }
-        else {
+        else if (cellCount < 36) {
           cols = 4;
+        }
+        else if (cellCount < 49) {
+          cols = 5;
+        }
+        else {
+          cols = 6;
         }
         rows = Math.ceil(cellCount / cols);
       }
