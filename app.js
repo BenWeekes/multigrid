@@ -364,7 +364,7 @@ class AgoraMultiChanelApp {
       var stats =
       agoraApp.fixStatCPUo(  "Dec Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
       agoraApp.fixStatCPUo( " Enc (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
-      agoraApp.fixStatCPUo(  "Render Vol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
+      agoraApp.fixStatCPUo(  "RVol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
         document.getElementById("renderFrameRate").innerHTML = stats;
     }
   }
