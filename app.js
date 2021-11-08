@@ -485,15 +485,26 @@ class AgoraMultiChanelApp {
           }
         }
 
-        stats_display.innerHTML = "<span class='stats_display_inner'> " +
-          " Res: " + userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " (" + sd + ") " + "<br/> " +
-          " Bitrate: " + userStats.receiveBitrate + " <br/> " +
-          " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
-          " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
-          " Nack Rate: " + userStats.nackRate + " <br/> " +
-          " Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> " +          
-          " Duration: " + userStats.totalDuration + " </span> ";
-      }
+
+          if (agoraApp.isMobile()) {
+
+            stats_display.innerHTML = "<span class='stats_display_inner'> " +
+            " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
+            " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " </span> ";
+
+          } else {
+            stats_display.innerHTML = "<span class='stats_display_inner'> " +
+            " Res: " + userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " (" + sd + ") " + "<br/> " +
+            " Bitrate: " + userStats.receiveBitrate + " <br/> " +
+            " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
+            " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
+            " Nack Rate: " + userStats.nackRate + " <br/> " +
+            " Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> " +          
+            " Duration: " + userStats.totalDuration + " </span> ";
+          }
+        }
+
+
     }
   }
 
