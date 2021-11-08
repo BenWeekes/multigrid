@@ -297,7 +297,7 @@ class AgoraMultiChanelApp {
 
     agoraApp.clientStats = clientStats;
   
-    if (agoraApp.isMobile==="true") {
+    if (isMobile()) {
       agoraApp.displayClientVideoStatisticsMobile(clientStats);
     } else {
       agoraApp.displayClientVideoStatisticsCPU(clientStats);
