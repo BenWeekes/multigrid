@@ -297,8 +297,7 @@ class AgoraMultiChanelApp {
 
     agoraApp.clientStats = clientStats;
     agoraApp.displayClientVideoStatisticsCPU(clientStats);
-    if (true)
-      return;
+ 
     if (agoraApp.cpuAlgoTest==="true") {
       agoraApp.displayClientVideoStatisticsCPU(clientStats);
     }
@@ -364,8 +363,18 @@ class AgoraMultiChanelApp {
   }
 
   
-
   displayClientVideoStatisticsMobile(clientStats) {
+    if (clientStats.RemoteSubCount > 0) {
+      var stats =
+      agoraApp.fixStatCPUo(  "Dec Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
+      agoraApp.fixStatCPUo( " Enc (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
+      agoraApp.fixStatCPUo(  "Render Vol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
+        document.getElementById("renderFrameRate").innerHTML = stats;
+    }
+  }
+
+
+  displayClientVideoStatisticsMobile2(clientStats) {
 
     if (agoraApp.showMinStats === "true") {
       var stats = "";
