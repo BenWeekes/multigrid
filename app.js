@@ -750,12 +750,8 @@ class AgoraMultiChanelApp {
     var elapse = Math.ceil((Date.now() - this.clientStats.LastUpdated) / 1000);
     console.log("manageRampUpAndDown RemoteStatus " + this.clientStats.RemoteStatus + "." + this.clientStats.RemoteStatusExtra + " shareContentOnDisplay " + this.shareContentOnDisplay + " currentStatusDuration=" + currentStatusDuration + "  MinRemoteDuration " + this.clientStats.MinRemoteDuration + " RTCUtilsInitialised " + this.RTCUtilsInitialised + " elapse=" + elapse)
 
-    if (this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusPoor) {
+    if (this.clientStats.RemoteStatus == AgoraRTCUtils.RemoteStatusPoor && this.cpuAlgoTest!="true") {
      
-      if (this.cpuAlgoTest==="true") {
-        return;  //////// disable ramp downs to push CPU for testing
-      }
-
       // batch size 
       this.bwLastDecreaseTime = Date.now();
       var batch = Math.ceil(this.clientStats.RemoteSubCount / 5); // 20% drop 
