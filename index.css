@@ -36,6 +36,19 @@
     color: #bfbfbf;
   }
 
+  .cpu_stats_mobile{
+    color: #81bfe4 !important;
+  }
+
+  .cpu_stats_mobile_o{
+    width: 120px !important;
+    font-size: 14px;
+    display: inline-block;
+    color: #bfbfbf;
+  }
+
+  
+
   
 
   .fixed_stat{

@@ -342,8 +342,9 @@ class AgoraMultiChanelApp {
   displayClientVideoStatisticsCPU(clientStats) {
     if (clientStats.RemoteSubCount > 0) {
       var stats =
-      agoraApp.fixStatCPUo( " Rx Br (kbps):" + agoraApp.fixStatCPU((clientStats.RecvBitrate / 1000).toFixed(0)))+  
-      agoraApp.fixStatCPUo( " Nack Rate Avg (%):" + agoraApp.fixStatCPU(clientStats.AvgRxNR.toFixed(0)))+
+      agoraApp.fixStatCPUo( " Rx Br (kbps):" + agoraApp.fixStatCPU((clientStats.RecvBitrate / 1000).toFixed(0)))+        
+      agoraApp.fixStatCPUo( " Stats Sched/Dur: " + agoraApp.fixStatCPU(clientStats.StatsScheduleTime.toFixed(0))+"/"+agoraApp.fixStatCPU(clientStats.StatsRunTime.toFixed(0)))+
+      //agoraApp.fixStatCPUo( " Nack Rate Avg (%):" + agoraApp.fixStatCPU(clientStats.AvgRxNR.toFixed(0)))+
       agoraApp.fixStatCPUo(  "Decode Time Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
       agoraApp.fixStatCPUo( " Encode Time (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
       agoraApp.fixStatCPUo(  "Render Vol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
@@ -360,13 +361,23 @@ class AgoraMultiChanelApp {
     return " <span class='cpu_stats'>" + (inp) + "</span>  ";
   }
 
+  fixStatMobileCPUo(inp) {
+    return " <span class='cpu_stats_mobile_o'>" + (inp) + "</span>  ";
+  }
+
+
+  fixStatMobileCPU(inp) {
+    return " <span class='cpu_stats_mobile'>" + (inp) + "</span>  ";
+  }
+
   
   displayClientVideoStatisticsMobile(clientStats) {
     if (clientStats.RemoteSubCount > 0) {
       var stats =
-      agoraApp.fixStatCPUo(  "Dec Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
-      agoraApp.fixStatCPUo( " Enc (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
-      agoraApp.fixStatCPUo(  "RVol Avg (fps):" + agoraApp.fixStatCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
+      agoraApp.fixStatMobileCPUo( " S/D: " + agoraApp.fixStatMobileCPU(clientStats.StatsScheduleTime.toFixed(0))+"/"+agoraApp.fixStatMobileCPU(clientStats.StatsRunTime.toFixed(0)))+
+      agoraApp.fixStatMobileCPUo(  "Dec Avg (ms):" + agoraApp.fixStatMobileCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
+      agoraApp.fixStatMobileCPUo( " Enc (ms):"+ agoraApp.fixStatMobileCPU(clientStats.EncodeTime.toFixed(2))) +
+      agoraApp.fixStatMobileCPUo(  "RVol Avg (fps):" + agoraApp.fixStatMobileCPU(clientStats.AvgRxRVol.toFixed(0))) ;   
         document.getElementById("renderFrameRate").innerHTML = stats;
     }
   }

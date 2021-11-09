@@ -353,6 +353,10 @@ var AgoraRTCUtils = (function () {
   var _clientStatsMap={};
   var _nackException=false;
 
+  var _monitorStart=Date.now();
+  var _monitorEnd=Date.now();
+
+
   const RemoteStatusGood=0;
   const RemoteStatusFair=1;
   const RemoteStatusPoor=2;
@@ -392,7 +396,6 @@ var AgoraRTCUtils = (function () {
 
   async function monitorRemoteCallStats() {
 
-    console.log("start monitorRemoteCallStats "+(Date.now()));
 
     // store previous values for each rU
     // look for a volatile render rate 
@@ -423,8 +426,17 @@ var AgoraRTCUtils = (function () {
       LastUpdated : 0,
       LastEncodeTime : 0, 
       LastFramesEncoded : 0, 
-      EncodeTime : 0
+      EncodeTime : 0,
+      StatsRunTime : 0,
+      StatsScheduleTime : 0
     };
+
+
+    _monitorStart=Date.now();
+    _clientStatsMap.StatsScheduleTime=_monitorStart-_monitorEnd;
+    
+
+    //console.log("stats schedule time  "+());
 
 
     for (var i = 0; i < _rtc_num_clients; i++) {
@@ -559,7 +571,7 @@ var AgoraRTCUtils = (function () {
 
 
         if (client._highStream) {
-          console.log("start monitorRemoteCallStats  outbound "+(Date.now()));
+         // console.log("start monitorRemoteCallStats  outbound "+(Date.now()));
           var hrc=client._highStream;
           if (hrc.pc && hrc.pc.pc) {
             await hrc.pc.pc.getStats(null).then(async stats => {
@@ -584,7 +596,7 @@ var AgoraRTCUtils = (function () {
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;
           _clientStatsMap.TxSendResolutionWidth=outgoingStats.sendResolutionWidth;
           _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;
-          console.log("end monitorRemoteCallStats  outbound "+(Date.now()));
+        
         }
 
       }
@@ -674,15 +686,19 @@ var AgoraRTCUtils = (function () {
     
     //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 
+
+    _monitorEnd=Date.now();
+    _clientStatsMap.StatsRunTime=(_monitorEnd-_monitorStart);
     AgoraRTCUtilEvents.emit("ClientVideoStatistics",_clientStatsMap);
-    console.log("end monitorRemoteCallStats "+(Date.now()));
+
+    //console.log("stats process time  "+(_monitorEnd-_monitorStart));
     if ( _monitorRemoteCallStatsInterval) {
       setTimeout(() => {
         monitorRemoteCallStats();
       }, _remoteCallStatsMonitorFrequency);
   
     }
-    console.log("  ");
+   // console.log("  ");
 
     /*
      Here we can fire events to advise whether remote streams should be reduced in quality or turned off
