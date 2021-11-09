@@ -285,6 +285,8 @@ class AgoraMultiChanelApp {
 
     if (this.cpuAlgoTest==="false" && (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true"))) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
+    } else {
+      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
     }
 
     AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
@@ -1580,6 +1582,10 @@ class AgoraMultiChanelApp {
   }
 
   async publishAudioVideoToChannel() {
+
+    if (this.myPublishClient < 0) {
+      return;
+    }
     // create together for single allow
     if (!this.localTracks.audioTrack) {
 
@@ -1728,6 +1734,8 @@ class AgoraMultiChanelApp {
     }
 
     this.myPublishClient = this.getFirstOpenChannelInner();
+    if ( this.myPublishClient <0) 
+      return;
     await this.clients[this.myPublishClient].setClientRole("host");
     return this.myPublishClient;
   }
@@ -1742,6 +1750,8 @@ class AgoraMultiChanelApp {
         return i;
       }
     }
+    alert("no channel space available");
+    return -1;
   }
 
   setRemoteVolumes(vol) {

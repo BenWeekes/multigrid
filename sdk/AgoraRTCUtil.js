@@ -348,6 +348,7 @@ var AgoraRTCUtils = (function () {
   var MaxRenderRateSamples=16; // 4 seconds
   
   var _monitorRemoteCallStatsInterval;
+  var _remoteCallStatsMonitorFrequency;
   var _userStatsMap={};
   var _clientStatsMap={};
   var _nackException=false;
@@ -390,6 +391,8 @@ var AgoraRTCUtils = (function () {
   }
 
   async function monitorRemoteCallStats() {
+
+    console.log("start monitorRemoteCallStats "+(Date.now()));
 
     // store previous values for each rU
     // look for a volatile render rate 
@@ -556,7 +559,7 @@ var AgoraRTCUtils = (function () {
 
 
         if (client._highStream) {
-
+          console.log("start monitorRemoteCallStats  outbound "+(Date.now()));
           var hrc=client._highStream;
           if (hrc.pc && hrc.pc.pc) {
             await hrc.pc.pc.getStats(null).then(async stats => {
@@ -581,10 +584,13 @@ var AgoraRTCUtils = (function () {
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;
           _clientStatsMap.TxSendResolutionWidth=outgoingStats.sendResolutionWidth;
           _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;
+          console.log("end monitorRemoteCallStats  outbound "+(Date.now()));
         }
 
       }
     }
+
+    
     // calculate aggregate user stats and aggregate channel (client) stats
 
     // don't report vvol on one user as gateway interferes on its own in 2 person call
@@ -669,7 +675,14 @@ var AgoraRTCUtils = (function () {
     //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 
     AgoraRTCUtilEvents.emit("ClientVideoStatistics",_clientStatsMap);
-
+    console.log("end monitorRemoteCallStats "+(Date.now()));
+    if ( _monitorRemoteCallStatsInterval) {
+      setTimeout(() => {
+        monitorRemoteCallStats();
+      }, _remoteCallStatsMonitorFrequency);
+  
+    }
+    console.log("  ");
 
     /*
      Here we can fire events to advise whether remote streams should be reduced in quality or turned off
@@ -825,6 +838,17 @@ strategy
       _voiceActivityDetectionInterval = null;
     },
     startRemoteCallStatsMonitor: function (remoteCallStatsMonitorFrequency) {
+      _monitorRemoteCallStatsInterval = true;
+      _remoteCallStatsMonitorFrequency = remoteCallStatsMonitorFrequency;
+      setTimeout(() => {
+        monitorRemoteCallStats();
+      }, _remoteCallStatsMonitorFrequency);
+    },
+    stopRemoteCallStatsMonitor: function () {
+      _monitorRemoteCallStatsInterval = false;
+    },
+    /*
+    startRemoteCallStatsMonitor: function (remoteCallStatsMonitorFrequency) {
       _monitorRemoteCallStatsInterval = setInterval(() => {
         monitorRemoteCallStats();
       }, remoteCallStatsMonitorFrequency);
@@ -832,7 +856,7 @@ strategy
     stopRemoteCallStatsMonitor: function () {
       clearInterval(_monitorRemoteCallStatsInterval);
       _monitorRemoteCallStatsInterval = null;
-    },
+    },*/
     RemoteStatusGood: RemoteStatusGood,
     RemoteStatusFair: RemoteStatusFair,
     RemoteStatusPoor: RemoteStatusPoor,
