@@ -343,7 +343,7 @@ class AgoraMultiChanelApp {
     if (clientStats.RemoteSubCount > 0) {
       var stats =
       agoraApp.fixStatCPUo( " Rx Br (kbps):" + agoraApp.fixStatCPU((clientStats.RecvBitrate / 1000).toFixed(0)))+        
-      agoraApp.fixStatCPUo( " Stats Sched/Dur: " + agoraApp.fixStatCPU(clientStats.StatsScheduleTime.toFixed(0))+"/"+agoraApp.fixStatCPU(clientStats.StatsRunTime.toFixed(0)))+
+      agoraApp.fixStatCPUo( " Stats Sch/Dur: " + agoraApp.fixStatCPU(clientStats.StatsScheduleTime.toFixed(0))+"/"+agoraApp.fixStatCPU(clientStats.StatsRunTime.toFixed(0)))+
       //agoraApp.fixStatCPUo( " Nack Rate Avg (%):" + agoraApp.fixStatCPU(clientStats.AvgRxNR.toFixed(0)))+
       agoraApp.fixStatCPUo(  "Decode Time Avg (ms):" + agoraApp.fixStatCPU(clientStats.AvgRxDecodeTime.toFixed(2))) +
       agoraApp.fixStatCPUo( " Encode Time (ms):"+ agoraApp.fixStatCPU(clientStats.EncodeTime.toFixed(2))) +
