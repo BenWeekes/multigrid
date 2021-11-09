@@ -345,7 +345,7 @@ var AgoraRTCUtils = (function () {
   // Monitor Render Rate for being erratic 
   // fireevent when all collected
 
-  var MaxRenderRateSamples=16; // 4 seconds
+  var MaxRenderRateSamples=8; // 4 or 8 seconds
   
   var _monitorRemoteCallStatsInterval;
   var _remoteCallStatsMonitorFrequency;
