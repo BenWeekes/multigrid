@@ -69,9 +69,7 @@
     opacity: 0.9;
   }
 
-  .stats_display_inner_low{
-    color:#e4320f !important;
-  }
+
 
   .stats_display {
     color:#ffbf00;
@@ -79,12 +77,21 @@
     margin-top: 2px;
     position: absolute;
     z-index: 100;
-    font-size: 9px;
+    font-size: 12px;
+  }
+
+  .stats_display_inner_low{
+    color:#ffbf00 !important;
   }
 
   .stats_display_small_font {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
+
+  .stats_display_large_font {
+    font-size: 16px !important;
+  }
+
 
 
   .stats_display_local {

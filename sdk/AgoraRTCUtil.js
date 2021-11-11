@@ -489,6 +489,9 @@ var AgoraRTCUtils = (function () {
                     var totalDecodeTimeChange = 1000*(totalDecodeTime - _userStatsMap[uid].lastDecodeTime);
                     var framesDecodedChange =  (framesDecoded -  _userStatsMap[uid].lastFramesDecoded);
                     var decodeTime=(totalDecodeTimeChange/framesDecodedChange);
+                    if (decodeTime==0) {
+                      decodeTime=0.01;
+                    }
 
                     _userStatsMap[uid].lastStatsRead = now;
                     _userStatsMap[uid].lastNack = nack;            
