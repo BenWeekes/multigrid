@@ -535,7 +535,6 @@ var AgoraRTCUtils = (function () {
 
                 if (_userStatsMap[uid].renderRateStdDeviationPerc>10) {
                   console.log(uid+" "+_userStatsMap[uid].renderRates.length+" "+_userStatsMap[uid].renderRateStdDeviationPerc+" "+_userStatsMap[uid].renderRates);
-//                  console.log(_userStatsMap[uid].renderRates);
                 }
                 
                 if (_userStatsMap[uid].nackRate>0 && !isNaN(_userStatsMap[uid].nackRate)) {
@@ -560,7 +559,6 @@ var AgoraRTCUtils = (function () {
 
         // channel (client) level stats
         const clientStats = client.getRTCStats();
-
         _clientStatsMap.RecvBitrate=_clientStatsMap.RecvBitrate+clientStats.RecvBitrate;
         _clientStatsMap.SendBitrate=_clientStatsMap.SendBitrate+clientStats.SendBitrate;
 
@@ -571,7 +569,6 @@ var AgoraRTCUtils = (function () {
         if ( clientStats.RTT>_clientStatsMap.MaxRTT ) {
           _clientStatsMap.MaxRTT=clientStats.RTT;  
         }
-
 
         if (client._highStream) {
          // console.log("start monitorRemoteCallStats  outbound "+(Date.now()));
@@ -598,17 +595,15 @@ var AgoraRTCUtils = (function () {
           _clientStatsMap.TxSendBitratekbps=Math.floor(outgoingStats.sendBitrate / 1000);
           _clientStatsMap.TxSendFrameRate=outgoingStats.sendFrameRate;
           _clientStatsMap.TxSendResolutionWidth=outgoingStats.sendResolutionWidth;
-          _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;
-        
+          _clientStatsMap.TxSendResolutionHeight=outgoingStats.sendResolutionHeight;        
         }
-
       }
     }
 
     
     // calculate aggregate user stats and aggregate channel (client) stats
 
-    // don't report vvol on one user as gateway interferes on its own in 2 person call
+    // don't report render vol on one user as gateway interferes on its own in 2 person call
     //if (_clientStatsMap.RemoteSubCount>1) {
     _clientStatsMap.AvgRxRVol=_clientStatsMap.SumRxRVol/_clientStatsMap.RemoteSubCount;
     _clientStatsMap.AvgRxNR=_clientStatsMap.SumRxNR/_clientStatsMap.RemoteSubCount;
@@ -624,6 +619,10 @@ var AgoraRTCUtils = (function () {
      _fpsVol=-2;
    }
 
+   _monitorEnd=Date.now();
+   _clientStatsMap.StatsRunTime=(_monitorEnd-_monitorStart);
+
+
     /// determine remote status, start and duration
     /// reset duration for good/critical/poor
     
@@ -637,7 +636,9 @@ var AgoraRTCUtils = (function () {
     if (_nackException) {
       rrMultiplier=2;
     }
-    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ||  _fpsVol>10.0 ) {
+
+    
+    if (_clientStatsMap.AvgRxRVol > (12*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 12 ||  _fpsVol>10.0 || _clientStatsMap.StatsRunTime > (50 + (10*_clientStatsMap.RemoteSubCount)) || _clientStatsMap.StatsScheduleTime > _remoteCallStatsMonitorFrequency*1.2 ) {
       // critical or poor
       if (_clientStatsTrackMap.RemoteStatus!=RemoteStatusPoor) {
         _clientStatsTrackMap.RemoteStatus=RemoteStatusPoor;
@@ -646,7 +647,7 @@ var AgoraRTCUtils = (function () {
         _clientStatsTrackMap.RemoteStatusDuration=Date.now()-_clientStatsTrackMap.RemoteStatusStart;        
       }
 
-      if (_clientStatsMap.AvgRxRVol > (20*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 30 ||  _fpsVol>20.0) {
+      if (_clientStatsMap.AvgRxRVol > (20*rrMultiplier) ||  _clientStatsMap.AvgRxNR > 30 ||  _fpsVol>20.0 || _clientStatsMap.StatsScheduleTime > _remoteCallStatsMonitorFrequency*1.1) {
 
         if ( _clientStatsMap.AvgRxNR > 30 ) {
           _nackException=true;
@@ -685,13 +686,7 @@ var AgoraRTCUtils = (function () {
     _clientStatsMap.RemoteStatusDuration=Math.floor(_clientStatsTrackMap.RemoteStatusDuration/1000);
     _clientStatsMap.RemoteStatus= _clientStatsTrackMap.RemoteStatus;
     _clientStatsMap.LastUpdated= Date.now();
-    
-    
-    //console.log(" setting RemoteStatus to "+_clientStatsTrackMap.RemoteStatus )
 
-
-    _monitorEnd=Date.now();
-    _clientStatsMap.StatsRunTime=(_monitorEnd-_monitorStart);
     AgoraRTCUtilEvents.emit("ClientVideoStatistics",_clientStatsMap);
 
     //console.log("stats process time  "+(_monitorEnd-_monitorStart));
