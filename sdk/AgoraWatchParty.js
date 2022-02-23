@@ -90,8 +90,7 @@ class AgoraWatchParty {
 
     // call back can't handle this so used agoraWatchParty
     processInboundAudioExceedsThreshold(data) {        
-        //if (!AgoraRTCUtils.isIOS()  &&  (!data || data> agoraWatchParty.AudioExceedThreshold) ) {            
-        if (  (!data || data> agoraWatchParty.AudioExceedThreshold) ) {            
+        if (!AgoraRTCUtils.isIOS()  &&  (!data || data> agoraWatchParty.AudioExceedThreshold) ) {            
             if (agoraWatchParty.autoVolume && agoraWatchParty.player.volume!=agoraWatchParty.VOL_LOW) {
 
                 agoraWatchParty.setPlayerVolume(agoraWatchParty.VOL_LOW);
@@ -133,9 +132,9 @@ class AgoraWatchParty {
         // anyone receiving RTM will stop themselves as owner and will lose controls
         // add control listen
     
-      //  if  ( !AgoraRTCUtils.isIOS()) {
+        if  ( !AgoraRTCUtils.isIOS()) {
             this.setPlayerVolume(this.VOL_HIGH);
-      //  }
+        }
 
         setInterval(() => {
             this.broadcastState();
@@ -166,8 +165,7 @@ class AgoraWatchParty {
          this.disableShareContent();
         }
 
-        //if  (this.autoVolume && !AgoraRTCUtils.isIOS() && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH  && this.player.volume!= this.volumeCurrent) {            
-            if  (this.autoVolume && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH  && this.player.volume!= this.volumeCurrent) {                        
+        if  (this.autoVolume && !AgoraRTCUtils.isIOS() && (Date.now() -  this.lastInboundAudioTurnDown) > this.InboundAudioTurnBackUpTimeout && this.player.volume!= this.VOL_HIGH  && this.player.volume!= this.volumeCurrent) {            
             this.setPlayerVolume(this.VOL_HIGH);
             console.log("WP set audio vol high to "+this.player.volume);
             
@@ -185,7 +183,6 @@ class AgoraWatchParty {
         this.remoteHost=false;
         this.enableShareContent();
         this.player.src = document.getElementById("watchid").value;
-        this.player.muted = false;
         AgoraRTC.processExternalMediaAEC(this.player);
         this.player.load();
         this.player.pause();
@@ -231,7 +228,6 @@ class AgoraWatchParty {
         
         this.lastRTMUpdate = Date.now();
         // this.player.controls = false;  
-        this.player.muted = false;
         var command = text.split(this.RTM_SEPARATOR)[1];
         var vid = text.split(this.RTM_SEPARATOR)[2];
         var playerTime = Math.round(text.split(this.RTM_SEPARATOR)[3] * 10) / 10;

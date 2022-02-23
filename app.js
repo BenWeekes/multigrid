@@ -2290,9 +2290,6 @@ async function showMediaDeviceTest() {
 
 
   $("#media-device-test").on("hidden.bs.modal", async function (e) {
-    document.getElementById("agoravideoplayer").play();
-    
-    console.log(document.getElementById("agoravideoplayer"));
     cancelAnimationFrame(volumeAnimation);
     showLoadingSpinner();
     var currentCam = cams.find(cam => cam.label === $(".cam-input").val());
@@ -2314,7 +2311,6 @@ async function showMediaDeviceTest() {
 }
 
 async function showMediaDeviceChange() {
-  
   $("#mediaGo").html("Close");
   $("#media-device-test").modal("show");
   $("#media-device-test").unbind("hidden.bs.modal");
