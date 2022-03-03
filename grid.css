@@ -8,13 +8,6 @@
     overflow: hidden;
   }
 
-  .main_body_mobile{
-    
-  }
-
-
-
-
 
   .main_body_mobile_landscape{
     gap: 2px !important;
@@ -38,11 +31,30 @@
     width: 40px !important;
   }
 
+  #grid {
+    margin-top: 30px;
+    margin-left: 10vw;
+    overflow: hidden;
+    }
+  
+  td{
+    text-align: center;
+  }
+  #gridtable{
+    margin-top: 100px;
+    margin-left: 10vw;
+    overflow: hidden;
+    justify-content: center;
+    width: 80vw;
+  }
+
   .grid_wrapper {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 2px;
     grid-auto-rows: minmax(22px, auto);
+    justify-content: center;
+    width: 90vw;
   }
 
   .grid_wrapper_follow {

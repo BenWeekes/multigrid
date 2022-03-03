@@ -52,10 +52,14 @@ class AgoraMultiChanelApp {
     // Page Parameters
     this.appId = getParameterByName("appid") || "";
     this.maxClients = getParameterByNameAsInt("maxClients") || getParameterByNameAsInt("maxChannels") || 4;
-    this.baseChannelName = getParameterByName("channelBase") || getParameterByName("channelNamePrefix") || "SA-MULTITEST";
+    this.baseChannelName = getParameterByName("channelBase") || getParameterByName("channelNamePrefix") || "LOOQ";
     this.channel = getParameterByName("channel");
     this.userid = getParameterByNameAsInt("userid");
     this.maxUsersPerChannel = getParameterByNameAsInt("maxUsersPerChannel") || getParameterByNameAsInt("maxHostsPerChannel") || 16;
+
+    // LOOQ params
+    this.maxSeats=getParameterByNameAsInt("maxSeats") || 9;
+    this.currentSeat=getParameterByNameAsInt("currentSeat") || 2;
 
     this.isMobile = getParameterByName("isMobile") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
@@ -268,7 +272,7 @@ class AgoraMultiChanelApp {
     }, this.intervalManageSubscriptions);
 
     AgoraRTCUtils.setRTCClients(this.clients, this.numClients);
-    AgoraRTCUtils.startInboundVolumeMonitor(150); // ms interval
+  //  AgoraRTCUtils.startInboundVolumeMonitor(150); // ms interval
 
     // hangup after 1 hour
     setTimeout(() => {
@@ -282,6 +286,9 @@ class AgoraMultiChanelApp {
       AgoraRTCUtilEvents.on("RemoteUserVideoStatistics", agoraApp.processRemoteUserVideoStatistics);
       AgoraRTCUtilEvents.on("ClientVideoStatistics", agoraApp.processAllClientVideoStatistics);
     }
+
+
+    this.looq_generateTableLayout();
 
   }
 
@@ -305,6 +312,52 @@ class AgoraMultiChanelApp {
     return Object.keys(x).length;
   }
 
+
+  looq_get_angle(cell,angle){ 
+    return parseInt(""+looq_getCellId(cell)+""+angle);
+  }
+
+  looq_generateTableLayout() {
+  let tableHTML=' <table id="gridtable"> ' +
+    ' <tr>' +
+    ' <td> <div id="'+this.looq_getCellId(2)+'" title="2_pos_120_uid='+this.looq_getCellId(2)+'" class="remote_video" ></div></td>' +
+    ' <td> <div id="'+this.looq_getCellId(3)+'" title="3_pos_160_uid='+this.looq_getCellId(3)+'" class="remote_video" ></div></td>' +
+    ' <td> <div id="'+this.looq_getCellId(4)+'" title="4_pos_200_uid='+this.looq_getCellId(4)+'" class="remote_video" ></div></td>' +
+    ' <td> <div id="'+this.looq_getCellId(5)+'" title="5_pos_240_uid='+this.looq_getCellId(5)+'" class="remote_video" ></div></td>' +
+    ' </tr> ' +
+    ' <tr>' +
+    ' <td> <div id="'+this.looq_getCellId(1)+'" title="1_pos_80_uid='+this.looq_getCellId(1)+'" class="remote_video" ></div></td>' +
+    ' <td  colspan="2"> <div id="pos_content" class="remote_video" ></div></td>' +
+    '  <td> <div id="'+this.looq_getCellId(6)+'" title="6_pos_280_uid='+this.looq_getCellId(6)+'" class="remote_video" ></div></td>' +
+    ' </tr> ' +
+    ' <tr>' +
+    ' <td> <div id="'+this.looq_getCellId(0)+'" title="0_pos_40_uid='+this.looq_getCellId(0)+'" class="remote_video" ></div></td>' +
+    ' <td   colspan="2">  <div id="local-player"  class="remote_video"></div></td>' +
+    ' <td> <div id="'+this.looq_getCellId(7)+'" title="7_pos_320_uid='+this.looq_getCellId(7)+'" class="remote_video" ></div></td>' +
+    ' </tr>  ' +
+    ' </table>';
+    document.getElementById("meeting_table").innerHTML = tableHTML;
+  }
+
+  looq_subscribe(uid){
+    if (uid==looq_get_angle(0,40) ||
+        uid==looq_get_angle(1,80) ||  
+        uid==looq_get_angle(2,120) ||  
+        uid==looq_get_angle(3,160) ||  
+        uid==looq_get_angle(4,200) ||  
+        uid==looq_get_angle(5,240) ||  
+        uid==looq_get_angle(6,280) ||  
+        uid==looq_get_angle(7,320) 
+        ) {
+      // also check the 180
+      return true;
+    }
+    return false
+    }
+
+    // when to publish a 180?
+    // when to publish nothing ?
+
   async createClients() {
     let i = 0;
     // Create the max number of client objects.
@@ -325,7 +378,30 @@ class AgoraMultiChanelApp {
       // We may want specific users (instructor) to always be subscribed to.
       // The best way to quickly detect client issues (due to either cpu or network) is the average renderFrameRate which is instantly impacted if either the network or cpu is not keeping up
 
+
+      // LOOQ - only some userids required depending on current seat
+      // 
+
+      /*
+      Seat-to-seat	
+         1	 2	 3	 4	 5 	 6	 7 	 8	 9 
+      1	 -	40	80	120	160	200	240	280	320
+      2	320	 -	40	80	120	160	200	240	280
+      3	280	320	 -	40	80	120	160	200	240
+      4	240	280	320	 -	40	80	120	160	200
+      5	200	240	280	320	 -	40	80	120	160
+      6	160	200	240	280	320	 -	40	80	120
+      7	120	160	200	240	280	320	 -	40	80
+      8	80	120	160	200	240	280	320	 -	40
+      9	40	80	120	160	200	240	280	320	-
+      
+      
+      */
       this.clients[i].on("user-published", async (user, mediaType) => {
+        // ignore if not required looq camera
+        if (!this.looq_subscribe())
+        return;
+
         var uid_string = user.uid.toString();
         //console.error(" adding user "+uid_string);
         this.userMap[uid_string] = user;
@@ -876,6 +952,7 @@ class AgoraMultiChanelApp {
   }
 
   removeAgoraInnerVideoStyling() {
+  
     var els = document.getElementsByClassName("remote_video");
     var that = this;
     Array.prototype.forEach.call(els, function (el) {
@@ -926,6 +1003,7 @@ class AgoraMultiChanelApp {
   }
 
   removeSlotsIfNotInMap(expected) {
+    return;
     var els = document.getElementsByClassName("remote_video");
     var that = this;
     Array.prototype.forEach.call(els, function (el) {
@@ -950,6 +1028,7 @@ class AgoraMultiChanelApp {
   }
 
   addVideoSlotIfNotExisting(uid_string) {
+    return;
     if (!document.getElementById(uid_string)) {
       const playerDomDiv = document.createElement("div");
       playerDomDiv.id = uid_string;
@@ -1610,8 +1689,19 @@ class AgoraMultiChanelApp {
     }
   }
 
-  updateUILayout() {
+  looq_getCellId(pos) {
+    let uid= ((this.currentSeat + (pos)) % (this.maxSeats)) + 1;
+    if (uid<10) {
+      return "10"+uid;
+    } else {
+      return "1"+uid;
+    }
+  }
 
+ 
+
+  updateUILayout() {
+return;
     this.setMobileOneTime();
     this.removeAgoraInnerVideoStyling();
 
@@ -1691,7 +1781,7 @@ class AgoraMultiChanelApp {
       }
     }
 
-    //  follow speaker/content mode
+    
     if (!this.gridLayout) { //
       // keep single row
       // portrait mobile can handle up to 3 rows of 2
@@ -1830,7 +1920,6 @@ class AgoraMultiChanelApp {
         document.getElementById(this.vadUid).children[0].style.opacity = "";
       }
     }
-
 
     this.ui_rows = rows;
     this.ui_cols = cols;
