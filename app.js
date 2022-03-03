@@ -51,7 +51,7 @@ class AgoraMultiChanelApp {
 
     // Page Parameters
     this.appId = getParameterByName("appid") || "";
-    this.maxClients = getParameterByNameAsInt("maxClients") || getParameterByNameAsInt("maxChannels") || 4;
+    this.maxClients = getParameterByNameAsInt("maxClients") || getParameterByNameAsInt("maxChannels") || 9;
     this.baseChannelName = getParameterByName("channelBase") || getParameterByName("channelNamePrefix") || "LOOQ";
     this.channel = getParameterByName("channel");
     this.userid = getParameterByNameAsInt("userid");
@@ -306,15 +306,15 @@ class AgoraMultiChanelApp {
   }
 
 
-
-
   getMapSize(x) {
     return Object.keys(x).length;
   }
 
-
   looq_get_angle(cell,angle){ 
-    return parseInt(""+looq_getCellId(cell)+""+angle);
+    if (angle<100)
+      return parseInt(""+this.looq_getCellId(cell)+"0"+angle);
+    else
+      return parseInt(""+this.looq_getCellId(cell)+""+angle);
   }
 
   looq_generateTableLayout() {
@@ -340,14 +340,15 @@ class AgoraMultiChanelApp {
   }
 
   looq_subscribe(uid){
-    if (uid==looq_get_angle(0,40) ||
-        uid==looq_get_angle(1,80) ||  
-        uid==looq_get_angle(2,120) ||  
-        uid==looq_get_angle(3,160) ||  
-        uid==looq_get_angle(4,200) ||  
-        uid==looq_get_angle(5,240) ||  
-        uid==looq_get_angle(6,280) ||  
-        uid==looq_get_angle(7,320) 
+    if (uid==this.looq_get_angle(0,40) ||
+        uid==this.looq_get_angle(1,80) ||  
+        uid==this.looq_get_angle(2,120) ||  
+        uid==this.looq_get_angle(3,160) ||  
+        uid==this.looq_get_angle(4,200) ||  
+        uid==this.looq_get_angle(5,240) ||  
+        uid==this.looq_get_angle(6,280) ||  
+        uid==this.looq_get_angle(7,320) || 
+        uid.endsWith("180")
         ) {
       // also check the 180
       return true;
@@ -399,14 +400,13 @@ class AgoraMultiChanelApp {
       */
       this.clients[i].on("user-published", async (user, mediaType) => {
         // ignore if not required looq camera
-        if (!this.looq_subscribe())
-        return;
+
 
         var uid_string = user.uid.toString();
+        if (!this.looq_subscribe(uid_string))
+        return;
         //console.error(" adding user "+uid_string);
         this.userMap[uid_string] = user;
-
-
 
         if (mediaType === this.VIDEO) {
           this.videoPublishers[uid_string] = currentClient;
@@ -931,7 +931,9 @@ class AgoraMultiChanelApp {
     if (this.performSubscriptions === "true") {
       client.subscribe(user, this.VIDEO).then(response => {
 
-        user.videoTrack.play(uid_string);
+        // 108180
+        let divuid=uid_string.substring(0,uid_string.length-3)
+        user.videoTrack.play(divuid);
         that.removeAgoraInnerVideoStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
@@ -1332,10 +1334,19 @@ class AgoraMultiChanelApp {
       let i = 0;
       // Join one channel for each client object.
       for (i; i < this.numClients; i++) {
-        tempChannelName = this.baseChannelName + i.toString();
+
+        // LOOQ1
+        // LOOQ01
+        if (i<10){
+          tempChannelName = this.baseChannelName + "0" + i.toString();
+        } else {
+          tempChannelName = this.baseChannelName + i.toString();
+        }
+        
+
         await this.clients[i].setClientRole("audience");
         this.myUid[i] = await this.clients[i].join(this.appId, tempChannelName,
-          this.token, null);
+          this.token,  this.userid);
       }
       this.numChannels = i;
     }
@@ -1610,8 +1621,8 @@ class AgoraMultiChanelApp {
       return this.myPublishClient;
     }
 
-    this.myPublishClient = this.getFirstOpenChannelInner();
-    if (this.myPublishClient < 0)
+    //this.myPublishClient = this.getFirstOpenChannelInner();
+    this.myPublishClient = this.currentSeat-1;
       return;
     await this.clients[this.myPublishClient].setClientRole("host");
     return this.myPublishClient;
