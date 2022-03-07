@@ -141,9 +141,14 @@
   background-position: center 50%;
   margin: 2px;
   padding: 2px;
-  width: 120px;
-  height: 90px;
+  width: 320px;
+  height: 180px;
   display: inline-block;
+  }
+
+  #contentshare{
+    width: 640px;
+    height: 360px;
   }
 
 
@@ -441,3 +446,4 @@
   .status_critical{
     color: #5f0202;
   }
+

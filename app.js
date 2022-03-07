@@ -60,6 +60,7 @@ class AgoraMultiChanelApp {
     // LOOQ params
     this.maxSeats=getParameterByNameAsInt("maxSeats") || 9;
     this.currentSeat=getParameterByNameAsInt("currentSeat") || 2;
+    this.doPublish=getParameterByName("doPublish") || true;
 
     this.isMobile = getParameterByName("isMobile") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
@@ -327,7 +328,7 @@ class AgoraMultiChanelApp {
     ' </tr> ' +
     ' <tr>' +
     ' <td> <div id="'+this.looq_getCellId(1)+'" title="1_pos_80_uid='+this.looq_getCellId(1)+'" class="remote_video" ></div></td>' +
-    ' <td  colspan="2"> <div id="pos_content" class="remote_video" ></div></td>' +
+    ' <td  colspan="2"> <div id="contentshare" class="remote_video" ></div></td>' +
     '  <td> <div id="'+this.looq_getCellId(6)+'" title="6_pos_280_uid='+this.looq_getCellId(6)+'" class="remote_video" ></div></td>' +
     ' </tr> ' +
     ' <tr>' +
@@ -348,7 +349,8 @@ class AgoraMultiChanelApp {
         uid==this.looq_get_angle(5,240) ||  
         uid==this.looq_get_angle(6,280) ||  
         uid==this.looq_get_angle(7,320) || 
-        uid.endsWith("180")
+        uid.endsWith("180") ||
+        parseInt(uid) <= this.maxScreenshareUID        
         ) {
       // also check the 180
       return true;
@@ -931,9 +933,15 @@ class AgoraMultiChanelApp {
     if (this.performSubscriptions === "true") {
       client.subscribe(user, this.VIDEO).then(response => {
 
-        // 108180
-        let divuid=uid_string.substring(0,uid_string.length-3)
-        user.videoTrack.play(divuid);
+        var uidi = parseInt(uid_string, 10);
+        if (uidi < this.maxScreenshareUID) {
+          this.currScreenshareUID = uidi;
+          user.videoTrack.play("contentshare");
+        } else {
+          // 108180
+          let divuid=uid_string.substring(0,uid_string.length-3)
+          user.videoTrack.play(divuid);
+        }
         that.removeAgoraInnerVideoStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
@@ -942,7 +950,7 @@ class AgoraMultiChanelApp {
         client.setRemoteVideoStreamType(user.uid, that.videoSubscriptions[uid_string].streamType);
         that.videoSubscriptions[uid_string].startTime = Date.now();
         // handleScreenshareSub
-        that.handleScreenshareSub(uid_string);
+//        that.handleScreenshareSub(uid_string);
 
       }).catch(e => {
         delete that.videoSubscriptions[uid_string];
@@ -1404,7 +1412,6 @@ class AgoraMultiChanelApp {
     }
   }
 
-
   async peerMessage(msg, peerId) {
     this.rtmClient.sendMessageToPeer({ text: msg }, peerId).then(() => {
     }).catch(error => {
@@ -1426,11 +1433,7 @@ class AgoraMultiChanelApp {
 
   async publishScreenShareToChannel() {
     this.screenClient = AgoraRTC.createClient(this.clientConfig);
-    var availableClient = this.getFirstOpenChannelInner();
-    let tempChannelName = this.baseChannelName + availableClient.toString();
-    if (this.channel) {
-      tempChannelName = this.channel;
-    }
+    let tempChannelName = this.baseChannelName+"01";
     var ssuid = this.currScreenshareUID + 1;
     if (ssuid >= this.maxScreenshareUID) {
       ssuid = this.minScreenshareUID;
@@ -1522,7 +1525,6 @@ class AgoraMultiChanelApp {
 
     if (!this.RTCUtilsInitialised) {
       this.initRTCUtils(this.initialProfile);
-
       // we will use the last channel name and UID to join RTM for send/receive VAD messages
       this.rtmChannelName = this.baseChannelName;
       this.rtmUid = this.myUid[this.myPublishClient].toString();
@@ -1550,7 +1552,6 @@ class AgoraMultiChanelApp {
     }
   }
 
-
   async stopPublishingVideo() {
     if (this.localTracks.videoTrack != null) {
       console.log("### stopPublishingVideo VIDEO! ###");
@@ -1558,7 +1559,6 @@ class AgoraMultiChanelApp {
       await this.clients[this.myPublishClient].unpublish(this.localTracks.videoTrack);
       await this.localTracks.videoTrack.stop();
       await this.localTracks.videoTrack.close();
-
       //await this.localTracks.videoTrack.stop();
       this.localTracks.videoTrack = null;
     }
@@ -1621,10 +1621,14 @@ class AgoraMultiChanelApp {
       return this.myPublishClient;
     }
 
-    //this.myPublishClient = this.getFirstOpenChannelInner();
-    this.myPublishClient = this.currentSeat-1;
-      return;
-    await this.clients[this.myPublishClient].setClientRole("host");
+    if (!this.doPublish){
+      this.myPublishClient = -1;
+    }
+    else {
+      this.myPublishClient = this.currentSeat-1;      
+      await this.clients[this.myPublishClient].setClientRole("host");  
+    }
+
     return this.myPublishClient;
   }
 
@@ -1696,7 +1700,6 @@ class AgoraMultiChanelApp {
       if (document.getElementById("watchid")) {
         document.getElementById("watchid").classList.add("watch_input_mobile");
       }
-
     }
   }
 
@@ -1708,8 +1711,6 @@ class AgoraMultiChanelApp {
       return "1"+uid;
     }
   }
-
- 
 
   updateUILayout() {
 return;
