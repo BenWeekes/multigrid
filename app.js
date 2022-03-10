@@ -289,9 +289,7 @@ class AgoraMultiChanelApp {
 
     if (this.cpuAlgoTest === "false" && (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true"))) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
-    } else {
-      AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
-    }
+    } 
 
     AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
     AgoraRTCUtilEvents.on("VoiceActivityDetected", agoraApp.handleVADEvents);
