@@ -1639,7 +1639,7 @@ class AgoraMultiChanelApp {
     var grid_padding = 6;
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
     //alert(toolbar_height);
-    console.log(toolbar_height);
+    //console.log(toolbar_height);
     var toolbar_height_and_focus_height = toolbar_height;
 
     var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
