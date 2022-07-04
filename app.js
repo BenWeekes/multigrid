@@ -58,6 +58,9 @@ class AgoraMultiChanelApp {
     this.maxUsersPerChannel = getParameterByNameAsInt("maxUsersPerChannel") || getParameterByNameAsInt("maxHostsPerChannel") || 16;
 
     this.isMobile = getParameterByName("isMobile") || "false";
+
+    this.logoPath = getParameterByName("logoPath") ||  "";
+    this.enableChat = getParameterByName("enableChat") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
     this.minVideoAllowedSubs = getParameterByNameAsInt("minVideoAllowedSubs") || 1;
@@ -183,6 +186,9 @@ class AgoraMultiChanelApp {
     this.rtmUid;
     this.rtmChannelName;
     this.rtmChannel;
+    this.chatWidth=0;  
+    this.logoHeight=0;             
+    this.grid_over="grid_over";
 
     // VAD
     this.vadUid;
@@ -223,11 +229,13 @@ class AgoraMultiChanelApp {
     this.outboundFrameCount = 0;
     this.InboundStatsMonitorInterval = 15;
     this.debugInboundStats = this.InboundStatsMonitorInterval;
+    this.uiInit = false;
     this.mobileUIUpdated = false;
     this.mobileUIUpdatedLandscape = false;
     this.mobileUIUpdatedPortrait = false;
     this.gridLayout = true;
     this.landscape = true;
+    this.uiinitlandscape = false;
 
     this.manageGridLast = 0;
     this.ManageGridWait = getParameterByNameAsInt("ManageGridWait") || 500;
@@ -1584,6 +1592,48 @@ class AgoraMultiChanelApp {
     }
   }
 
+  UIInit() {
+
+    if (!this.uiInit || this.landscape!=this.uiinitlandscape) {
+      this.uiInit=true;
+      this.uiinitlandscape=this.landscape;
+
+      this.logoPath = getParameterByName("logoPath") ||  "";
+      this.enableChat = getParameterByName("enableChat") || "false";
+
+      // logo
+      if (this.logoPath.length>0) {        
+        document.getElementById("logoimg").src=this.logoPath; 
+        document.getElementById("logo").classList.remove("hidden");     
+        this.logoHeight=30;             
+      }
+
+      // chat 
+      if (this.enableChat === "true" && this.landscape) {        
+        document.getElementById("chat").classList.remove("hidden");  
+        this.grid_over="grid_over_chat";
+
+        if (this.logoPath.length>0) {
+          document.getElementById("chat").style.top = 106 + 'px';
+        } else {
+          document.getElementById("chat").style.top = 76 + 'px';
+        }
+
+        this.chatWidth=200;             
+        
+      } else {
+        document.getElementById("chat").classList.add("hidden");  
+        this.grid_over="grid_over";
+        this.chatWidth=0;   
+      }
+
+      
+
+    }
+
+  }
+
+
   setMobileOneTime() {
     if (!this.mobileUIUpdated && isMobile()) {
       this.mobileUIUpdated = true;
@@ -1610,6 +1660,7 @@ class AgoraMultiChanelApp {
 
   updateUILayout() {
 
+
     this.setMobileOneTime();
     this.removeAgoraInnerVideoStyling();
 
@@ -1621,7 +1672,14 @@ class AgoraMultiChanelApp {
       this.landscape = true;
     }
 
+    this.UIInit();
+
+    if (this.landscape) {
+      width = window.innerWidth-this.chatWidth;
+    }
     // shownPersonToPerson is 2 person face time style call
+
+    document.getElementById("focus-parent").style.width=width + 'px';
 
     var connected_users = this.usersConnected.length;
     if (connected_users == 1 && this.gridLayout && !this.shareContentOnDisplay) {
@@ -1632,14 +1690,11 @@ class AgoraMultiChanelApp {
       this.toggleLayout();
     }
 
-
     var cell_width = this.CellWidthBase; // 160 and smallest possible size 
     var cell_height = this.CellHeightBase;
     var cell_margin = 4;
     var grid_padding = 6;
     var toolbar_height = document.getElementById("toolbar").offsetHeight;
-    //alert(toolbar_height);
-    //console.log(toolbar_height);
     var toolbar_height_and_focus_height = toolbar_height;
 
     var cells = document.getElementsByClassName('remote_video'); // in grid (excludes focussed follow speaker)
@@ -1719,6 +1774,7 @@ class AgoraMultiChanelApp {
         cols = 1;
       }
       else if (this.landscape) {
+        // height is challenged
         var focus_height = height - toolbar_height - cell_height * 2 - cell_margin * 3 - grid_padding * 3;
         if (focus_height < 180)
           focus_height = 180;
@@ -1737,7 +1793,8 @@ class AgoraMultiChanelApp {
 
     document.getElementById("agoravideoplayer").style.height = document.getElementById("focus-video").style.height;
     document.getElementById("agoravideoplayer").style.width = document.getElementById("focus-video").style.width;
-
+    
+    
     // mobile grid gaps
     if (isMobile()) {
       var mel = document.getElementById("main_body");
@@ -1764,10 +1821,10 @@ class AgoraMultiChanelApp {
     var grid_available_width = width - (grid_padding * cols);
 
     if (connected_users == 1 && !this.gridLayout && !this.shareContentOnDisplay) { // 1 other person to display larger
-      document.getElementById("grid").classList.add("grid_over");
+      document.getElementById("grid").classList.add(this.grid_over);
       grid_available_height = 90;
     } else {
-      document.getElementById("grid").classList.remove("grid_over");
+      document.getElementById("grid").classList.remove(this.grid_over);
     }
     // are we limited by width or height 
     if (rows * grid_available_width / this.AspectRatio > cols * grid_available_height) {
@@ -1804,6 +1861,11 @@ class AgoraMultiChanelApp {
 
     document.getElementById("grid").style.width = grid_width + 'px';
     document.getElementById("grid").style.height = grid_height + 'px';
+
+
+    var chat_height= height - toolbar_height - this.logoHeight  - (grid_padding * 4);
+    document.getElementById("chat").style.height = chat_height + 'px';
+    
 
     var grid_actual_width = document.getElementById("grid").offsetWidth;
     var grid_actual_height = document.getElementById("grid").offsetHeight;

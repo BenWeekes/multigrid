@@ -17,6 +17,10 @@
 </head>
 
 <body>
+  <div id="logo" class="logo hidden" >    
+    <img src='' id="logoimg"
+    class="logoimg" />
+  </div>
   <div id="main_body" class="main_body">
     <div id="toolbar" class="header">
 
@@ -127,21 +131,26 @@
         </div>
       </div>
     </div>
+  
+    <div id="focus-parent">
+      <div id="focus-video" class="focussed-video hidden">
+        <div id="ytplayer" class="hidden"></div>
 
-    <div id="focus-video" class="focussed-video hidden">
-      <div id="ytplayer" class="hidden"></div>
+        <div id="agoraplayer" class="hidden">
+          <video id="agoravideoplayer" crossorigin="anonymous" controls="false" preload='auto' playsinline>
 
-      <div id="agoraplayer" class="hidden">
-        <video id="agoravideoplayer" crossorigin="anonymous" controls="false" preload='auto' playsinline>
-
-        </video>
+          </video>
+        </div>
       </div>
-    </div>
 
+
+    <div id="chat" class="chat hidden" ></div>
 
     <div id="grid" class="grid_wrapper">
       <div id="local-player" class="local_video hidden"><div id="stats_local" class="stats_display_local"></div></div>
     </div>
+  </div>
+
 
   </div>
 </body>
