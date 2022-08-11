@@ -1608,8 +1608,8 @@ class AgoraMultiChanelApp {
  async fixiOSPlayerAudio() {
    //alert("fixiOSPlayerAudio 2");
     // avoid iOS low volume issue by recreating  mic track
-    await this.leaveChannels();
-    await this.joinChannels();
+    //await this.leaveChannels();
+    //await this.joinChannels();
     var enabled=this.localTracks.audioTrack._enabled;
     this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
     await this.clients[this.myPublishClient].setClientRole("host");
