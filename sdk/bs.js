@@ -173,7 +173,7 @@ async function init() {
 
     const constraints = {
         video: {
-            deviceId: deviceId ? { exact: deviceId } : {}, width: 320, height: 180, rameRate: 15
+            deviceId: deviceId ? { exact: deviceId } : {}, width: 320, height: 180, rameRate: 24
         },
         audio: true
     };
@@ -187,7 +187,7 @@ async function init() {
         },
         width: 320,
         height: 180,
-        frameRate: 15
+        frameRate: 24
     });
 
     navigator.mediaDevices.getUserMedia(constraints).then(async (stream) => {

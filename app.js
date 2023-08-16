@@ -1489,15 +1489,33 @@ class AgoraMultiChanelApp {
         //canv.width=1280;
         //canv.height=720;
         canv.setAttribute('style', 'position:absolute !important');    
-        var stream = canv.captureStream(30);
+        var stream = canv.captureStream(24);
+        var gumStream;
         if (this.micId){
-          [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-            AgoraRTC.createMicrophoneAudioTrack( { microphoneId: this.micId }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 15, bitrateMin: 300, bitrateMax: 1200  })]);
-  
+           gumStream=await navigator.mediaDevices.getUserMedia({ video: false, audio: { exact: this.micId } });
         } else {
-        [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createMicrophoneAudioTrack(), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 15, bitrateMin: 300, bitrateMax: 1200 })]);
+          gumStream=await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
         }
+
+        const ac = new AudioContext();
+        const dest = ac.createMediaStreamDestination();
+        var source = ac.createMediaStreamSource(gumStream);
+        let audioDelay = ac.createDelay(0.2); // 10 seconds max delay
+        audioDelay.delayTime.value = 0.1 // Seconds delay    
+        source.connect(audioDelay).connect(dest);
+
+        /*
+        var audioContext = new AudioContext();
+        var source = audioContext.createMediaStreamSource(gumStream);
+        let audioDelay = audioContext.createDelay(2); // 10 seconds max delay
+        audioDelay.delayTime.value = 1 // Seconds delay
+        //source.connect(audioDelay).connect(audioContext.destination)
+        console.error(audioContext.destination);
+        //const dest = audioContext.createMediaStreamDestination();
+        */
+        [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
+          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 540 }, height: { max: 540 }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })]);
+
       }
       else if (this.cameraId && this.micId) {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
