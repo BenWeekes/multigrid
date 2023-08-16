@@ -147,8 +147,8 @@ function applyMocap(obj, blendshapes_values, mirror) {
 
     head.rotation.x = -0.6 * roll;
     neck.rotation.x = - 0.4 * roll;
-    head.rotation.y = 0.6 * yaw;
-    neck.rotation.y = 0.4 * yaw;
+    head.rotation.y = -0.6 * yaw;
+    neck.rotation.y = -0.4 * yaw;
     head.rotation.z = -0.45 - 0.6 * pitch;
     neck.rotation.z = -0.45 - 0.4 * pitch;
 }
