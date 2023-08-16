@@ -1491,6 +1491,17 @@ class AgoraMultiChanelApp {
       }
     }
 
+    
+    var canv=document.getElementsByTagName("canvas")[0];
+
+    canv.width=1280;
+    canv.height=720;
+    canv.setAttribute('style', 'position:absolute !important');
+    //canv.setAttribute('style', 'width:640px !important; height:320px !important');
+
+    var stream = canv.captureStream(30);
+    this.localTracks.videoTrack=AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] });
+
     if ((this.enableDualStream === "true" && !isMobile()) || this.enableDualStreamMobile === "true") {
       this.clients[this.myPublishClient].enableDualStream().then(() => {
         console.log("Enable Dual stream success!");
