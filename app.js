@@ -1484,20 +1484,26 @@ class AgoraMultiChanelApp {
       }
 
       
-
-      if (this.cameraId && this.micId) {
-        [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-          { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
-      }
-      else if (this.avatar === "true") {
+      if (this.avatar === "true") {
         var canv=document.getElementsByTagName("canvas")[0];
         //canv.width=1280;
         //canv.height=720;
         canv.setAttribute('style', 'position:absolute !important');    
         var stream = canv.captureStream(30);
+        if (this.micId){
+          [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
+            AgoraRTC.createMicrophoneAudioTrack( { microphoneId: this.micId }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })]);
+  
+        } else {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
           AgoraRTC.createMicrophoneAudioTrack(), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })]);
+        }
       }
+      else if (this.cameraId && this.micId) {
+        [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+          { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
+      }
+
       else {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
           {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
