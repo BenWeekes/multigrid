@@ -1492,11 +1492,11 @@ class AgoraMultiChanelApp {
         var stream = canv.captureStream(30);
         if (this.micId){
           [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-            AgoraRTC.createMicrophoneAudioTrack( { microphoneId: this.micId }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })]);
+            AgoraRTC.createMicrophoneAudioTrack( { microphoneId: this.micId }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 15, bitrateMin: 300, bitrateMax: 1200  })]);
   
         } else {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createMicrophoneAudioTrack(), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })]);
+          AgoraRTC.createMicrophoneAudioTrack(), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 15, bitrateMin: 300, bitrateMax: 1200 })]);
         }
       }
       else if (this.cameraId && this.micId) {
