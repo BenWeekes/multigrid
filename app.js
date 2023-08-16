@@ -1466,7 +1466,7 @@ class AgoraMultiChanelApp {
       return;
     }
     // create together for single allow
-    if (!this.localTracks.audioTrack) {
+    if (!this.localTracks.audioTrack || this.avatar === "true") {
 
       var vwidth = this.highVideoWidth;
       var vheight = this.highVideoHeight;
