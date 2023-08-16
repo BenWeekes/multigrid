@@ -149,8 +149,8 @@ function applyMocap(obj, blendshapes_values, mirror) {
     neck.rotation.x = - 0.4 * roll;
     head.rotation.y = 0.6 * yaw;
     neck.rotation.y = 0.4 * yaw;
-    head.rotation.z = -0.4 - 0.6 * pitch;
-    neck.rotation.z = -0.4 - 0.4 * pitch;
+    head.rotation.z = -0.45 - 0.6 * pitch;
+    neck.rotation.z = -0.45 - 0.4 * pitch;
 }
 function handleMocap(bs_csv) {
     let blendshapes_values = bs_csv.split(',');
