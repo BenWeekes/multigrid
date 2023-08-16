@@ -82,6 +82,7 @@ class AgoraMultiChanelApp {
 
     this.rampUpAgressive = getParameterByName("rampUpAgressive") || "false";
     this.cpuAlgoTest = getParameterByName("cpuAlgoTest") || "false";
+    this.avatar = getParameterByName("avatar") || "false";
 
     this.chatName = getParameterByName("chatName") || "Guest"+(Math.floor(Math.random() * 900)+100);
 
@@ -1482,25 +1483,26 @@ class AgoraMultiChanelApp {
         this.initialProfile = "180p";
       }
 
+      
+
       if (this.cameraId && this.micId) {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
           { microphoneId: this.micId }, { cameraId: this.cameraId, encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
-      } else {
+      }
+      else if (this.avatar === "true") {
+        var canv=document.getElementsByTagName("canvas")[0];
+        //canv.width=1280;
+        //canv.height=720;
+        canv.setAttribute('style', 'position:absolute !important');    
+        var stream = canv.captureStream(30);
+        [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
+          AgoraRTC.createMicrophoneAudioTrack(), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })]);
+      }
+      else {
         [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
           {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
       }
     }
-
-    
-    var canv=document.getElementsByTagName("canvas")[0];
-
-    canv.width=1280;
-    canv.height=720;
-    canv.setAttribute('style', 'position:absolute !important');
-    //canv.setAttribute('style', 'width:640px !important; height:320px !important');
-
-    var stream = canv.captureStream(30);
-    this.localTracks.videoTrack=AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] });
 
     if ((this.enableDualStream === "true" && !isMobile()) || this.enableDualStreamMobile === "true") {
       this.clients[this.myPublishClient].enableDualStream().then(() => {
