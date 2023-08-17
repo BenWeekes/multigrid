@@ -1,5 +1,5 @@
 
-import vision from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0'; 
+import vision from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3'; 
 let camera;
 let deviceId = null;
 let blendshapesNeutral = [0.1456766, 0.14509096, 0.04416631, 0, 0, 0.02075958, 0.05995359, 0.05044997, 0, 0, 0, 0, 0.06333958, 0.06059476, 0, 0, 0.1233948, 0.1233262, 0.2249145, 0.2248967, 0.1552135, 0.1565699, 0.1084167, 0.01461025, 0.1069989, 0, 0.0935045, 0.08081174, 0.06888802, 0, 0, 0.02572375, 0.02300292, 0.1214991, 0.1276631, 0.0682996, 0.06274197, 0.04613221, 0, 0.0765766, 0.077179, 0.1069419, 0.04396585, 0.1304866, 0.06028794, 0.1125906, 0.1049666, 0.0104436, 0.008164653, 0.05508019, 0.04577279, 3.348952e-07, -0.033934776, 0.010706255, 0.0024019803];
@@ -20,9 +20,7 @@ document.getElementById("mesh").addEventListener('model-loaded', (e, f) => {
 
 const readBlendshapesFromAvatar = function (meshMorphData, mesh) {
     meshMorphData['bs'] = [];
-
     mesh.traverse((o) => {
-
         if (o.type == 'Bone') {
             if (o.name == 'Neck' || o.name == 'Neck01' || o.name == 'Neck1_M') {
                 meshMorphData['neck'] = o;
@@ -32,18 +30,14 @@ const readBlendshapesFromAvatar = function (meshMorphData, mesh) {
                 meshMorphData[o.name] = o;
             }
         }
-
         if (o.type == 'SkinnedMesh') {
             meshMorphData[o.name] = o;
         }
-
         if (o.morphTargetInfluences && o.userData.targetNames) {
             meshMorphData['bs'].push(o);
         }
-
     });
 }
-
 
 function getMeshMorphData(obj) {
     let meshMorphData = MorphData[obj.uuid];
@@ -60,8 +54,17 @@ const getBone = function (obj, bone) {
     return meshMorphData[bone];
 }
 
+let init2done=false;
 
 async function init2() {
+   
+    if (init2done) {
+        MorphData = {};
+        return;
+    }
+    else {
+        init2done=true;
+    }
     const { FaceLandmarker, FilesetResolver } = vision;
     const filesetResolver = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -74,6 +77,9 @@ async function init2() {
             },
             outputFaceBlendshapes: true,
             outputFacialTransformationMatrixes: true,
+            minFacePresenceConfidence:0.9,
+            minTrackingConfidence:0.9,
+            minFaceDetectionConfidence:0.9,
             runningMode: 'VIDEO',
             numFaces: 1
         }
@@ -87,7 +93,6 @@ function onResultsFaceLM(results) {
         for (let i = 0; i < faceBlendshapes.length - 1; i++) {
             blendshapes[i] = +faceBlendshapes[i + 1].score.toFixed(9); //faceBlendshapes[i + 1].score;
         }
-
     }
 
     if (results.facialTransformationMatrixes.length > 0) {
@@ -99,6 +104,7 @@ function onResultsFaceLM(results) {
         blendshapes[BS_ROLL] = -transform.rotation.z;
 
     }
+    //console.warn('onResultsFaceLM',results);
     handleMocap(blendshapes.join());
 }
 
@@ -108,15 +114,23 @@ function headLimit(val) {
     return val;
 }
 
-function blendshapeLimit(val) {
-    if (val > 0.8) return 0.8;
+var bsLimits = { 'mouthUpperUpLeft': 0.4, 'mouthUpperUpRight': 0.4, 'mouthShrugUpper': 1.0, 'mouthPucker': 1.0 };
+
+function blendshapeLimit(bs, val) {
+    let limit =0.8;
+    let bslimit=bsLimits[bs];
+    if (bslimit) {
+        limit=bslimit;
+    }    
+    if (val > limit) return limit;
     if (val < 0) return 0;
     return val;
 }
 
 
 const playMorphTarget = function (obj, blendshape, amount) {
-    amount = blendshapeLimit(amount);
+    amount = blendshapeLimit(blendshape, amount);
+    //if (blendshape==='mouthPucker')
     let meshMorphData = getMeshMorphData(obj);
     meshMorphData['bs'].map(function (o, i) {
         if (o.morphTargetInfluences && o.userData.targetNames) {
@@ -128,6 +142,9 @@ const playMorphTarget = function (obj, blendshape, amount) {
 
     });
 }
+
+
+let neckOffset= -0.45;
 
 function applyMocap(obj, blendshapes_values, mirror) {
     if (!obj) {
@@ -149,8 +166,8 @@ function applyMocap(obj, blendshapes_values, mirror) {
     neck.rotation.x = - 0.4 * roll;
     head.rotation.y = -0.6 * yaw;
     neck.rotation.y = -0.4 * yaw;
-    head.rotation.z = -0.45 - 0.6 * pitch;
-    neck.rotation.z = -0.45 - 0.4 * pitch;
+    head.rotation.z = neckOffset - 0.6 * pitch;
+    neck.rotation.z = neckOffset - 0.4 * pitch;
 }
 function handleMocap(bs_csv) {
     let blendshapes_values = bs_csv.split(',');
@@ -204,3 +221,42 @@ document.querySelector('a-scene').addEventListener('loaded', function () {
 if (document.querySelector('a-scene').hasLoaded) {
     init();
 }
+
+var avatarConfigs = {
+   'Amir': {url:'https://digitalhuman.uk/assets/characters/Amir_Rigged/Amir_Rigged.gltf', height:1.63, neckOffset:-0.45}
+   ,'Bes': {url:'https://digitalhuman.uk/assets/characters/Bes_Rigged/Bes_Rigged.gltf', height:1.63, neckOffset:-0.35}
+   ,'Cooper': {url:'https://digitalhuman.uk/assets/characters/Cooper_Rigged/Cooper_Rigged.gltf', height:1.63, neckOffset:-0.35}
+   ,'Emanuel': {url:'https://digitalhuman.uk/assets/characters/Emanuel_Rigged/Emanuel_Rigged.gltf', height:1.63, neckOffset:-0.35}
+   ,'Jesse': {url:'https://digitalhuman.uk/assets/characters/Jesse_Rigged/Jesse_Rigged.gltf', height:1.71, neckOffset:-0.35}
+   ,'Nasim': {url:'https://digitalhuman.uk/assets/characters/Nasim_Rigged/Nasim_Rigged.gltf', height:1.63, neckOffset:-0.35}
+   ,'Khaled': {url:'https://digitalhuman.uk/assets/characters/Khaled_Rigged/Khaled_Rigged.gltf', height:1.63, neckOffset:-0.45}
+   ,'Hannah': {url:'https://digitalhuman.uk/assets/characters/Hana_Rigged/Hana_Rigged.gltf', height:1.46, neckOffset:-0.35}
+   ,'Bernice': {url:'https://digitalhuman.uk/assets/characters/Bernice_Rigged/Bernice_Rigged.gltf', height:1.52, neckOffset:-0.35}
+   ,'Jean': {url:'https://digitalhuman.uk/assets/characters/JeanRigged/JeanRigged.gltf', height:1.46, neckOffset:-0.35}
+   ,'Kendra': {url:'https://digitalhuman.uk/assets/characters/Kendra_Rigged/Kendra_Rigged.gltf', height:1.52, neckOffset:-0.35}
+   ,'Natalia': {url:'https://digitalhuman.uk/assets/characters/Natalia_Rigged/Natalia_Rigged.gltf', height:1.52, neckOffset:-0.35}
+   ,'Vivian': {url:'https://digitalhuman.uk/assets/characters/vivian_rigged/VivianRigged.gltf', height:1.6, neckOffset:-0.4}
+};
+
+
+
+
+function loadAvatar(aid) {
+    let conf=avatarConfigs[aid];
+    document.getElementById("mesh").setAttribute('gltf-model',  conf.url);
+    let cam = document.getElementById("camera").object3D;
+    cam.position.set(0.0, conf.height, 0.85);
+    neckOffset=conf.neckOffset;
+    $(".avatar-input").val(aid);
+}
+
+function loadAvatarTest(aid, height, necko) {
+    let conf=avatarConfigs[aid];
+    document.getElementById("mesh").setAttribute('gltf-model', conf.url);
+    let cam = document.getElementById("camera").object3D;
+    cam.position.set(0.0, height, 0.85);
+    neckOffset=necko;
+}
+
+window.loadAvatar=loadAvatar;
+window.loadAvatarTest=loadAvatarTest;

@@ -702,6 +702,10 @@ class AgoraMultiChanelApp {
 
 
   async manageGrid() {
+    if (this.avatar === "true") {
+      var canv=document.getElementsByTagName("canvas")[0];
+      canv.setAttribute('style', 'position:absolute !important');    
+    }
     var now = Date.now();
     if ((now - this.manageGridLast) < this.ManageGridWait) {
       return;
@@ -2525,8 +2529,12 @@ async function showMediaDeviceChange() {
   $("#media-device-test").modal("show");
   $("#media-device-test").unbind("hidden.bs.modal");
   $("#media-device-test").on("hidden.bs.modal", async function (e) {
-    await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
-    await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+    if (agoraApp.localTracks.videoTrack.setDevice) {
+      await agoraApp.localTracks.videoTrack.setDevice(currentCam.deviceId);
+    }
+    if (agoraApp.localTracks.audioTrack.setDevice) {
+      await agoraApp.localTracks.audioTrack.setDevice(currentMic.deviceId);
+    }
   });
 }
 
