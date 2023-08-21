@@ -80,9 +80,23 @@
   const paramsString = document.location.search;
   const searchParams = new URLSearchParams(paramsString);
   const codec = searchParams.get("codec");
-
   var appid = searchParams.get("appid");
   var channel = searchParams.get("channel");
+  var width=1280;
+  var height=720;
+
+  if (searchParams.get("height")) {
+      height = parseInt(searchParams.get("height"));
+  }
+
+  if (searchParams.get("width")) {
+      width = parseInt(searchParams.get("width"));
+  }
+
+  var canv=document.getElementsById("canid");
+  canv.width=width;
+  canv.height=height;
+
   var agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: codec });
   var uid = null;
 
@@ -105,8 +119,8 @@
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
-//      AgoraRTC.createCameraVideoTrack({ width: { max: 720 }, height: { max: 720 }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+//      AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
