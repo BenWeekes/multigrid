@@ -100,7 +100,7 @@
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })
+      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 720 }, height: { max: 720 }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
