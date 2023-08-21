@@ -1,0 +1,116 @@
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  .video-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .video-container-inner {
+    /* Make video to at least 100% wide and tall */
+    min-width: 100%;
+    min-height: 100%;
+
+    /* Setting width & height to auto prevents the browser from stretching or squishing the video */
+    width: auto;
+    height: auto;
+
+    /* Center the video */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .video-circle {
+    position: relative;
+    z-index: 1000;
+    border-radius: 50%;
+    object-fit: cover;
+    width: 200px;
+    height: 200px;
+    border: 3px solid white;
+    margin: 18px;
+  }
+</style>
+
+<div class="video-container">
+  <video muted autoplay id="video" class="video-container-inner"> </video>
+  <video muted autoplay id="video-over" class="video-circle" width="300" height="300"> </video>
+</div>
+
+<canvas id="canid" width="1280" height="720" style="display:none;"> </canvas>
+
+<script>
+
+  function funk() {
+    var randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    var canv = document.getElementById("canid");
+    var ctx = document.getElementById("canid").getContext('2d');
+    ctx.fillStyle = '#' + randomColor;
+    ctx.beginPath();
+    ctx.moveTo(Math.random() * canv.width, Math.random() * canv.height);
+    ctx.lineTo(Math.random() * canv.width, Math.random() * canv.height);
+    ctx.lineTo(Math.random() * canv.width, Math.random() * canv.height);
+    ctx.fill();
+  }
+  setInterval(funk, 50);
+
+  var localTracks = {
+    videoTrack: null,
+    audioTrack: null
+  };
+
+  const paramsString = document.location.search;
+  const searchParams = new URLSearchParams(paramsString);
+  const codec = searchParams.get("codec");
+
+  var appid = searchParams.get("appid");
+  var channel = searchParams.get("channel");
+  var agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: codec });
+  var uid = null;
+
+  async function agora() {
+    agoraClient.on("user-joined", async (user) => {
+      console.warn("user-joined", user);
+    });
+
+    agoraClient.on("user-published", async (user, mediaType) => {
+      await agoraClient.subscribe(user, mediaType);
+      if (mediaType === 'audio') {
+        user.audioTrack.play();
+      }
+      else if (mediaType === 'video') {
+        var videoStream = new MediaStream();
+        videoStream.addTrack(user.videoTrack._mediaStreamTrack);
+        document.querySelector("#video").srcObject = videoStream;
+        document.querySelector("#video").play();
+      }
+    });
+
+    var stream = document.getElementById("canid").captureStream(30);
+    [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
+      agoraClient.join(appid, channel, null, null),
+      AgoraRTC.createMicrophoneAudioTrack(),
+      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0] })
+    ]);
+
+    await agoraClient.publish(Object.values(localTracks));
+
+    var videoStream = new MediaStream();
+    videoStream.addTrack(localTracks.videoTrack._mediaStreamTrack);
+    document.querySelector("#video-over").srcObject = videoStream;
+    document.querySelector("#video-over").play();
+
+  }
+  window.onload = agora;
+
+</script>
