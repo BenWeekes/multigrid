@@ -46,7 +46,7 @@
     top: 10px;
     z-index: 1000;
     width: 400px;
-    height:700px;
+    height:800px;
     right: 100px;
     font-size: 40px;
     background-color: brown;
@@ -206,9 +206,10 @@ window.addEventListener('resize',resizeGrid);
 
         await agoraClient._p2pChannel.connection.peerConnection.getStats().then(async stats => {
           await stats.forEach(report => {
+            console.log(report);
               if (report.type === "inbound-rtp" && report.kind === "video") {
                 // inbound fps, width, height, codec
-                console.log(report);
+               
                 /*
                 console.log('decoderImplementation',report["decoderImplementation"],
                 'frameWidth',report["frameWidth"],
