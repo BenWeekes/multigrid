@@ -157,7 +157,8 @@ window.addEventListener('resize',resizeGrid);
   canv.height=height;
 
   var agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: codec });
-  var uid = null;
+  var uid_local = null;
+  var uid_remote = null;
 
   async function agora() {
     agoraClient.on("user-joined", async (user) => {
@@ -166,6 +167,7 @@ window.addEventListener('resize',resizeGrid);
 
     agoraClient.on("user-published", async (user, mediaType) => {
       await agoraClient.subscribe(user, mediaType);
+      uid_remote=user.uid;
       if (mediaType === 'audio') {
  //       user.audioTrack.play();
       }
@@ -178,10 +180,10 @@ window.addEventListener('resize',resizeGrid);
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
+       // AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
 //        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0], encoderConfig: profiles[currProf] })
       //AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
-     // AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
+      AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
@@ -199,8 +201,8 @@ window.addEventListener('resize',resizeGrid);
       {
         var outgoingStats = agoraClient.getLocalVideoStats();
         var recvStats;
-        if (agoraClient._users.length) {
-          recvStats=agoraClient.getRemoteVideoStats()[agoraClient._users[agoraClient._users.length-1].uid];
+        if (agoraClient._users.length && uid_remote) {
+          recvStats=agoraClient.getRemoteVideoStats()[uid_remote];
           console.log('recvStats',recvStats);
         }
         var clientStats = agoraClient.getRTCStats();
@@ -224,11 +226,11 @@ window.addEventListener('resize',resizeGrid);
                 'frameHeight',report["frameHeight"],
                 'framesPerSecond',report["framesPerSecond"]);
 */  
-                if (report["frameWidth"]) {
+                if (report["frameWidth" && recvStats]) {
                   document.getElementById("fps-in").innerHTML="<br><u>Inbound</u><br> width: "+report["frameWidth"]+
                   " <br>height: "+report["frameHeight"]+
                   " <br>fps: "+report["framesPerSecond"]+
-                  " <br>codec:  "+report["decoderImplementation"];
+                  " <br>codec:  "+recvStats.codecType;
                 }                
               }
 
