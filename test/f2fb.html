@@ -178,10 +178,10 @@ window.addEventListener('resize',resizeGrid);
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-      //  AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
+        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
 //        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0], encoderConfig: profiles[currProf] })
       //AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
-      AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
+     // AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
