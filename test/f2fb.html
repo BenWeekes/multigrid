@@ -200,8 +200,8 @@ window.addEventListener('resize',resizeGrid);
         var outgoingStats = agoraClient.getLocalVideoStats();
         var recvStats;
         if (agoraClient._users.length) {
-          recvStats=agoraClient.getRemoteVideoStats()[agoraClient._users[0].uid];
-       //   console.log('recvStats',recvStats);
+          recvStats=agoraClient.getRemoteVideoStats()[agoraClient._users[agoraClient._users.length-1].uid];
+          console.log('recvStats',recvStats);
         }
         var clientStats = agoraClient.getRTCStats();
         var fps=outgoingStats.sendFrameRate;
@@ -213,7 +213,7 @@ window.addEventListener('resize',resizeGrid);
           await stats.forEach(report => {
             
             if (report.type.indexOf("inbound") > -1  && report.kind === "video") {
-              console.log(report);
+             // console.log(report);
             }
               if (report.type === "inbound-rtp" && report.kind === "video") {
                 // inbound fps, width, height, codec
