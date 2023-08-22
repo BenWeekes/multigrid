@@ -198,6 +198,11 @@ window.addEventListener('resize',resizeGrid);
     try    
       {
         var outgoingStats = agoraClient.getLocalVideoStats();
+        var recvStats;
+        if (agoraClient._users.length) {
+          recvStats=agoraClient.getRemoteVideoStats()[agoraClient._users[0].uid];
+       //   console.log('recvStats',recvStats);
+        }
         var clientStats = agoraClient.getRTCStats();
         var fps=outgoingStats.sendFrameRate;
        /* if (fps) {
