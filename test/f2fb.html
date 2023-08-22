@@ -263,10 +263,10 @@ window.addEventListener('resize',resizeGrid);
                   document.getElementById("fps-out").innerHTML="<br><u>Outbound ("+currProf+")</u><br> width: "+report["frameWidth"]+
                   "<br>height: "+report["frameHeight"]+
                   "<br>fps: "+report["framesPerSecond"]+
-                  "<br>target br: "+(report["targetBitrate"]/1000).toFixed(0)+
-                  "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0)+
-                  "<br>quality limit: "+report["qualityLimitationReason"]+
-                  "<br>codec:  "+report["encoderImplementation"];
+            //      "<br>target br: "+(report["targetBitrate"]/1000).toFixed(0)+
+                  "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0);
+            //      "<br>quality limit: "+report["qualityLimitationReason"]+
+             //     "<br>codec:  "+report["encoderImplementation"];
                 }
                 }
               })
