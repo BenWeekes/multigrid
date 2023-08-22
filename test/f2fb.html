@@ -45,11 +45,10 @@
     color: white;
     top: 10px;
     z-index: 1000;
-    width: 130px;
-    height: 40px;
-    right: 150px;
-    iborder: 3px solid white;
-    font-size: 40px;
+    width: 400px;
+    height:150px;
+    right: 100px;
+    font-size: 20px;
     background-color: brown;
     padding: 10px;
   }
@@ -61,19 +60,56 @@
     width: 100%;
     height: 100%;
   }
+  .ld{
+    margin-top: 10px;
+  }
+  .cycle {
+    color: white;
+  }
 
 </style>
 
 
   <div id="mainvideo"> </div>
-  <div id="video-over" class="video-circle"> </div>
-  <div id="fps-out" class="fps-display"> </div>
 
-  
+  <div id="video-over" class="video-circle"> </div>
+  <div id="stats-out" class="fps-display"> 
+    <a class="cycle"  onclick="cycleResolution();" href="#">Cycle Outbound Profile</a>
+    <div class='ld' id="fps-out"></div>
+    <div class='ld' id="fps-in"></div>
+  </div>
+    
   
 <canvas id="canid" width="1280" height="720" style="display:none;width:320px; height:180px;  border: 3px solid orangered;"> </canvas>
 
 <script>
+
+  let currProf=-1;
+  let landscape=false
+  let profiles=[
+                {width: 640, height: 360, frameRate: 24, bitrateMin: 300, bitrateMax: 600},
+                {width: 960, height: 540, frameRate: 24, bitrateMin: 600, bitrateMax: 1200},
+                {width: 1280, height: 720, frameRate: 24, bitrateMin: 900, bitrateMax: 1800}
+               ]
+
+  function isLandscape() {
+    return (window.innerWidth>window.innerHeight);
+  }
+
+  screen.orientation.addEventListener("change", (event) => {
+  const type = event.target.type;
+  const angle = event.target.angle;
+  alert(`ScreenOrientation change: ${type}, ${angle} degrees.`);
+});
+
+  function cycleResolution(){
+    currProf++;
+    if (currProf>=profiles.length){
+      currProf=0;
+    }
+    
+    localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
+  }
 
   function funk() {
     var randomColor = Math.floor(Math.random() * 16777215).toString(16);
@@ -98,8 +134,8 @@
   const codec = searchParams.get("codec");
   var appid = searchParams.get("appid");
   var channel = searchParams.get("channel");
-  var width=1280;
-  var height=720;
+  var width=640;
+  var height=360;
 
   if (searchParams.get("height")) {
       height = parseInt(searchParams.get("height"));
@@ -135,7 +171,8 @@
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+//      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })
 //      AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
     ]);
 
@@ -144,36 +181,64 @@
 
   }
 
+  /*
+  if receiving VP8 then switch to sending VP8. This should only happen for when mobile on iOS < 16
+
+  */
 
   async function monitorCallStats() {
     try    
       {
         var outgoingStats = agoraClient.getLocalVideoStats();
         var fps=outgoingStats.sendFrameRate;
-        if (fps) {
+       /* if (fps) {
           document.getElementById("fps-out").innerHTML="FPS: "+fps;
-        }
+        }*/
 
-        /*
+        await agoraClient._p2pChannel.connection.peerConnection.getStats().then(async stats => {
+          await stats.forEach(report => {
+              if (report.type === "inbound-rtp" && report.kind === "video") {
+                // inbound fps, width, height, codec
+                //console.log(report);
+                /*
+                console.log('decoderImplementation',report["decoderImplementation"],
+                'frameWidth',report["frameWidth"],
+                'frameHeight',report["frameHeight"],
+                'framesPerSecond',report["framesPerSecond"]);
+*/  
+                if (report["frameWidth"]) {
+                  document.getElementById("fps-in").innerHTML="Inbound<br> width:"+report["frameWidth"]+
+                  " height: "+report["frameHeight"]+
+                  " fps: "+report["framesPerSecond"]+
+                  " codec:  "+report["decoderImplementation"];
+                }                
+              }
+          })
+        })        
+        
         if (agoraClient._p2pChannel.localTrackMap.get("videoTrack")) {
             await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track).then(async stats => {
               await stats.forEach(report => {
                 if (report.type === "outbound-rtp" && report.kind === "video") {
-                  var totalEncodeTime = report["totalEncodeTime"];
-                  var framesEncoded = report["framesEncoded"];
-                  var totalEncodeTimeChange = 1000*(totalEncodeTime - _clientStatsMap.LastEncodeTime);
-                  var framesEncodedChange =  (framesEncoded -  _clientStatsMap.LastFramesEncoded);
-                  _clientStatsMap.EncodeTime = (totalEncodeTimeChange/framesEncodedChange);
-                  if (framesEncodedChange>100) {
-                    _clientStatsMap.LastEncodeTime=totalEncodeTime;
-                    _clientStatsMap.LastFramesEncoded=framesEncoded;
-                     }
-                  }
+                           /*         
+                  console.log('encoderImplementation',report["encoderImplementation"],
+                  'qualityLimitationReason',report["qualityLimitationReason"],
+                'frameWidth',report["frameWidth"],
+                'frameHeight',report["frameHeight"],
+                'framesPerSecond',report["framesPerSecond"]);
+                */
+                if (report["frameWidth"]) {
+                  document.getElementById("fps-out").innerHTML="Outbound<br> width:"+report["frameWidth"]+
+                  " height: "+report["frameHeight"]+
+                  " fps: "+report["framesPerSecond"]+
+                  " codec:  "+report["encoderImplementation"];
+                }
+                }
               })
             });      
           
         }
-          */
+          
       } catch(e) {
         console.error(e);
       }
@@ -187,8 +252,6 @@
     monitorCallStats();
 
   }
-
-  
 
   window.onload = run;
 
