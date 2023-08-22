@@ -46,9 +46,9 @@
     top: 10px;
     z-index: 1000;
     width: 400px;
-    height:150px;
+    height:600px;
     right: 100px;
-    font-size: 20px;
+    font-size: 30px;
     background-color: brown;
     padding: 10px;
   }
@@ -96,10 +96,8 @@
     return (window.innerWidth>window.innerHeight);
   }
 
-
-
  function resizeGrid() {
-  alert("isLandscape()",isLandscape());
+  console.log("isLandscape()",isLandscape());
  }
 window.addEventListener('resize',resizeGrid);
 
@@ -110,6 +108,8 @@ window.addEventListener('resize',resizeGrid);
     }
     
     localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
+    console.log('profiles[currProf]',profiles[currProf]);
+    
   }
 
   function funk() {
@@ -135,8 +135,14 @@ window.addEventListener('resize',resizeGrid);
   const codec = searchParams.get("codec");
   var appid = searchParams.get("appid");
   var channel = searchParams.get("channel");
+
+  // Custom source can't change config if starts low
   var width=640;
   var height=360;
+
+
+  //var width=1280;
+  //var height=720;
 
   if (searchParams.get("height")) {
       height = parseInt(searchParams.get("height"));
@@ -172,9 +178,8 @@ window.addEventListener('resize',resizeGrid);
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-//      AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
-        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })
-//      AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+//        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })
+      AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
@@ -208,10 +213,10 @@ window.addEventListener('resize',resizeGrid);
                 'framesPerSecond',report["framesPerSecond"]);
 */  
                 if (report["frameWidth"]) {
-                  document.getElementById("fps-in").innerHTML="Inbound<br> width:"+report["frameWidth"]+
-                  " height: "+report["frameHeight"]+
-                  " fps: "+report["framesPerSecond"]+
-                  " codec:  "+report["decoderImplementation"];
+                  document.getElementById("fps-in").innerHTML="<br><u>Inbound</u><br> width: "+report["frameWidth"]+
+                  " <br>height: "+report["frameHeight"]+
+                  " <br>fps: "+report["framesPerSecond"]+
+                  " <br>codec:  "+report["decoderImplementation"];
                 }                
               }
 
@@ -241,10 +246,11 @@ window.addEventListener('resize',resizeGrid);
                 'framesPerSecond',report["framesPerSecond"]);
                 */
                 if (report["frameWidth"]) {
-                  document.getElementById("fps-out").innerHTML="Outbound<br> width:"+report["frameWidth"]+
-                  " height: "+report["frameHeight"]+
-                  " fps: "+report["framesPerSecond"]+
-                  " codec:  "+report["encoderImplementation"];
+                  document.getElementById("fps-out").innerHTML="<br><u>Outbound</u><br> width: "+report["frameWidth"]+
+                  "<br>height: "+report["frameHeight"]+
+                  "<br>fps: "+report["framesPerSecond"]+
+                  "<br>quality limit: "+report["qualityLimitationReason"]+
+                  "<br>codec:  "+report["encoderImplementation"];
                 }
                 }
               })
