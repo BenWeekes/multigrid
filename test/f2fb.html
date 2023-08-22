@@ -96,11 +96,12 @@
     return (window.innerWidth>window.innerHeight);
   }
 
-  screen.orientation.addEventListener("change", (event) => {
-  const type = event.target.type;
-  const angle = event.target.angle;
-  alert(`ScreenOrientation change: ${type}, ${angle} degrees.`);
-});
+
+
+ function resizeGrid() {
+  alert("isLandscape()",isLandscape());
+ }
+window.addEventListener('resize',resizeGrid);
 
   function cycleResolution(){
     currProf++;
