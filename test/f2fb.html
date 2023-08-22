@@ -214,11 +214,23 @@ window.addEventListener('resize',resizeGrid);
                   " codec:  "+report["decoderImplementation"];
                 }                
               }
+
+              /*
+              if (report.type === "outbound-rtp" && report.kind === "video") {
+
+                  if (report["frameWidth"]) {
+                    document.getElementById("fps-out").innerHTML="Outbound<br> width:"+report["frameWidth"]+
+                    " height: "+report["frameHeight"]+
+                    " fps: "+report["framesPerSecond"]+
+                    " codec:  "+report["encoderImplementation"];
+                  }
+              }
+              */              
           })
         })        
         
         if (agoraClient._p2pChannel.localTrackMap.get("videoTrack")) {
-            await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track).then(async stats => {
+            await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track._mediaStreamTrack).then(async stats => {
               await stats.forEach(report => {
                 if (report.type === "outbound-rtp" && report.kind === "video") {
                            /*         
