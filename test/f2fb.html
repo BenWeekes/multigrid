@@ -46,9 +46,9 @@
     top: 10px;
     z-index: 1000;
     width: 400px;
-    height:600px;
+    height:700px;
     right: 100px;
-    font-size: 30px;
+    font-size: 40px;
     background-color: brown;
     padding: 10px;
   }
@@ -84,7 +84,7 @@
 
 <script>
 
-  let currProf=-1;
+  let currProf=2;
   let landscape=false
   let profiles=[
                 {width: 640, height: 360, frameRate: 24, bitrateMin: 300, bitrateMax: 600},
@@ -137,12 +137,12 @@ window.addEventListener('resize',resizeGrid);
   var channel = searchParams.get("channel");
 
   // Custom source can't change config if starts low
-  var width=640;
-  var height=360;
+  //var width=640;
+  //var height=360;
 
 
-  //var width=1280;
-  //var height=720;
+  var width=1280;
+  var height=720;
 
   if (searchParams.get("height")) {
       height = parseInt(searchParams.get("height"));
@@ -178,8 +178,10 @@ window.addEventListener('resize',resizeGrid);
     [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       agoraClient.join(appid, channel, null, null),
       AgoraRTC.createMicrophoneAudioTrack(),
-//        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: width }, height: { max: width }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })
-      AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
+//        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0], encoderConfig: profiles[currProf] })
+      //AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
+      //AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
     ]);
 
     await agoraClient.publish(Object.values(localTracks));
@@ -205,7 +207,7 @@ window.addEventListener('resize',resizeGrid);
           await stats.forEach(report => {
               if (report.type === "inbound-rtp" && report.kind === "video") {
                 // inbound fps, width, height, codec
-                //console.log(report);
+                console.log(report);
                 /*
                 console.log('decoderImplementation',report["decoderImplementation"],
                 'frameWidth',report["frameWidth"],
@@ -246,7 +248,7 @@ window.addEventListener('resize',resizeGrid);
                 'framesPerSecond',report["framesPerSecond"]);
                 */
                 if (report["frameWidth"]) {
-                  document.getElementById("fps-out").innerHTML="<br><u>Outbound</u><br> width: "+report["frameWidth"]+
+                  document.getElementById("fps-out").innerHTML="<br><u>Outbound ("+currProf+")</u><br> width: "+report["frameWidth"]+
                   "<br>height: "+report["frameHeight"]+
                   "<br>fps: "+report["framesPerSecond"]+
                   "<br>quality limit: "+report["qualityLimitationReason"]+
