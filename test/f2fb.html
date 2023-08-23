@@ -5,8 +5,8 @@
   let landscape=false
   let profiles=[
                 {width: 640, height: 360, frameRate: 24, bitrateMin: 300, bitrateMax: 600},
-                {width: 960, height: 540, frameRate: 24, bitrateMin: 600, bitrateMax: 1200},
-                {width: 1280, height: 720, frameRate: 24, bitrateMin: 900, bitrateMax: 1800}
+                {width: 960, height: 540, frameRate: 24, bitrateMin: 500, bitrateMax: 1200},
+                {width: 1280, height: 720, frameRate: 24, bitrateMin: 800, bitrateMax: 1800}
                ]
 
   function isLandscape() {
@@ -273,7 +273,7 @@
                     } 
                     console.warn('step down network',clientStats.OutgoingAvailableBandwidth,profiles[0].bitrateMin)
                   }
-                  else if (!stepDown && fps>22 && previousFPS>22 && clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMax) {
+                  else if (!stepDown && fps>profiles[0].frameRate*0.9 && previousFPS>profiles[0].frameRate*0.9 && clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMax) {
                     // Step Up
                     if (currProf<profiles.length-1) {
                       currProf++;
