@@ -211,8 +211,7 @@
   */
 
   let previousFPS=-1;
-  let stepDown=false;
-  let stepUp=false;
+  let stepDownCompute=false;
   async function monitorCallStats() {
     if (agoraClient) {
 
@@ -261,7 +260,10 @@
                       currProf--;
                       localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
                     }
-                    stepDown=true;                  
+                    if (clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMin){
+                      stepDownCompute=true;  
+                    }
+                                    
                     previousFPS=-1;
                     console.warn('step down fps',fps)
                   } else if (clientStats.OutgoingAvailableBandwidth >profiles[0].bitrateMin && clientStats.OutgoingAvailableBandwidth<profiles[currProf].bitrateMin) {
@@ -273,13 +275,12 @@
                     } 
                     console.warn('step down network',clientStats.OutgoingAvailableBandwidth,profiles[0].bitrateMin)
                   }
-                  else if (!stepDown && fps>profiles[0].frameRate*0.9 && previousFPS>profiles[0].frameRate*0.9 && clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMax) {
+                  else if (!stepDownCompute && fps>profiles[0].frameRate*0.9 && previousFPS>profiles[0].frameRate*0.9 && clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMax) {
                     // Step Up
                     if (currProf<profiles.length-1) {
                       currProf++;
                       localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
                     }
-                    stepUp=true;                   
                     previousFPS=-1;
                     console.warn('step up ',fps,clientStats.OutgoingAvailableBandwidth);
                   } else {
