@@ -296,7 +296,7 @@
           let version=getiOSVersion();
           console.log(mobile,version);
           alert(mobile+" "+version+" supportVP9 "+supportVP9);
-          if (version>=16) {
+          if (version>=16 && supportVP9) {
             codec='vp9';
           }
         } else  if (mobile==='Android') {        
@@ -304,16 +304,16 @@
           let chrome=getChromeVersion();  
           console.log(mobile,version,chrome);
           alert(mobile+" "+version+" "+chrome+" supportVP9 "+supportVP9);
-          if (version>=16) {
+          if (version>=12 && chrome>=111 && supportVP9) {
             codec='vp9';
           }
         }
       } else {
+        let chrome=getChromeVersion();   
+        alert("chrome "+chrome+" supportVP9 "+supportVP9);   
         if (supportVP9){
           codec='vp9';
         } 
-        let chrome=getChromeVersion();   
-        alert(chrome);   
        
       }
     }
@@ -372,7 +372,7 @@
     top: 10px;
     z-index: 1000;
     width: 400px;
-    height:700px;
+    height:740px;
     right: 100px;
     font-size: 40px;
     background-color: brown;
