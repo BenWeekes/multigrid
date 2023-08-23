@@ -256,13 +256,20 @@
                   "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0)+
                   "<br>codec: "+codec;
                    if (fps<10 && previousFPS>-1 && previousFPS<10) {
-                    // Step Down
+                    // Step Down Low FPS. Don't allow future step up
                     if (currProf>0) {
                       currProf--;
                       localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
                     }
                     stepDown=true;                  
                     previousFPS=-1;
+                  } else if (clientStats.OutgoingAvailableBandwidth<profiles[currProf].bitrateMin) {
+                    // Step down network
+                    if (currProf>0) {
+                      currProf--;
+                      localTracks.videoTrack.setEncoderConfiguration(profiles[currProf]);
+                      previousFPS=-1;
+                    } 
                   }
                   else if (!stepDown && fps>22 && previousFPS>22 && clientStats.OutgoingAvailableBandwidth>profiles[currProf].bitrateMax) {
                     // Step Up
@@ -301,24 +308,25 @@
       if (mobile) {
         if (mobile==='iOS') {
           let version=getiOSVersion();
-          console.log(mobile,version);
-          alert(mobile+" "+version+" supportVP9 "+supportVP9);
+          //console.log(mobile,version);
+          console.log(mobile+" "+version+" supportVP9 "+supportVP9);
           if (version>=16 && supportVP9) {
             codec='vp9';
           }
         } else  if (mobile==='Android') {        
           let version=getAndroidVersion();
           let chrome=getChromeVersion();  
-          console.log(mobile,version,chrome);
-          alert(mobile+" "+version+" "+chrome+" supportVP9 "+supportVP9);
+          //console.log(mobile,version,chrome);
+          console.log(mobile+" "+version+" "+chrome+" supportVP9 "+supportVP9);
           if (version>=12 && chrome>=111 && supportVP9) {
             codec='vp9';
           }
         }
       } else {
         let chrome=getChromeVersion();   
-        alert("chrome "+chrome+" supportVP9 "+supportVP9);   
-        if (supportVP9){
+        console.log("chrome "+chrome+" supportVP9 "+supportVP9);   
+        if (supportVP9 && (!chrome || chrome>=111))
+         {
           codec='vp9';
         } 
        
