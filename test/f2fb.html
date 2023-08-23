@@ -263,7 +263,7 @@
                     }
                     stepDown=true;                  
                     previousFPS=-1;
-                  } else if (clientStats.OutgoingAvailableBandwidth<profiles[currProf].bitrateMin) {
+                  } else if (clientStats.OutgoingAvailableBandwidth >clientStats.OutgoingAvailableBandwidth<profiles[0].bitrateMin && clientStats.OutgoingAvailableBandwidth<profiles[currProf].bitrateMin) {
                     // Step down network
                     if (currProf>0) {
                       currProf--;
