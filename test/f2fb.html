@@ -198,9 +198,16 @@
   }
 
   /*
-  if receiving VP8 then switch to sending VP8. This should only happen for when mobile on iOS < 16
-  if outgoing FPS < 10 a few times then switch down and don't come back up
-  if outgoing FPS > fps * 0.9 a few times then switch up and wait 
+  if receiving VP8 then switch to sending VP8. 
+  Enable VP9 if supported and on iOS version >=  16 and Android version >=  12 && chrome >= 111
+  if outgoing FPS < 10 for two consecutive readings (500ms apart) then switch down a resolution profile and don't come back up
+  if outgoing FPS > target fps * 0.9  for two consecutive readings (500ms apart) and outgoing bitrate > BitrateMax of current profile then switch up and wait 
+  
+   let profiles=[
+                {width: 640, height: 360, frameRate: 24, bitrateMin: 300, bitrateMax: 600},
+                {width: 960, height: 540, frameRate: 24, bitrateMin: 600, bitrateMax: 1200},
+                {width: 1280, height: 720, frameRate: 24, bitrateMin: 900, bitrateMax: 1800}
+               ]
   */
 
   let previousFPS=-1;
