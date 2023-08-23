@@ -75,11 +75,11 @@
   <div id="video-over" class="video-circle"> </div>
   <div id="stats-out" class="fps-display"> 
     <a class="cycle"  onclick="cycleResolution();" href="#">Cycle Outbound Profile</a>
+    <a class="cycle"  onclick="cycleCodec();" href="#">Switch Outbound Codec</a>
     <div class='ld' id="fps-out"></div>
     <div class='ld' id="fps-in"></div>
   </div>
-    
-  
+      
 <canvas id="canid" width="1280" height="720" style="display:none;width:320px; height:180px;  border: 3px solid orangered;"> </canvas>
 
 <script>
@@ -100,6 +100,14 @@
   console.log("isLandscape()",isLandscape());
  }
 window.addEventListener('resize',resizeGrid);
+
+  function cycleCodec(){
+    if (codec=='vp8') {
+      join('vp9');
+    } else if (codec=='vp9') {
+      join('vp8');
+    }
+  }
 
   function cycleResolution(){
     currProf++;
@@ -123,7 +131,7 @@ window.addEventListener('resize',resizeGrid);
     ctx.lineTo(Math.random() * canv.width, Math.random() * canv.height);
     ctx.fill();
   }
-  setInterval(funk, 33);
+
 
   var localTracks = {
     videoTrack: null,
@@ -132,13 +140,18 @@ window.addEventListener('resize',resizeGrid);
 
   const paramsString = document.location.search;
   const searchParams = new URLSearchParams(paramsString);
-  const codec = searchParams.get("codec");
+  var codec = searchParams.get("codec");
   var appid = searchParams.get("appid");
   var channel = searchParams.get("channel");
+  var canvas = false;
 
+  if ( "true"===searchParams.get("canvas")) {
+    canvas=true;
+  }
   // Custom source can't change config if starts low
   //var width=640;
   //var height=360;
+
 
 
   var width=1280;
@@ -152,13 +165,27 @@ window.addEventListener('resize',resizeGrid);
       width = parseInt(searchParams.get("width"));
   }
 
-  var canv=document.getElementById("canid");
-  canv.width=width;
-  canv.height=height;
 
-  var agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: codec });
+  if (canvas) {
+    setInterval(funk, 33);
+    var canv=document.getElementById("canid");
+    canv.width=width;
+    canv.height=height;
+  }
+
+  var agoraClient = null;
   var uid_local = null;
   var uid_remote = null;
+
+  async function join(codec_){
+    codec=codec_;
+    if (agoraClient) {
+      await agoraClient.unpublish();
+    }
+    uid_remote=null;
+    agoraClient = await AgoraRTC.createClient({ mode: "rtc", codec: codec_ });
+    agora();
+  }
 
   async function agora() {
     agoraClient.on("user-joined", async (user) => {
@@ -176,19 +203,23 @@ window.addEventListener('resize',resizeGrid);
       }
     });
 
-    var stream = document.getElementById("canid").captureStream(30);
-    [uid,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
-      agoraClient.join(appid, channel, null, null),
-      AgoraRTC.createMicrophoneAudioTrack(),
-       // AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
-//        AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0], encoderConfig: profiles[currProf] })
-      //AgoraRTC.createCameraVideoTrack({ width: { max: height }, height: { max: height }, frameRate: 30, bitrateMin: 500, bitrateMax: 1200 })
-      AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
-    ]);
+    if (canvas) {
+      var stream = document.getElementById("canid").captureStream(30);
+      [uid_local,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
+          agoraClient.join(appid, channel, null, null),
+          AgoraRTC.createMicrophoneAudioTrack(),
+          AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width:  profiles[currProf].width , height: profiles[currProf].height, frameRate: profiles[currProf].frameRate, bitrateMin: profiles[currProf].bitrateMin, bitrateMax: profiles[currProf].bitrateMax })
+      ]);
+    } else {
+      [uid_local,  localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
+        agoraClient.join(appid, channel, null, null),
+        AgoraRTC.createMicrophoneAudioTrack(),
+        AgoraRTC.createCameraVideoTrack({encoderConfig: profiles[currProf] })
+      ]);
+    }
 
     await agoraClient.publish(Object.values(localTracks));
     localTracks.videoTrack.play("video-over");
-
   }
 
   /*
@@ -197,6 +228,8 @@ window.addEventListener('resize',resizeGrid);
   */
 
   async function monitorCallStats() {
+    if (agoraClient) {
+
     try    
       {
         var outgoingStats = agoraClient.getLocalVideoStats();
@@ -264,7 +297,9 @@ window.addEventListener('resize',resizeGrid);
                   "<br>height: "+report["frameHeight"]+
                   "<br>fps: "+report["framesPerSecond"]+
             //      "<br>target br: "+(report["targetBitrate"]/1000).toFixed(0)+
-                  "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0);
+                  "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0)+
+                  "<br>codec: "+codec;
+                  
             //      "<br>quality limit: "+report["qualityLimitationReason"]+
              //     "<br>codec:  "+report["encoderImplementation"];
                 }
@@ -276,18 +311,20 @@ window.addEventListener('resize',resizeGrid);
           
       } catch(e) {
         console.error(e);
-      }
-
-      setTimeout(() => {
-          monitorCallStats();
-      }, 500);
+      }    
+    }
+    setTimeout(() => {
+        monitorCallStats();
+    }, 500);
   }
   function run() {
-    setTimeout(agora,200);
+  //  setTimeout(join(codec),200);
+    join(codec);
     monitorCallStats();
 
   }
 
   window.onload = run;
+
 
 </script>
