@@ -225,32 +225,33 @@
         }
         var clientStats = agoraClient.getRTCStats();
         //var fps=outgoingStats.sendFrameRate;
-        await agoraClient._p2pChannel.connection.peerConnection.getStats().then(async stats => {
-          await stats.forEach(report => {
-              if (report.type === "inbound-rtp" && report.kind === "video") {
+      //  await agoraClient._p2pChannel.connection.peerConnection.getStats().then(async stats => {
+//          await stats.forEach(report => {
+  //            if (report.type === "inbound-rtp" && report.kind === "video") {
                 // inbound fps, width, height, codec               
-                if (report["frameWidth"] && recvStats) {
+                //if (report["frameWidth"] && recvStats) {
+                  if ( recvStats) {
                   document.getElementById("fps-in").innerHTML=""+
-                  " <br><u>Inbound</u><br> width: "+report["frameWidth"]+
-                  " <br>height: "+report["frameHeight"]+
-                  " <br>fps: "+report["framesPerSecond"]+
+                  " <br><u>Inbound</u><br> width: "+recvStats.receiveResolutionWidth+
+                  " <br>height: "+recvStats.receiveResolutionHeight+
+                  " <br>fps: "+recvStats.receiveFrameRate+
                   " <br>codec:  "+recvStats.codecType;
                 }                
-              }
+              //}
               if (recvStats && recvStats.codecType=='VP8' && codec=='vp9'){
                 join('vp8');
               }       
-          })
-        })        
+     //     })
+    //    })        
         
-        if (agoraClient._p2pChannel.localTrackMap.get("videoTrack")) {
-            await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track._mediaStreamTrack).then(async stats => {
-              await stats.forEach(report => {
-                if (report.type === "outbound-rtp" && report.kind === "video") {
-                if (report["framesPerSecond"]) {
-                 let fps=report["framesPerSecond"];
-                  document.getElementById("fps-out").innerHTML="<br><u>Outbound ("+currProf+")</u><br> width: "+report["frameWidth"]+
-                  "<br>height: "+report["frameHeight"]+
+        //if (agoraClient._p2pChannel.localTrackMap.get("videoTrack")) {
+//            await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track._mediaStreamTrack).then(async stats => {
+  //            await stats.forEach(report => {
+//                if (report.type === "outbound-rtp" && report.kind === "video") {
+                if (outgoingStats && outgoingStats.sendFrameRate>0) {
+                 let fps=outgoingStats.sendFrameRate.toFixed(0);
+                  document.getElementById("fps-out").innerHTML="<br><u>Outbound ("+currProf+")</u><br> width: "+outgoingStats.sendResolutionWidth+
+                  "<br>height: "+outgoingStats.sendResolutionHeight +
                   "<br>fps: "+fps+
                   "<br>available br: "+clientStats.OutgoingAvailableBandwidth.toFixed(0)+
                   "<br>codec: "+codec;
@@ -287,10 +288,10 @@
                     previousFPS=fps;
                   }
                 }
-                }
-              })
-            });       
-        }  
+            //    }
+           //   })
+           // });       
+       // }  
       } catch(e) {
         console.error(e);
       }    
