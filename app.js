@@ -695,16 +695,15 @@ class AgoraMultiChanelApp {
       // but dont subscribe to low of main window id
       this.changeAllVideoStreamTypes(this.LowVideoStreamType, false, 0);
     }
-
-
   }
-
-
 
   async manageGrid() {
     if (this.avatar === "true") {
       var canv=document.getElementsByTagName("canvas")[0];
-      canv.setAttribute('style', 'position:absolute !important');    
+      if (canv) {
+        canv.setAttribute('style', 'position:absolute !important');    
+      }
+      
     }
     var now = Date.now();
     if ((now - this.manageGridLast) < this.ManageGridWait) {
@@ -1518,7 +1517,7 @@ class AgoraMultiChanelApp {
         //const dest = audioContext.createMediaStreamDestination();
         */
         [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 540 }, height: { max: 540 }, frameRate: 24, bitrateMin: 500, bitrateMax: 1200 })]);
+          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 25, bitrateMin: 300, bitrateMax: 900 })]);
 
       }
       else if (this.cameraId && this.micId) {

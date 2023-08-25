@@ -162,12 +162,42 @@ function applyMocap(obj, blendshapes_values, mirror) {
     let yaw = headLimit(blendshapes_values[BS_YAW]);
     let roll = headLimit(blendshapes_values[BS_ROLL]);
 
-    head.rotation.x = -0.6 * roll;
-    neck.rotation.x = - 0.4 * roll;
-    head.rotation.y = -0.6 * yaw;
-    neck.rotation.y = -0.4 * yaw;
-    head.rotation.z = neckOffset - 0.6 * pitch;
-    neck.rotation.z = neckOffset - 0.4 * pitch;
+    let head_rotation_x = -0.6 * roll;
+    let neck_rotation_x = - 0.4 * roll;
+    let head_rotation_y = -0.6 * yaw;
+    let neck_rotation_y = -0.4 * yaw;
+    let head_rotation_z = neckOffset - 0.6 * pitch;
+    let neck_rotation_z = neckOffset - 0.4 * pitch;
+
+    console.warn(Math.abs(head.rotation.x-head_rotation_x),Math.abs( head.rotation.y -head_rotation_y),Math.abs(head.rotation.z - head_rotation_z));
+    if (Math.abs(head.rotation.x-head_rotation_x)>0.1)
+    {
+        head_rotation_x
+    }
+
+    let limit=0.03;
+    head.rotation.x =blerp(head.rotation.x,head_rotation_x,limit);
+    neck.rotation.x =blerp(neck.rotation.x,neck_rotation_x,limit);
+    head.rotation.y =blerp(head.rotation.y,head_rotation_y,limit);
+    neck.rotation.y =blerp(neck.rotation.y,neck_rotation_y,limit);
+    head.rotation.z =blerp(head.rotation.z,head_rotation_z,limit);
+    neck.rotation.z =blerp(neck.rotation.z,neck_rotation_z,limit);
+}
+
+function blerp(current,proposed,limit) {
+    if (Math.abs(current-proposed)>limit)
+    {
+        if (proposed>current)
+            return current+limit;
+        else
+            return current-limit;
+    }  
+    else {
+        return proposed;
+    }
+
+
+
 }
 function handleMocap(bs_csv) {
     let blendshapes_values = bs_csv.split(',');
@@ -223,23 +253,19 @@ if (document.querySelector('a-scene').hasLoaded) {
 }
 
 var avatarConfigs = {
-   'Amir': {url:'https://digitalhuman.uk/assets/characters/Amir_Rigged/Amir_Rigged.gltf', height:1.63, neckOffset:-0.45}
-   ,'Bes': {url:'https://digitalhuman.uk/assets/characters/Bes_Rigged/Bes_Rigged.gltf', height:1.63, neckOffset:-0.35}
-   ,'Cooper': {url:'https://digitalhuman.uk/assets/characters/Cooper_Rigged/Cooper_Rigged.gltf', height:1.63, neckOffset:-0.35}
-   ,'Emanuel': {url:'https://digitalhuman.uk/assets/characters/Emanuel_Rigged/Emanuel_Rigged.gltf', height:1.63, neckOffset:-0.35}
-   ,'Jesse': {url:'https://digitalhuman.uk/assets/characters/Jesse_Rigged/Jesse_Rigged.gltf', height:1.71, neckOffset:-0.35}
-   ,'Nasim': {url:'https://digitalhuman.uk/assets/characters/Nasim_Rigged/Nasim_Rigged.gltf', height:1.63, neckOffset:-0.35}
-   ,'Khaled': {url:'https://digitalhuman.uk/assets/characters/Khaled_Rigged/Khaled_Rigged.gltf', height:1.63, neckOffset:-0.45}
-   ,'Hannah': {url:'https://digitalhuman.uk/assets/characters/Hana_Rigged/Hana_Rigged.gltf', height:1.46, neckOffset:-0.35}
-   ,'Bernice': {url:'https://digitalhuman.uk/assets/characters/Bernice_Rigged/Bernice_Rigged.gltf', height:1.52, neckOffset:-0.35}
-   ,'Jean': {url:'https://digitalhuman.uk/assets/characters/JeanRigged/JeanRigged.gltf', height:1.46, neckOffset:-0.35}
-   ,'Kendra': {url:'https://digitalhuman.uk/assets/characters/Kendra_Rigged/Kendra_Rigged.gltf', height:1.52, neckOffset:-0.35}
-   ,'Natalia': {url:'https://digitalhuman.uk/assets/characters/Natalia_Rigged/Natalia_Rigged.gltf', height:1.52, neckOffset:-0.35}
-   ,'Vivian': {url:'https://digitalhuman.uk/assets/characters/vivian_rigged/VivianRigged.gltf', height:1.6, neckOffset:-0.4}
+   'Amir': {url:'https://digitalhuman.uk/assets/characters/Amir_Rigged/Amir_Rigged.gltf', height:1.64, neckOffset:-0.48}
+   ,'Bes': {url:'https://digitalhuman.uk/assets/characters/Bes_Rigged/Bes_Rigged.gltf', height:1.65, neckOffset:-0.38}
+   ,'Cooper': {url:'https://digitalhuman.uk/assets/characters/Cooper_Rigged/Cooper_Rigged.gltf', height:1.65, neckOffset:-0.42}
+   ,'Emanuel': {url:'https://digitalhuman.uk/assets/characters/Emanuel_Rigged/Emanuel_Rigged.gltf', height:1.65, neckOffset:-0.42}
+   ,'Jesse': {url:'https://digitalhuman.uk/assets/characters/Jesse_Rigged/Jesse_Rigged.gltf', height:1.71, neckOffset:-0.48}
+   ,'Nasim': {url:'https://digitalhuman.uk/assets/characters/Nasim_Rigged/Nasim_Rigged.gltf', height:1.65, neckOffset:-0.42}
+   ,'Khaled': {url:'https://digitalhuman.uk/assets/characters/Khaled_Rigged/Khaled_Rigged.gltf', height:1.63, neckOffset:-0.48}
+   ,'Hannah': {url:'https://digitalhuman.uk/assets/characters/Hana_Rigged/Hana_Rigged.gltf', height:1.46, neckOffset:-0.48}
+   ,'Bernice': {url:'https://digitalhuman.uk/assets/characters/Bernice_Rigged/Bernice_Rigged.gltf', height:1.52, neckOffset:-0.48}
+   ,'Kendra': {url:'https://digitalhuman.uk/assets/characters/Kendra_Rigged/Kendra_Rigged.gltf', height:1.52, neckOffset:-0.48}
+   ,'Natalia': {url:'https://digitalhuman.uk/assets/characters/Natalia_Rigged/Natalia_Rigged.gltf', height:1.52, neckOffset:-0.42}
+   ,'Vivian': {url:'https://digitalhuman.uk/assets/characters/vivian_rigged/VivianRigged.gltf', height:1.6, neckOffset:-0.48}
 };
-
-
-
 
 function loadAvatar(aid) {
     let conf=avatarConfigs[aid];
