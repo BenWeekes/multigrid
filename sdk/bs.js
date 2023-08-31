@@ -169,12 +169,6 @@ function applyMocap(obj, blendshapes_values, mirror) {
     let head_rotation_z = neckOffset - 0.6 * pitch;
     let neck_rotation_z = neckOffset - 0.4 * pitch;
 
-    console.warn(Math.abs(head.rotation.x-head_rotation_x),Math.abs( head.rotation.y -head_rotation_y),Math.abs(head.rotation.z - head_rotation_z));
-    if (Math.abs(head.rotation.x-head_rotation_x)>0.1)
-    {
-        head_rotation_x
-    }
-
     let limit=0.03;
     head.rotation.x =blerp(head.rotation.x,head_rotation_x,limit);
     neck.rotation.x =blerp(neck.rotation.x,neck_rotation_x,limit);
@@ -195,10 +189,8 @@ function blerp(current,proposed,limit) {
     else {
         return proposed;
     }
-
-
-
 }
+
 function handleMocap(bs_csv) {
     let blendshapes_values = bs_csv.split(',');
     let obj = document.getElementById("mesh").object3D;
