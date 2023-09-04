@@ -199,6 +199,21 @@ function handleMocap(bs_csv) {
 
 let video;
 async function init() {
+    //var canv=document.getElementsByTagName("canvas")[0];
+    //console.error('INIT',canv);
+
+    let bg=getCookie('loadBG');
+    if (!bg) {
+       bg=""+Math.floor(Math.random() * 7);        
+    }
+
+    loadBG(bg);
+
+    let aid=getCookie('loadAvatar');
+    if (aid) {
+        loadAvatar(aid);
+    }
+
     video = document.getElementById('l_v');
     if (!isMobile()) {
         let cams = await AgoraRTC.getCameras();
@@ -245,25 +260,49 @@ if (document.querySelector('a-scene').hasLoaded) {
 }
 
 var avatarConfigs = {
-   'Amir': {url:'https://digitalhuman.uk/assets/characters/Amir_Rigged/Amir_Rigged.gltf', height:1.64, neckOffset:-0.48}
-   ,'Bes': {url:'https://digitalhuman.uk/assets/characters/Bes_Rigged/Bes_Rigged.gltf', height:1.65, neckOffset:-0.38}
-   ,'Cooper': {url:'https://digitalhuman.uk/assets/characters/Cooper_Rigged/Cooper_Rigged.gltf', height:1.65, neckOffset:-0.42}
-   ,'Emanuel': {url:'https://digitalhuman.uk/assets/characters/Emanuel_Rigged/Emanuel_Rigged.gltf', height:1.65, neckOffset:-0.42}
-   ,'Jesse': {url:'https://digitalhuman.uk/assets/characters/Jesse_Rigged/Jesse_Rigged.gltf', height:1.71, neckOffset:-0.48}
-   ,'Nasim': {url:'https://digitalhuman.uk/assets/characters/Nasim_Rigged/Nasim_Rigged.gltf', height:1.65, neckOffset:-0.42}
-   ,'Khaled': {url:'https://digitalhuman.uk/assets/characters/Khaled_Rigged/Khaled_Rigged.gltf', height:1.63, neckOffset:-0.48}
-   ,'Hannah': {url:'https://digitalhuman.uk/assets/characters/Hana_Rigged/Hana_Rigged.gltf', height:1.46, neckOffset:-0.48}
-   ,'Bernice': {url:'https://digitalhuman.uk/assets/characters/Bernice_Rigged/Bernice_Rigged.gltf', height:1.52, neckOffset:-0.48}
-   ,'Kendra': {url:'https://digitalhuman.uk/assets/characters/Kendra_Rigged/Kendra_Rigged.gltf', height:1.52, neckOffset:-0.48}
-   ,'Natalia': {url:'https://digitalhuman.uk/assets/characters/Natalia_Rigged/Natalia_Rigged.gltf', height:1.52, neckOffset:-0.42}
-   ,'Vivian': {url:'https://digitalhuman.uk/assets/characters/vivian_rigged/VivianRigged.gltf', height:1.6, neckOffset:-0.48}
+   'Amir': {url:'https://digitalhuman.uk/assets/characters/Amir_Rigged/Amir_Rigged.gltf',position: '0 -0.04 0', neckOffset:-0.48}
+   ,'Bes': {url:'https://digitalhuman.uk/assets/characters/Bes_Rigged/Bes_Rigged.gltf',position: '0 -0.04 0', neckOffset:-0.38}
+   ,'Cooper': {url:'https://digitalhuman.uk/assets/characters/Cooper_Rigged/Cooper_Rigged.gltf', position: '0 -0.04 0', neckOffset:-0.42}
+   ,'Emanuel': {url:'https://digitalhuman.uk/assets/characters/Emanuel_Rigged/Emanuel_Rigged.gltf', position: '0 -0.04 0', neckOffset:-0.42}
+   ,'Jesse': {url:'https://digitalhuman.uk/assets/characters/Jesse_Rigged/Jesse_Rigged.gltf', position: '0 -0.1 0', neckOffset:-0.48}
+   ,'Nasim': {url:'https://digitalhuman.uk/assets/characters/Nasim_Rigged/Nasim_Rigged.gltf', position: '0 -0.04 0', neckOffset:-0.42}
+   ,'Khaled': {url:'https://digitalhuman.uk/assets/characters/Khaled_Rigged/Khaled_Rigged.gltf', position: '0 -0.04 0', neckOffset:-0.48}
+   ,'Hannah': {url:'https://digitalhuman.uk/assets/characters/Hana_Rigged/Hana_Rigged.gltf',position: '0 0.14 0.02', neckOffset:-0.48}
+   ,'Bernice': {url:'https://digitalhuman.uk/assets/characters/Bernice_Rigged/Bernice_Rigged.gltf', position: '0 0.09 0.05', neckOffset:-0.48}
+   ,'Kendra': {url:'https://digitalhuman.uk/assets/characters/Kendra_Rigged/Kendra_Rigged.gltf', position: '0 0.09 0.05', neckOffset:-0.48}
+   ,'Natalia': {url:'https://digitalhuman.uk/assets/characters/Natalia_Rigged/Natalia_Rigged.gltf', position: '0 0.09 0.05', neckOffset:-0.42}
+   ,'Vivian': {url:'https://digitalhuman.uk/assets/characters/vivian_rigged/VivianRigged.gltf',position: '0 0 0', neckOffset:-0.48}
 };
 
-function loadAvatar(aid) {
+var bgConfigs = {
+    '1': {url:'./assets/bbg1.jpeg'},
+    '2': {url:'./assets/bbg2.jpeg'},
+    '3': {url:'./assets/bbg3.jpeg'},
+    '4': {url:'./assets/bbg4.jpeg'},
+    '5': {url:'./assets/bbg5.jpeg'},
+    '6': {url:'./assets/bbg6.jpeg'},
+    '7': {url:'./assets/bbg6.jpeg'}
+}
+
+function setCookie(name,value) {
+    localStorage.setItem(name, value);
+}
+function getCookie(name) {
+    return localStorage.getItem(name);
+}
+
+function loadBG(bg) {
+    //document.getElementById("bgp").src=bgConfigs[bg].url;
+    setCookie('loadBG',bg);
+    document.getElementById("bgp").setAttribute('src',bgConfigs[bg].url);
+    $(".background-input").val(bg);
+}
+
+function loadAvatar(aid) {    
+    setCookie('loadAvatar',aid);
     let conf=avatarConfigs[aid];
     document.getElementById("mesh").setAttribute('gltf-model',  conf.url);
-    let cam = document.getElementById("camera").object3D;
-    cam.position.set(0.0, conf.height, 0.85);
+    document.getElementById("mesh").setAttribute('position',  conf.position);
     neckOffset=conf.neckOffset;
     $(".avatar-input").val(aid);
 }
@@ -277,4 +316,6 @@ function loadAvatarTest(aid, height, necko) {
 }
 
 window.loadAvatar=loadAvatar;
+window.loadBG=loadBG;
+
 window.loadAvatarTest=loadAvatarTest;

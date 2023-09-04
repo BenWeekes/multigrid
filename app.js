@@ -701,6 +701,8 @@ class AgoraMultiChanelApp {
     if (this.avatar === "true") {
       var canv=document.getElementsByTagName("canvas")[0];
       if (canv) {
+       // canv.width=640;
+       // canv.height=360;
         canv.setAttribute('style', 'position:absolute !important');    
       }
       
@@ -1489,10 +1491,11 @@ class AgoraMultiChanelApp {
       
       if (this.avatar === "true") {
         var canv=document.getElementsByTagName("canvas")[0];
-        //canv.width=1280;
-        //canv.height=720;
-        canv.setAttribute('style', 'position:absolute !important');    
-        var stream = canv.captureStream(24);
+       // canv.width=640;
+       // canv.height=360;
+       // canv.setAttribute('style', 'position:absolute !important');    
+       console.error("canv ",canv);
+        var stream = canv.captureStream(30);
         var gumStream;
         if (this.micId){
            gumStream=await navigator.mediaDevices.getUserMedia({ video: false, audio: { exact: this.micId } });
@@ -1517,7 +1520,7 @@ class AgoraMultiChanelApp {
         //const dest = audioContext.createMediaStreamDestination();
         */
         [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 25, bitrateMin: 300, bitrateMax: 900 })]);
+          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 30, bitrateMin: 300, bitrateMax: 800 })]);
 
       }
       else if (this.cameraId && this.micId) {
@@ -2548,11 +2551,26 @@ window.addEventListener('resize', resizeGrid);
 
 var showDeviceSelection = getParameterByName("showDeviceSelection") || "true";
 
-if (showDeviceSelection === "true") {
-  showMediaDeviceTest();
+// if avatar then wait for a-frame to be loaded 
+// show spinner 
+if (agoraApp.avatar === "true" && !document.querySelector('a-scene').hasLoaded) {
+  document.querySelector('a-scene').addEventListener('loaded', function () {
+    hideLoadingSpinner();
+    if (showDeviceSelection === "true") {
+      showMediaDeviceTest();
+    } else {
+      connect();
+    }    
+})
+  showLoadingSpinner();
 } else {
-  connect();
+  if (showDeviceSelection === "true") {
+    showMediaDeviceTest();
+  } else {
+    connect();
+  }
 }
+
 
 var autoShowStats = getParameterByName("autoShowStats") || "false";
 if (autoShowStats === "true") {
