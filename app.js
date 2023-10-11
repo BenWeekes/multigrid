@@ -94,7 +94,7 @@ class AgoraMultiChanelApp {
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
 
-    this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "true";
+    this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "false";
     this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "false";
     this.forceRemoteUserStats = getParameterByName("forceRemoteUserStats") || "false";
     this.showMinStats = getParameterByName("showMinStats") || "false";
@@ -108,7 +108,7 @@ class AgoraMultiChanelApp {
     this.enableDualStreamMobile = getParameterByName("enableDualStreamMobile") || "false";
     this.matchPriorityOrderToAudio = getParameterByName("matchPriorityOrderToAudio") || "false";
 
-    this.vcodec = getParameterByName("vcodec") || "vp8";
+    this.vcodec = getParameterByName("vcodec") || "vp9";
 
     this.enableDualStream = getParameterByName("enableDualStream") || "true";
 
@@ -1373,9 +1373,14 @@ class AgoraMultiChanelApp {
       var vbrmax = 500;
       this.initialProfile = "180p";
     }
-
-    [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-      {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
+  
+    if (this.enableRemoteCallStatsMonitor === "true") {
+      [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+        {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });  
+    } else {
+      [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+        {}, { encoderConfig: '720p_auto' });
+    }
   }
 
   async startCamMic(cameraId, micId) {
@@ -1520,7 +1525,8 @@ class AgoraMultiChanelApp {
         //const dest = audioContext.createMediaStreamDestination();
         */
         [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 30, bitrateMin: 300, bitrateMax: 800 })]);
+          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 1280 }, height: { max: 720 }, frameRate: 30, bitrateMin: 900, bitrateMax: 3000 })]);
+          //AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 30, bitrateMin: 300, bitrateMax: 800 })]);
 
       }
       else if (this.cameraId && this.micId) {
