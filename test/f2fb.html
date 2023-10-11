@@ -43,7 +43,8 @@
    var  ua = navigator.userAgent.toLowerCase(); 
     var match = ua.match(/android\s([0-9\.]*)/i);
     return match ? match[1] : undefined;
-};
+  };
+  
   function getiOSVersion(){
   var agent = window.navigator.userAgent;
   var start = agent.indexOf('OS ');
@@ -247,7 +248,7 @@
         //if (agoraClient._p2pChannel.localTrackMap.get("videoTrack")) {
 //            await agoraClient._p2pChannel.connection.peerConnection.getStats(agoraClient._p2pChannel.localTrackMap.get("videoTrack").track._mediaStreamTrack).then(async stats => {
   //            await stats.forEach(report => {
-//                if (report.type === "outbound-rtp" && report.kind === "video") {
+//                if (report.type === "" && report.kind === "video") {
                 if (outgoingStats && outgoingStats.sendFrameRate>0) {
                  let fps=outgoingStats.sendFrameRate.toFixed(0);
                   document.getElementById("fps-out").innerHTML="<br><u>Outbound ("+currProf+")</u><br> width: "+outgoingStats.sendResolutionWidth+
@@ -417,7 +418,6 @@
 
 
   <div id="mainvideo"> </div>
-
   <div id="video-over" class="video-circle"> </div>
   <div id="stats-out" class="fps-display"> 
     <a class="cycle"  onclick="cycleResolution();" href="#">Cycle Outbound Profile</a>
