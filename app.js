@@ -94,7 +94,10 @@ class AgoraMultiChanelApp {
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
     this.enableContentSpeakerMode = getParameterByName("enableContentSpeakerMode") || "true";
 
-    this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "false";
+    // generate stats
+    this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "true";
+    this.enableManageRampUpAndDown = getParameterByName("enableManageRampUpAndDown") || "true";
+    
     this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "false";
     this.forceRemoteUserStats = getParameterByName("forceRemoteUserStats") || "false";
     this.showMinStats = getParameterByName("showMinStats") || "false";
@@ -483,7 +486,7 @@ class AgoraMultiChanelApp {
     }
 
     // new method 
-    if (this.enableRemoteCallStatsMonitor === "true") {
+    if (this.enableManageRampUpAndDown === "true") {
       this.manageRampUpAndDown();
     }
 
@@ -2236,19 +2239,23 @@ class AgoraMultiChanelApp {
       }
       innerHTML = innerHTML +
         " Res: " + userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " (" + streamTypeDisplay + ") " + "<br/> " +
+        " Codec: " + userStats.receiveCodec + " <br/> " +
         " Bitrate: " + userStats.receiveBitrate + " <br/> " +
         " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
         " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
         " Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> " +
+        " Freeze Duration: " + userStats.totalFreezesDuration + " <br/> " +
         " Nack Rate: " + userStats.nackRate + " <br/> " +
         " Duration: " + userStats.totalDuration + " </span> ";
     } else if (agoraApp.ui_cell_height > 100) {
       innerHTML = innerHTML +
         " Res: " + userStats.receiveResolutionWidth + "x" + userStats.receiveResolutionHeight + " (" + streamTypeDisplay + ") " + "<br/> " +
+        " Codec: " + userStats.receiveCodec + " <br/> " +
         " Bitrate: " + userStats.receiveBitrate + " <br/> " +
-        " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " +
-        " Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
-        " Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> ";
+        " Freeze Duration: " + userStats.totalFreezesDuration + " <br/> " +
+        " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " ;
+        //" Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
+        //" Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> ";
       if (stats_display.classList.contains("stats_display_large_font")) {
         stats_display.classList.remove("stats_display_large_font");
       }
