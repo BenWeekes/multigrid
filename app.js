@@ -60,7 +60,7 @@ class AgoraMultiChanelApp {
 
     this.isMobile = getParameterByName("isMobile") || "false";
 
-    this.logoPath = getParameterByName("logoPath") ||  "";
+    this.logoPath = getParameterByName("logoPath") || "";
     this.enableChat = getParameterByName("enableChat") || "false";
     this.maxVideoTiles = getParameterByNameAsInt("maxVideoTiles") || ((this.isMobile === "true" || isMobile()) ? 16 : 49);
     this.maxAudioSubscriptions = getParameterByNameAsInt("maxAudioSubscriptions") || 6;
@@ -84,11 +84,12 @@ class AgoraMultiChanelApp {
     this.cpuAlgoTest = getParameterByName("cpuAlgoTest") || "false";
     this.avatar = getParameterByName("avatar") || "false";
 
-    this.chatName = getParameterByName("chatName") || "Guest"+(Math.floor(Math.random() * 900)+100);
+    this.chatName = getParameterByName("chatName") || "Guest" + (Math.floor(Math.random() * 900) + 100);
 
     this.dynamicallyAdjustLowStreamResolution = getParameterByName("dynamicallyAdjustLowStreamResolution") || "false";
     // disable subscriptions for load testing clients 
     this.performSubscriptions = getParameterByName("performSubscriptions") || "true";
+    this.performFallBack = getParameterByName("performFallBack") || "false";
     this.muteMicOnJoin = getParameterByName("muteMicOnJoin") || "true";
     this.sendVAD = getParameterByName("sendVAD") || "true";
     this.enableFullLogging = getParameterByName("enableFullLogging") || "false";
@@ -97,7 +98,7 @@ class AgoraMultiChanelApp {
     // generate stats
     this.enableRemoteCallStatsMonitor = getParameterByName("enableRemoteCallStatsMonitor") || "true";
     this.enableManageRampUpAndDown = getParameterByName("enableManageRampUpAndDown") || "true";
-    
+
     this.enableCallStatsToAdjustNumberOfSubscriptions = getParameterByName("enableCallStatsToAdjustNumberOfSubscriptions") || "false";
     this.forceRemoteUserStats = getParameterByName("forceRemoteUserStats") || "false";
     this.showMinStats = getParameterByName("showMinStats") || "false";
@@ -193,9 +194,9 @@ class AgoraMultiChanelApp {
     this.rtmUid;
     this.rtmChannelName;
     this.rtmChannel;
-    this.chatWidth=0;  
-    this.logoHeight=0;             
-    this.grid_over="grid_over";
+    this.chatWidth = 0;
+    this.logoHeight = 0;
+    this.grid_over = "grid_over";
 
     // VAD
     this.vadUid;
@@ -262,7 +263,7 @@ class AgoraMultiChanelApp {
     this.ui_cell_height = 0;
     this.ui_cell_width = 0;
 
-    this.RTMCHATSEPERATOR="::";
+    this.RTMCHATSEPERATOR = "::";
 
 
     // check an appid has been passed in
@@ -306,7 +307,7 @@ class AgoraMultiChanelApp {
 
     if (this.cpuAlgoTest === "false" && (this.enableHDAdjust === "true" || (AgoraRTCUtils.isIOS() && this.enableHDAdjustiOS === "true"))) {
       AgoraRTCUtils.startAutoAdjustResolution(this.clients[this.myPublishClient], profile, AgoraRTCUtils.isIOS());
-    } 
+    }
 
     AgoraRTCUtils.startVoiceActivityDetection(this.localTracks.audioTrack);
     AgoraRTCUtilEvents.on("VoiceActivityDetected", agoraApp.handleVADEvents);
@@ -328,6 +329,7 @@ class AgoraMultiChanelApp {
 
     for (i; i < this.maxClients; i++) {
       this.clients[i] = AgoraRTC.createClient(this.clientConfig);
+      AgoraRTC.setParameter("SVC",["vp8","vp9","h264"]);
       let currentClient = this.clients[i];
 
       /* Each client object will need the same event handlers. */
@@ -702,13 +704,13 @@ class AgoraMultiChanelApp {
 
   async manageGrid() {
     if (this.avatar === "true") {
-      var canv=document.getElementsByTagName("canvas")[0];
+      var canv = document.getElementsByTagName("canvas")[0];
       if (canv) {
-       // canv.width=640;
-       // canv.height=360;
-        canv.setAttribute('style', 'position:absolute !important');    
+        // canv.width=640;
+        // canv.height=360;
+        canv.setAttribute('style', 'position:absolute !important');
       }
-      
+
     }
     var now = Date.now();
     if ((now - this.manageGridLast) < this.ManageGridWait) {
@@ -879,9 +881,15 @@ class AgoraMultiChanelApp {
         that.removeAgoraInnerVideoStyling();
         // allow stream to fallback to audio only when congested
         // 1 is for low quality
-        //client.setStreamFallbackOption(user.uid, 1); // Automatically subscribe to the low-quality video stream under poor network.
-        client.setStreamFallbackOption(user.uid, 0); //disable fall back
-        client.setRemoteVideoStreamType(user.uid, that.videoSubscriptions[uid_string].streamType);
+        
+        if (this.performFallBack === "true") {
+          client.setStreamFallbackOption(user.uid, 1); // Automatically subscribe to the low-quality video stream under poor network.        
+          client.setRemoteVideoStreamType(user.uid, that.HighVideoStreamType);
+        } else {
+          client.setStreamFallbackOption(user.uid, 0); //disable fall back
+          client.setRemoteVideoStreamType(user.uid, that.videoSubscriptions[uid_string].streamType);
+        }
+               
         that.videoSubscriptions[uid_string].startTime = Date.now();
         // handleScreenshareSub
         that.handleScreenshareSub(uid_string);
@@ -1197,11 +1205,11 @@ class AgoraMultiChanelApp {
 
     this.rtmClient.on('ConnectionStateChanged', (newState, reason) => {
       console.log('this.rtmClient connection state changed to ' + newState + ' reason: ' + reason);
-      if (newState=="CONNECTED") {
-        document.getElementById('usermsg').disabled=false;
+      if (newState == "CONNECTED") {
+        document.getElementById('usermsg').disabled = false;
         document.getElementById('usermsg').focus();
       } else {
-        document.getElementById('usermsg').disabled=true;
+        document.getElementById('usermsg').disabled = true;
       }
     });
 
@@ -1263,45 +1271,45 @@ class AgoraMultiChanelApp {
       AgoraRTCUtils.increaseResolution();
       console.log(text);
     } else if (text.startsWith(this.RTMCHAT)) {
-      let msg=text.substring(this.RTMCHAT.length);
-      var ind=msg.indexOf(this.RTMCHATSEPERATOR);
-      var sender=msg.substring(0,ind);
-      var chatmsg=msg.substring(ind+this.RTMCHATSEPERATOR.length);
-      this.receiveChat(chatmsg,sender);
-    } 
+      let msg = text.substring(this.RTMCHAT.length);
+      var ind = msg.indexOf(this.RTMCHATSEPERATOR);
+      var sender = msg.substring(0, ind);
+      var chatmsg = msg.substring(ind + this.RTMCHATSEPERATOR.length);
+      this.receiveChat(chatmsg, sender);
+    }
   }
 
-  receiveChat(msg,senderId){
-    let chatbox=document.getElementById('chatbox');
-    let cclass="chatcellleft";
-    let extra=null;
-    let datespan=null;
-    let datapm=formatAMPM(new Date());
-    
-    
-    if (senderId==='me'){
-      cclass="chatcellright";
-      datespan="<span class='"+cclass+"date'>"+datapm+"</span>";   
-      extra="<span class='"+cclass+"'>"+ msg+"</span>";          
+  receiveChat(msg, senderId) {
+    let chatbox = document.getElementById('chatbox');
+    let cclass = "chatcellleft";
+    let extra = null;
+    let datespan = null;
+    let datapm = formatAMPM(new Date());
+
+
+    if (senderId === 'me') {
+      cclass = "chatcellright";
+      datespan = "<span class='" + cclass + "date'>" + datapm + "</span>";
+      extra = "<span class='" + cclass + "'>" + msg + "</span>";
     } else {
-      datespan="<span class='"+cclass+"date'><b>"+senderId+"</b> &nbsp;"+datapm+"</span>";   
-      extra="<span class='"+cclass+"'>"+ msg+"</span>";    
+      datespan = "<span class='" + cclass + "date'><b>" + senderId + "</b> &nbsp;" + datapm + "</span>";
+      extra = "<span class='" + cclass + "'>" + msg + "</span>";
     }
 
-    chatbox.innerHTML += datespan+extra;
-    $("#chatbox").stop().animate({ scrollTop: $("#chatbox")[0].scrollHeight}, 1000);
+    chatbox.innerHTML += datespan + extra;
+    $("#chatbox").stop().animate({ scrollTop: $("#chatbox")[0].scrollHeight }, 1000);
 
   }
 
-  chatKey(event,val) {
-      if(event.key === 'Enter') {
-        this.sendChat();    
+  chatKey(event, val) {
+    if (event.key === 'Enter') {
+      this.sendChat();
     }
   }
 
-  sendChat() {    
-    let msg=document.getElementById('usermsg').value.trim();   
-    if (msg.length==0) {
+  sendChat() {
+    let msg = document.getElementById('usermsg').value.trim();
+    if (msg.length == 0) {
       return;
     }
 
@@ -1313,22 +1321,22 @@ class AgoraMultiChanelApp {
   }
 
   appendChat(msg) {
-    document.getElementById('usermsg').value=document.getElementById('usermsg').value+msg;
+    document.getElementById('usermsg').value = document.getElementById('usermsg').value + msg;
     document.getElementById('usermsg').focus();
   }
 
-  postChat(msg) {    
-    var msg2 = this.RTMCHAT+this.chatName+this.RTMCHATSEPERATOR+msg;
+  postChat(msg) {
+    var msg2 = this.RTMCHAT + this.chatName + this.RTMCHATSEPERATOR + msg;
 
     this.rtmChannel.sendMessage({ text: msg2 }).then(() => {
-      document.getElementById('usermsg').value="";
-      this.receiveChat(msg,"me");
+      document.getElementById('usermsg').value = "";
+      this.receiveChat(msg, "me");
     }).catch(error => {
       console.error('AgoraRTM send failure for chat');
     });
     $(".econtainer").hide();
   }
-  
+
   // Publishing Local Streams
   async joinChannels() {
     if (this.channel) {
@@ -1376,10 +1384,10 @@ class AgoraMultiChanelApp {
       var vbrmax = 500;
       this.initialProfile = "180p";
     }
-  
+
     if (this.enableRemoteCallStatsMonitor === "true") {
       [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-        {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });  
+        {}, { encoderConfig: { width: vwidth, height: vheight, frameRate: vfps, bitrateMin: vbrmin, bitrateMax: vbrmax } });
     } else {
       [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
         {}, { encoderConfig: '720p_auto' });
@@ -1430,6 +1438,7 @@ class AgoraMultiChanelApp {
 
   async publishScreenShareToChannel() {
     this.screenClient = AgoraRTC.createClient(this.clientConfig);
+    AgoraRTC.setParameter("SVC",["vp8","vp9","h264"]);
     var availableClient = this.getFirstOpenChannelInner();
     let tempChannelName = this.baseChannelName + availableClient.toString();
     if (this.channel) {
@@ -1496,19 +1505,19 @@ class AgoraMultiChanelApp {
         this.initialProfile = "180p";
       }
 
-      
+
       if (this.avatar === "true") {
-        var canv=document.getElementsByTagName("canvas")[0];
-       // canv.width=640;
-       // canv.height=360;
-       // canv.setAttribute('style', 'position:absolute !important');    
-       console.error("canv ",canv);
+        var canv = document.getElementsByTagName("canvas")[0];
+        // canv.width=640;
+        // canv.height=360;
+        // canv.setAttribute('style', 'position:absolute !important');    
+        console.error("canv ", canv);
         var stream = canv.captureStream(30);
         var gumStream;
-        if (this.micId){
-           gumStream=await navigator.mediaDevices.getUserMedia({ video: false, audio: { exact: this.micId } });
+        if (this.micId) {
+          gumStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: { exact: this.micId } });
         } else {
-          gumStream=await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          gumStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
         }
 
         const ac = new AudioContext();
@@ -1527,9 +1536,9 @@ class AgoraMultiChanelApp {
         console.error(audioContext.destination);
         //const dest = audioContext.createMediaStreamDestination();
         */
-        [this.localTracks.audioTrack, this.localTracks.videoTrack] =  await Promise.all([
-          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 1280 }, height: { max: 720 }, frameRate: 30, bitrateMin: 900, bitrateMax: 3000 })]);
-          //AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 30, bitrateMin: 300, bitrateMax: 800 })]);
+        [this.localTracks.audioTrack, this.localTracks.videoTrack] = await Promise.all([
+          AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0], width: { max: 1280 }, height: { max: 720 }, frameRate: 30, bitrateMin: 900, bitrateMax: 3000 })]);
+        //AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: dest.stream.getAudioTracks()[0] }), AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: stream.getVideoTracks()[0],  width: { max: 640 }, height: { max: 360 }, frameRate: 30, bitrateMin: 300, bitrateMax: 800 })]);
 
       }
       else if (this.cameraId && this.micId) {
@@ -1657,19 +1666,19 @@ class AgoraMultiChanelApp {
   }
 
 
- async fixiOSPlayerAudio() {
-   //alert("fixiOSPlayerAudio 2");
+  async fixiOSPlayerAudio() {
+    //alert("fixiOSPlayerAudio 2");
     // avoid iOS low volume issue by recreating  mic track
     //await this.leaveChannels();
     //await this.joinChannels();
-    var enabled=this.localTracks.audioTrack._enabled;
+    var enabled = this.localTracks.audioTrack._enabled;
     this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
     await this.clients[this.myPublishClient].setClientRole("host");
     await this.clients[this.myPublishClient].publish(this.localTracks.audioTrack);
-   if (!enabled) {
-	  this.localTracks.audioTrack.setEnabled(false);
-   }
- }
+    if (!enabled) {
+      this.localTracks.audioTrack.setEnabled(false);
+    }
+  }
 
   // Returns the index of the first client object with an open channel.
   async getFirstOpenChannel() {
@@ -1735,45 +1744,45 @@ class AgoraMultiChanelApp {
 
   UIInit() {
 
-    if (!this.uiInit || this.landscape!=this.uiinitlandscape) {
-      this.uiInit=true;
-      this.uiinitlandscape=this.landscape;
+    if (!this.uiInit || this.landscape != this.uiinitlandscape) {
+      this.uiInit = true;
+      this.uiinitlandscape = this.landscape;
 
-      this.logoPath = getParameterByName("logoPath") ||  "";
+      this.logoPath = getParameterByName("logoPath") || "";
       this.enableChat = getParameterByName("enableChat") || "false";
 
       // logo
-      if (this.logoPath.length>0) {        
-        document.getElementById("logoimg").src=this.logoPath; 
-        document.getElementById("logo").classList.remove("hidden");     
-        this.logoHeight=30;             
+      if (this.logoPath.length > 0) {
+        document.getElementById("logoimg").src = this.logoPath;
+        document.getElementById("logo").classList.remove("hidden");
+        this.logoHeight = 30;
       }
 
       // chat 
-      if (this.enableChat === "true" && this.landscape) {        
-        document.getElementById("chat").classList.remove("hidden");  
-        this.grid_over="grid_over_chat";
+      if (this.enableChat === "true" && this.landscape) {
+        document.getElementById("chat").classList.remove("hidden");
+        this.grid_over = "grid_over_chat";
 
-        let stats=0;
-        if (!document.getElementById("stats_container").classList.contains("hidden")){
-          stats=48;
+        let stats = 0;
+        if (!document.getElementById("stats_container").classList.contains("hidden")) {
+          stats = 48;
         }
 
-        if (this.logoPath.length>0) {
+        if (this.logoPath.length > 0) {
           document.getElementById("chat").style.top = (106 + stats) + 'px';
         } else {
           document.getElementById("chat").style.top = (76 + stats) + 'px';
         }
 
-        this.chatWidth=200;             
-        
+        this.chatWidth = 200;
+
       } else {
-        document.getElementById("chat").classList.add("hidden");  
-        this.grid_over="grid_over";
-        this.chatWidth=0;   
+        document.getElementById("chat").classList.add("hidden");
+        this.grid_over = "grid_over";
+        this.chatWidth = 0;
       }
 
-      
+
 
     }
 
@@ -1821,11 +1830,11 @@ class AgoraMultiChanelApp {
     this.UIInit();
 
     if (this.landscape) {
-      width = window.innerWidth-this.chatWidth;
+      width = window.innerWidth - this.chatWidth;
     }
     // shownPersonToPerson is 2 person face time style call
 
-    document.getElementById("focus-parent").style.width=width + 'px';
+    document.getElementById("focus-parent").style.width = width + 'px';
 
     var connected_users = this.usersConnected.length;
     if (connected_users == 1 && this.gridLayout && !this.shareContentOnDisplay) {
@@ -1939,8 +1948,8 @@ class AgoraMultiChanelApp {
 
     document.getElementById("agoravideoplayer").style.height = document.getElementById("focus-video").style.height;
     document.getElementById("agoravideoplayer").style.width = document.getElementById("focus-video").style.width;
-    
-    
+
+
     // mobile grid gaps
     if (isMobile()) {
       var mel = document.getElementById("main_body");
@@ -2009,16 +2018,16 @@ class AgoraMultiChanelApp {
     document.getElementById("grid").style.height = grid_height + 'px';
 
 
-    let stats=0;
-    if (!document.getElementById("stats_container").classList.contains("hidden")){
-      stats=10;
+    let stats = 0;
+    if (!document.getElementById("stats_container").classList.contains("hidden")) {
+      stats = 10;
     }
-    var chat_height= height - toolbar_height - stats- this.logoHeight  - (grid_padding * 4);
+    var chat_height = height - toolbar_height - stats - this.logoHeight - (grid_padding * 4);
     document.getElementById("chat").style.height = chat_height + 'px';
 
-    document.getElementById("chatbox").style.height = (chat_height-40) + 'px';
-    
-    
+    document.getElementById("chatbox").style.height = (chat_height - 40) + 'px';
+
+
 
     var grid_actual_width = document.getElementById("grid").offsetWidth;
     var grid_actual_height = document.getElementById("grid").offsetHeight;
@@ -2079,7 +2088,7 @@ class AgoraMultiChanelApp {
     if (clientStats.RemoteSubCount > 0) {
       stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RenderVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
         "NackRateAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true) +
-        "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0)+"/"+clientStats.StatsRunTime.toFixed(0), false)) +
+        "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0) + "/" + clientStats.StatsRunTime.toFixed(0), false)) +
         " Duration(s):" + clientStats.RemoteStatusDuration +
         " Bitrate(kbps):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
     }
@@ -2156,8 +2165,8 @@ class AgoraMultiChanelApp {
       if (clientStats.RemoteSubCount > 0) {
         stats = agoraApp.getRemoteStatusDisplay(clientStats, "RVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
           "NRAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true) +
-          "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0)+"/"+clientStats.StatsRunTime.toFixed(0), false));
-//          "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), true));
+          "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0) + "/" + clientStats.StatsRunTime.toFixed(0), false));
+        //          "DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), true));
       } else {
 
       }
@@ -2173,7 +2182,7 @@ class AgoraMultiChanelApp {
         stats1 = stats1 + agoraApp.getRemoteStatusDisplay(clientStats, "RVolAvg:" + agoraApp.fixStat(clientStats.AvgRxRVol.toFixed(0), true) +
           "NRAvg:" + agoraApp.fixStat(clientStats.AvgRxNR.toFixed(0), true) +
           //"DecodeTimeAvg:" + agoraApp.fixStat(clientStats.AvgRxDecodeTime.toFixed(2), true)) +
-          "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0)+"/"+clientStats.StatsRunTime.toFixed(0), false))+
+          "Sched/Run:" + agoraApp.fixStat(clientStats.StatsScheduleTime.toFixed(0) + "/" + clientStats.StatsRunTime.toFixed(0), false)) +
           " Dur(s):" + clientStats.RemoteStatusDuration +
           " Br(k):" + agoraApp.fixStat((clientStats.RecvBitrate / 1000).toFixed(0));
       }
@@ -2229,6 +2238,12 @@ class AgoraMultiChanelApp {
       streamTypeDisplay = "high";
     }
 
+    if (agoraApp.performFallBack === "true") {
+      streamTypeDisplay = "auto fallback";
+    }
+    
+    //// GET IT CORRECT OR SHOW NOTHING 
+
     var innerHTML = "<span class='stats_display_inner'> ";
     if (agoraApp.ui_cell_height > 200 || agoraApp.mainVideoId == userStats.uid) {
       if (stats_display.classList.contains("stats_display_small_font")) {
@@ -2253,9 +2268,9 @@ class AgoraMultiChanelApp {
         " Codec: " + userStats.receiveCodec + " <br/> " +
         " Bitrate: " + userStats.receiveBitrate + " <br/> " +
         " Freeze Duration: " + userStats.totalFreezesDuration + " <br/> " +
-        " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> " ;
-        //" Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
-        //" Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> ";
+        " Render FPS: " + userStats.renderRateMean.toFixed(0) + " <br/> ";
+      //" Render Vol%: " + userStats.renderRateStdDeviationPerc.toFixed(0) + " <br/> " +
+      //" Decode Time: " + userStats.decodeTime.toFixed(4) + " <br/> ";
       if (stats_display.classList.contains("stats_display_large_font")) {
         stats_display.classList.remove("stats_display_large_font");
       }
@@ -2289,7 +2304,7 @@ class AgoraMultiChanelApp {
     }
     stats_display.innerHTML = innerHTML;
   }  // end func
- 
+
 }// end class
 
 
@@ -2320,7 +2335,7 @@ function toggleStats() {
     document.getElementById("stats_container").classList.add("hidden")
     document.getElementById("toolbar").classList.remove("headerOpen");
   }
-  agoraApp.uiInit=false;
+  agoraApp.uiInit = false;
 }
 
 function toggleCam() {
@@ -2404,7 +2419,7 @@ function formatAMPM(date) {
   var ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
   hours = hours ? hours : 12; // the hour '0' should be '12'
-  minutes = minutes < 10 ? '0'+minutes : minutes;
+  minutes = minutes < 10 ? '0' + minutes : minutes;
   var strTime = hours + ':' + minutes + ' ' + ampm;
   return strTime;
 }
@@ -2573,8 +2588,8 @@ if (agoraApp.avatar === "true" && !document.querySelector('a-scene').hasLoaded) 
       showMediaDeviceTest();
     } else {
       connect();
-    }    
-})
+    }
+  })
   showLoadingSpinner();
 } else {
   if (showDeviceSelection === "true") {
