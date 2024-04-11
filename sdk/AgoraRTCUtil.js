@@ -215,8 +215,10 @@ var AgoraRTCUtils = (function () {
     _fpsLowObserved = 0;
 
     _fpsRates = [];
-    if (_publishClient && _publishClient._highStream && _publishClient._highStream.videoTrack) {
-      _publishClient._highStream.videoTrack.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
+    if (_publishClient && _publishClient._p2pChannel &&  _publishClient._p2pChannel.localTrackMap.get("videoTrack")) {
+        // _publishClient._highStream.videoTrack.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
+    
+      _publishClient._p2pChannel.localTrackMap.get("videoTrack").track.setEncoderConfiguration({ width: profile.width, height: profile.height, frameRate: profile.frameRate, bitrateMin: profile.bitrateMin, bitrateMax: profile.bitrateMax });
     }
   }
 
