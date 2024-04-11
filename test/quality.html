@@ -4,7 +4,7 @@
   let currProf=0;
   let landscape=false
   let profiles=[
-                {width: 1280, height: 720, frameRate: 24, bitrateMin: 500, bitrateMax: 700}
+                {width: 1280, height: 720, frameRate: 30, bitrateMin: 500, bitrateMax: 700}
                ]
 
   function isLandscape() {
@@ -232,6 +232,7 @@
                   " <br><u>Inbound</u><br> width: "+recvStats.receiveResolutionWidth+
                   " <br>height: "+recvStats.receiveResolutionHeight+
                   " <br>fps: "+recvStats.receiveFrameRate+
+                  " <br>bitrate: "+recvStats.receiveBitrate+
                   " <br>codec:  "+recvStats.codecType;
                 }                
               //}
@@ -380,10 +381,10 @@
     color: white;
     top: 10px;
     z-index: 1000;
-    width: 400px;
+    width: 200px;
     height:740px;
-    right: 100px;
-    font-size: 40px;
+    right: 10px;
+    font-size: 20px;
     background-color: brown;
     padding: 10px;
   }
